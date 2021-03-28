@@ -7,7 +7,6 @@ namespace WowIndex.Models
 {
     public class GuildRanking
     {
-        public DateTime age { get; set; }
 
         [JsonProperty("guild")]
         public Guild guild { get; set; }
@@ -52,6 +51,7 @@ namespace WowIndex.Models
 
     public class Faction
     {
+
         [JsonProperty("type")]
         public string type { get; set; }
     }

@@ -7,6 +7,7 @@ namespace WowIndex.Models
 {
     public class LeaderboardEntries
     {
+
         [JsonProperty("_links")]
         public Links _links { get; set; }
 
@@ -37,12 +38,14 @@ namespace WowIndex.Models
 
     public class Links
     {
+
         [JsonProperty("self")]
         public Self self { get; set; }
     }
 
     public class Self
     {
+
         [JsonProperty("href")]
         public string href { get; set; }
     }

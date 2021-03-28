@@ -1,59 +1,61 @@
 ﻿@page "/"
+@inject WowIndex.Data.ApplicationDbContext _context
 
-@if (leaderboard == null)
+@if (records == null)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
 }
 
-@if (leaderboard != null)
+@if (records != null)
 {
-<MudContainer>
-    <MudTable RowsPerPage="100" Dense="true" Height="calc(100vh - 116px)" FixedHeader="true" Items="@leaderboard" Hover="true">
-        <!--<ToolBarContent>
-            <MudText Typo="Typo.h6">Top 200 guilds</MudText>
-            <MudToolBarSpacer />-->
-        @*<MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>*@
-        <!--</ToolBarContent>-->
-        <HeaderContent>
-            <MudTh></MudTh>
-            <MudTh>Guild</MudTh>
-            <MudTh>Region</MudTh>
-            <MudTh>Realm</MudTh>
-            <MudTh></MudTh>
-            <MudTh>Progress</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            @if (context.faction.type == "ALLIANCE")
-                {
-                <MudTd Class="ally-blue" DataLabel="Rank"><b>@context.rank</b></MudTd>
-                <MudTd Class="ally-blue" DataLabel="Guild">@context.guild.name</MudTd>
-                <MudTd Class="ally-blue" DataLabel="Region">@context.region</MudTd>
-                <MudTd Class="ally-blue" DataLabel="Realm">@context.guild.realm.name</MudTd>
-                <MudTd Class="ally-blue" DataLabel="Progress">
-                    <MudAvatar Image="img/alliance.png" Size="Size.Small" Class="ma-2" />
-                </MudTd>
-                <MudTd Class="ally-blue" DataLabel="Progress"></MudTd>
-                }
-                else
-                {
-                <MudTd Class="horde-red" DataLabel="Rank"><b>@context.rank</b></MudTd>
-                <MudTd Class="horde-red" DataLabel="Guild">@context.guild.name</MudTd>
-                <MudTd Class="horde-red" DataLabel="Region">@context.region</MudTd>
-                <MudTd Class="horde-red" DataLabel="Realm">@context.guild.realm.name</MudTd>
-                <MudTd Class="horde-red" DataLabel="Progress">
-                    <MudAvatar Image="img/horde.png" Size="Size.Small" Class="ma-2" />
-                </MudTd>
-                <MudTd Class="horde-red" DataLabel="Progress"></MudTd>
-                }
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager />
-        </PagerContent>
-    </MudTable>
-</MudContainer>
+    <MudContainer>
+        <MudTable RowsPerPage="100" Dense="true" Height="calc(100vh - 116px)" FixedHeader="true" Items="@records" Hover="true">
+            <!--<ToolBarContent>
+                <MudText Typo="Typo.h6">Top 200 guilds</MudText>
+                <MudToolBarSpacer />-->
+            @*<MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>*@
+            <!--</ToolBarContent>-->
+            <HeaderContent>
+                <MudTh></MudTh>
+                <MudTh>Guild</MudTh>
+                <MudTh>Region</MudTh>
+                <MudTh>Realm</MudTh>
+                <MudTh></MudTh>
+                <MudTh>Progress</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                @if (context.faction == "ALLIANCE")
+                    {
+                    <MudTd Class="ally-blue" DataLabel="Rank"><b>@context.rank</b></MudTd>
+                    <MudTd Class="ally-blue" DataLabel="Guild">@context.name</MudTd>
+                    <MudTd Class="ally-blue" DataLabel="Region">@context.region</MudTd>
+                    <MudTd Class="ally-blue" DataLabel="Realm">@context.realm</MudTd>
+                    <MudTd Class="ally-blue" DataLabel="Progress">
+                        <MudAvatar Image="img/alliance.png" Size="Size.Small" Class="ma-2" />
+                    </MudTd>
+                    <MudTd Class="ally-blue" DataLabel="Progress"></MudTd>
+                    }
+                    else
+                    {
+                    <MudTd Class="horde-red" DataLabel="Rank"><b>@context.rank</b></MudTd>
+                    <MudTd Class="horde-red" DataLabel="Guild">@context.name</MudTd>
+                    <MudTd Class="horde-red" DataLabel="Region">@context.region</MudTd>
+                    <MudTd Class="horde-red" DataLabel="Realm">@context.realm</MudTd>
+                    <MudTd Class="horde-red" DataLabel="Progress">
+                        <MudAvatar Image="img/horde.png" Size="Size.Small" Class="ma-2" />
+                    </MudTd>
+                    <MudTd Class="horde-red" DataLabel="Progress"></MudTd>
+                    }
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    </MudContainer>
 }
 @code {
-    public List<GuildRanking> leaderboard;
+
+    public List<GuildRecord> records;
 
     private string searchString = "";
 
@@ -67,38 +69,64 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var apiResponseAlliance = await apiConnection().GetAsync("data/wow/leaderboard/hall-of-fame/castle-nathria/alliance?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2");
-        var apiResponseHorde = await apiConnection().GetAsync("data/wow/leaderboard/hall-of-fame/castle-nathria/horde?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2");
+        var results = _context.Records.FirstOrDefault();
 
-        if (apiResponseHorde.IsSuccessStatusCode && apiResponseAlliance.IsSuccessStatusCode)
+        if(results == null  || results.age < DateTime.Now.AddMinutes(-1))
         {
-            var resultHorde = apiResponseHorde.Content.ReadAsStringAsync().Result;
-            var resultAlliance = apiResponseAlliance.Content.ReadAsStringAsync().Result;
-            var GuildRankingsListHorde = JsonConvert.DeserializeObject<LeaderboardEntries>(resultHorde);
-            var GuildRankingsListAlliance = JsonConvert.DeserializeObject<LeaderboardEntries>(resultAlliance);
-
-            GuildRanking[] Leaderboard = new GuildRanking[GuildRankingsListAlliance.entries.Length + GuildRankingsListHorde.entries.Length];
-
-            int j = 0;
-            for (int i = 0; i < Leaderboard.Length; i++)
+            records = new List<GuildRecord>();
+            var apiResponseAlliance = await apiConnection().GetAsync("data/wow/leaderboard/hall-of-fame/castle-nathria/alliance?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2");
+            var apiResponseHorde = await apiConnection().GetAsync("data/wow/leaderboard/hall-of-fame/castle-nathria/horde?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2");
+            if (apiResponseHorde.IsSuccessStatusCode && apiResponseAlliance.IsSuccessStatusCode)
             {
-                if (i < 100)
-                    Leaderboard[i] = GuildRankingsListHorde.entries[i];
-                else
+                var resultHorde = apiResponseHorde.Content.ReadAsStringAsync().Result;
+                var resultAlliance = apiResponseAlliance.Content.ReadAsStringAsync().Result;
+                var GuildRankingsListHorde = JsonConvert.DeserializeObject<LeaderboardEntries>(resultHorde);
+                var GuildRankingsListAlliance = JsonConvert.DeserializeObject<LeaderboardEntries>(resultAlliance);
+
+                GuildRanking[] Leaderboard = new GuildRanking[GuildRankingsListAlliance.entries.Length + GuildRankingsListHorde.entries.Length];
+
+                int j = 0;
+                for (int i = 0; i < Leaderboard.Length; i++)
                 {
-                    Leaderboard[i] = GuildRankingsListAlliance.entries[j];
+                    if (i < 100)
+                        Leaderboard[i] = GuildRankingsListHorde.entries[i];
+                    else
+                    {
+                        Leaderboard[i] = GuildRankingsListAlliance.entries[j];
+                        j++;
+                    }
+                }
+
+                await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE Records");
+                await _context.SaveChangesAsync();
+
+                List<GuildRanking> leaderboard = Leaderboard.OrderBy(x => x.timestamp).ToList();
+                j = 1;
+                foreach (var item in leaderboard)
+                {
+                    GuildRecord record = new GuildRecord()
+                    {
+                        rank = j,
+                        realm = item.region,
+                        region = item.region,
+                        name = item.guild.name,
+                        faction = item.faction.type,
+                        age = DateTime.Now,
+                        timestamp = item.timestamp
+                    };
+                    _context.Records.Add(record);
                     j++;
                 }
-            }
 
-            leaderboard = Leaderboard.OrderBy(x => x.timestamp).ToList();
-            j = 1;
-            foreach (var item in leaderboard)
-            {
-                item.rank = j;
-                j++;
+                await _context.SaveChangesAsync();
+
+                records = await _context.Records.OrderBy(x => x.timestamp).ToListAsync();
+                StateHasChanged();
             }
-            StateHasChanged();
+        }
+        else
+        {
+            records = await _context.Records.OrderBy(x => x.timestamp).ToListAsync();
         }
     }
 

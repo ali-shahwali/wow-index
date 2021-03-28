@@ -13,7 +13,8 @@ namespace WowIndex.Data
             : base(options)
         {
         }
+        
 
-        public DbSet<GuildRanking> guildRankings { get; set; }
+        public DbSet<GuildRecord> Records { get; set; }
     }
 }

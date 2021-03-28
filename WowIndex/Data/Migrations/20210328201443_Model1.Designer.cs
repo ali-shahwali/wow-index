@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WowIndex.Data;
 
 namespace WowIndex.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210328201443_Model1")]
+    partial class Model1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -219,7 +221,42 @@ namespace WowIndex.Data.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
-            modelBuilder.Entity("WowIndex.Models.GuildRecord", b =>
+            modelBuilder.Entity("WowIndex.Models.Faction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("type")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Faction");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.Guild", b =>
+                {
+                    b.Property<long>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("realmid")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("realmid");
+
+                    b.ToTable("Guild");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.GuildRanking", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -229,20 +266,14 @@ namespace WowIndex.Data.Migrations
                     b.Property<DateTime>("age")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("faction")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("progress")
+                    b.Property<int?>("factionId")
                         .HasColumnType("int");
 
-                    b.Property<int>("rank")
-                        .HasColumnType("int");
+                    b.Property<long?>("guildid")
+                        .HasColumnType("bigint");
 
-                    b.Property<string>("realm")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<long>("rank")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("region")
                         .HasColumnType("nvarchar(max)");
@@ -252,7 +283,29 @@ namespace WowIndex.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Records");
+                    b.HasIndex("factionId");
+
+                    b.HasIndex("guildid");
+
+                    b.ToTable("guildRankings");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.Realm", b =>
+                {
+                    b.Property<long>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("slug")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("id");
+
+                    b.ToTable("Realm");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -304,6 +357,30 @@ namespace WowIndex.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("WowIndex.Models.Guild", b =>
+                {
+                    b.HasOne("WowIndex.Models.Realm", "realm")
+                        .WithMany()
+                        .HasForeignKey("realmid");
+
+                    b.Navigation("realm");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.GuildRanking", b =>
+                {
+                    b.HasOne("WowIndex.Models.Faction", "faction")
+                        .WithMany()
+                        .HasForeignKey("factionId");
+
+                    b.HasOne("WowIndex.Models.Guild", "guild")
+                        .WithMany()
+                        .HasForeignKey("guildid");
+
+                    b.Navigation("faction");
+
+                    b.Navigation("guild");
                 });
 #pragma warning restore 612, 618
         }

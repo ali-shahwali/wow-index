@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WowIndex.Data;
 
 namespace WowIndex.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210328204542_Model3")]
+    partial class Model3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -238,17 +240,11 @@ namespace WowIndex.Data.Migrations
                     b.Property<int>("progress")
                         .HasColumnType("int");
 
-                    b.Property<int>("rank")
-                        .HasColumnType("int");
-
                     b.Property<string>("realm")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("region")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("timestamp")
-                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 

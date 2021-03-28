@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WowIndex.Data;
 
 namespace WowIndex.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210328203111_Model2")]
+    partial class Model2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -219,30 +221,59 @@ namespace WowIndex.Data.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
-            modelBuilder.Entity("WowIndex.Models.GuildRecord", b =>
+            modelBuilder.Entity("WowIndex.Models.Faction", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<DateTime>("age")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("faction")
+                    b.Property<string>("type")
                         .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Faction");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.Guild", b =>
+                {
+                    b.Property<long>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("progress")
+                    b.Property<long?>("realmid")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("realmid");
+
+                    b.ToTable("Guild");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.GuildRanking", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int?>("LeaderboardEntriesId")
                         .HasColumnType("int");
 
-                    b.Property<int>("rank")
+                    b.Property<int?>("factionId")
                         .HasColumnType("int");
 
-                    b.Property<string>("realm")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<long?>("guildid")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("rank")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("region")
                         .HasColumnType("nvarchar(max)");
@@ -252,7 +283,114 @@ namespace WowIndex.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Records");
+                    b.HasIndex("LeaderboardEntriesId");
+
+                    b.HasIndex("factionId");
+
+                    b.HasIndex("guildid");
+
+                    b.ToTable("guildRankings");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.JournalInstance", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int?>("KeyId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KeyId");
+
+                    b.ToTable("JournalInstance");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.LeaderboardEntries", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<long?>("JournalInstanceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("_linksId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("age")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("criteria_type")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("slug")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JournalInstanceId");
+
+                    b.HasIndex("_linksId");
+
+                    b.ToTable("LastEntry");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.Links", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int?>("selfId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("selfId");
+
+                    b.ToTable("Links");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.Realm", b =>
+                {
+                    b.Property<long>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("slug")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("id");
+
+                    b.ToTable("Realm");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.Self", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("href")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Self");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -304,6 +442,72 @@ namespace WowIndex.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("WowIndex.Models.Guild", b =>
+                {
+                    b.HasOne("WowIndex.Models.Realm", "realm")
+                        .WithMany()
+                        .HasForeignKey("realmid");
+
+                    b.Navigation("realm");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.GuildRanking", b =>
+                {
+                    b.HasOne("WowIndex.Models.LeaderboardEntries", null)
+                        .WithMany("entries")
+                        .HasForeignKey("LeaderboardEntriesId");
+
+                    b.HasOne("WowIndex.Models.Faction", "faction")
+                        .WithMany()
+                        .HasForeignKey("factionId");
+
+                    b.HasOne("WowIndex.Models.Guild", "guild")
+                        .WithMany()
+                        .HasForeignKey("guildid");
+
+                    b.Navigation("faction");
+
+                    b.Navigation("guild");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.JournalInstance", b =>
+                {
+                    b.HasOne("WowIndex.Models.Self", "Key")
+                        .WithMany()
+                        .HasForeignKey("KeyId");
+
+                    b.Navigation("Key");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.LeaderboardEntries", b =>
+                {
+                    b.HasOne("WowIndex.Models.JournalInstance", "JournalInstance")
+                        .WithMany()
+                        .HasForeignKey("JournalInstanceId");
+
+                    b.HasOne("WowIndex.Models.Links", "_links")
+                        .WithMany()
+                        .HasForeignKey("_linksId");
+
+                    b.Navigation("_links");
+
+                    b.Navigation("JournalInstance");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.Links", b =>
+                {
+                    b.HasOne("WowIndex.Models.Self", "self")
+                        .WithMany()
+                        .HasForeignKey("selfId");
+
+                    b.Navigation("self");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.LeaderboardEntries", b =>
+                {
+                    b.Navigation("entries");
                 });
 #pragma warning restore 612, 618
         }
