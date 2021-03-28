@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31112.23
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WowIndex", "WowIndex\WowIndex.csproj", "{5C63EB81-F2E6-4A61-ABAF-2BD2DB1BC776}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5C63EB81-F2E6-4A61-ABAF-2BD2DB1BC776}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C63EB81-F2E6-4A61-ABAF-2BD2DB1BC776}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C63EB81-F2E6-4A61-ABAF-2BD2DB1BC776}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C63EB81-F2E6-4A61-ABAF-2BD2DB1BC776}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C7C3AECE-B856-47DA-83BB-E7863DC9D4B2}
+	EndGlobalSection
+EndGlobal
