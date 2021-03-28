@@ -1,48 +1,14 @@
 ﻿@page "/"
 
-<MudTable Items="@Guilds" Hover="true" Filter="new Func<GuildRanking,bool>(FilterFunc)" @bind-SelectedItem="selectedItem">
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">Periodic Elements</MudText>
-        <MudToolBarSpacer />
-        <MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-    </ToolBarContent>
-    <HeaderContent>
-        <MudTh></MudTh>
-        <MudTh>Guild</MudTh>
-        <MudTh>Region</MudTh>
-        <MudTh>Realm</MudTh>
-        <MudTh>Progress</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Nr">@context.rank</MudTd>
-        <MudTd DataLabel="Sign">@context.Sign</MudTd>
-        <MudTd DataLabel="Name">@context.Name</MudTd>
-        <MudTd DataLabel="Position">@context.Position</MudTd>
-        <MudTd DataLabel="Molar mass">@context.Molar</MudTd>
-    </RowTemplate>
-    <PagerContent>
-        <MudTablePager />
-    </PagerContent>
-</MudTable>
+<ul>
+    @foreach (var item in GuildRankingsList)
+    {
+        <li>item.RealmName</li>
+    }
+</ul>
+
+
 
 @code {
-    private string searchString = "";
 
-    private GuildRanking selectedItem = null;
-    private HashSet<GuildRanking> selectedItems = new HashSet<GuildRanking>();
-
-    private IEnumerable<GuildRanking> Guilds = new List<GuildRanking>();
-
-    private bool FilterFunc(GuildRanking element)
-    {
-        if (string.IsNullOrWhiteSpace(searchString))
-            return true;
-        if (element.Sign.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
-        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
-        if ($"{element.Number} {element.Position} {element.Molar}".Contains(searchString))
-            return true;
-        return false;
-    }
 }
