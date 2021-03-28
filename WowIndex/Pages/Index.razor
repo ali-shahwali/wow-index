@@ -1,14 +1,50 @@
 ﻿@page "/"
 
-<ul>
-    @foreach (var item in GuildRankingsList)
-    {
-        <li>item.RealmName</li>
-    }
-</ul>
+@if (guilds != null)
+{
 
+    <ul>
+        @for (int i = 0; i < guilds.Length; i++)
+        {
+             <li>@guilds[i].guild.name</li>
+        }
 
+    </ul>
+}
 
 @code {
+    public LeaderboardEntries GuildRankingsList { get; set; }
+
+    public GuildRanking[] guilds { get; set; }
+
+    //HORDE REQUEST FOR TOP 100
+    //URL : https://us.api.blizzard.com/data/wow/leaderboard/hall-of-fame/castle-nathria/horde?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2
+
+    //ALLIANCE REQUEST FOR TOP 100
+    //URL : https://us.api.blizzard.com/data/wow/leaderboard/hall-of-fame/castle-nathria/alliance?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2
+
+
+    // API CONNECTION
+    public HttpClient apiConnection()
+    {
+        var APIclient = new HttpClient();
+        APIclient.BaseAddress = new Uri("https://us.api.blizzard.com/");
+
+        return APIclient;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var apiResponse = await apiConnection().GetAsync("data/wow/leaderboard/hall-of-fame/castle-nathria/horde?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2");
+
+        if (apiResponse.IsSuccessStatusCode)
+        {
+            var result = apiResponse.Content.ReadAsStringAsync().Result;
+            GuildRankingsList = JsonConvert.DeserializeObject<LeaderboardEntries>(result);
+
+            guilds = GuildRankingsList.entries;
+            StateHasChanged();
+        }
+    }
 
 }
