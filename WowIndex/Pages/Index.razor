@@ -7,12 +7,13 @@
 
 @if (leaderboard != null)
 {
-    <MudTable Height="500px" FixedHeader="true" Items="@leaderboard" Hover="true">
-        <ToolBarContent>
+<MudContainer>
+    <MudTable RowsPerPage="100" Dense="true" Height="calc(100vh - 116px)" FixedHeader="true" Items="@leaderboard" Hover="true">
+        <!--<ToolBarContent>
             <MudText Typo="Typo.h6">Top 200 guilds</MudText>
-            <MudToolBarSpacer />
-            @*<MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>*@
-        </ToolBarContent>
+            <MudToolBarSpacer />-->
+        @*<MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>*@
+        <!--</ToolBarContent>-->
         <HeaderContent>
             <MudTh></MudTh>
             <MudTh>Guild</MudTh>
@@ -22,16 +23,34 @@
             <MudTh>Progress</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Rank">@context.rank</MudTd>
-            <MudTd DataLabel="Guild">@context.guild.name</MudTd>
-            <MudTd DataLabel="Region">@context.region</MudTd>
-            <MudTd DataLabel="Realm">@context.guild.realm.name</MudTd>
-            <MudTd DataLabel="Progress"></MudTd>
+            @if (context.faction.type == "ALLIANCE")
+                {
+                <MudTd Class="ally-blue" DataLabel="Rank"><b>@context.rank</b></MudTd>
+                <MudTd Class="ally-blue" DataLabel="Guild">@context.guild.name</MudTd>
+                <MudTd Class="ally-blue" DataLabel="Region">@context.region</MudTd>
+                <MudTd Class="ally-blue" DataLabel="Realm">@context.guild.realm.name</MudTd>
+                <MudTd Class="ally-blue" DataLabel="Progress">
+                    <MudAvatar Image="img/alliance.png" Size="Size.Small" Class="ma-2" />
+                </MudTd>
+                <MudTd Class="ally-blue" DataLabel="Progress"></MudTd>
+                }
+                else
+                {
+                <MudTd Class="horde-red" DataLabel="Rank"><b>@context.rank</b></MudTd>
+                <MudTd Class="horde-red" DataLabel="Guild">@context.guild.name</MudTd>
+                <MudTd Class="horde-red" DataLabel="Region">@context.region</MudTd>
+                <MudTd Class="horde-red" DataLabel="Realm">@context.guild.realm.name</MudTd>
+                <MudTd Class="horde-red" DataLabel="Progress">
+                    <MudAvatar Image="img/horde.png" Size="Size.Small" Class="ma-2" />
+                </MudTd>
+                <MudTd Class="horde-red" DataLabel="Progress"></MudTd>
+                }
         </RowTemplate>
         <PagerContent>
             <MudTablePager />
         </PagerContent>
     </MudTable>
+</MudContainer>
 }
 @code {
     public List<GuildRanking> leaderboard;

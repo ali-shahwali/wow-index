@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using WowIndex.Models;
 
 namespace WowIndex.Data
 {
@@ -12,5 +13,7 @@ namespace WowIndex.Data
             : base(options)
         {
         }
+
+        public DbSet<GuildRanking> guildRankings { get; set; }
     }
 }
