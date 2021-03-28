@@ -19,6 +19,7 @@
     <Folder Include="Pages\components\" />
     <Folder Include="Pages\subcomponents\" />
     <Folder Include="wwwroot\js\" />
+    <Folder Include="wwwroot\img\" />
   </ItemGroup>
 
 </Project>

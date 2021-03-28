@@ -1,10 +1,15 @@
 ﻿@page "/"
 
-@if (GuildRankingsList != null)
+@if (leaderboard == null)
 {
-    <MudTable Items="@Leaderboard" Hover="true">
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+}
+
+@if (leaderboard != null)
+{
+    <MudTable Height="500px" FixedHeader="true" Items="@leaderboard" Hover="true">
         <ToolBarContent>
-            <MudText Typo="Typo.h6">Periodic Elements</MudText>
+            <MudText Typo="Typo.h6">Top 200 guilds</MudText>
             <MudToolBarSpacer />
             @*<MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>*@
         </ToolBarContent>
@@ -13,6 +18,7 @@
             <MudTh>Guild</MudTh>
             <MudTh>Region</MudTh>
             <MudTh>Realm</MudTh>
+            <MudTh></MudTh>
             <MudTh>Progress</MudTh>
         </HeaderContent>
         <RowTemplate>
@@ -28,8 +34,7 @@
     </MudTable>
 }
 @code {
-    public LeaderboardEntries GuildRankingsList { get; set; }
-    public GuildRanking[] Leaderboard { get; set; }
+    public List<GuildRanking> leaderboard;
 
     private string searchString = "";
 
@@ -53,7 +58,7 @@
             var GuildRankingsListHorde = JsonConvert.DeserializeObject<LeaderboardEntries>(resultHorde);
             var GuildRankingsListAlliance = JsonConvert.DeserializeObject<LeaderboardEntries>(resultAlliance);
 
-            Leaderboard = new GuildRanking[GuildRankingsListAlliance.entries.Length + GuildRankingsListHorde.entries.Length];
+            GuildRanking[] Leaderboard = new GuildRanking[GuildRankingsListAlliance.entries.Length + GuildRankingsListHorde.entries.Length];
 
             int j = 0;
             for (int i = 0; i < Leaderboard.Length; i++)
@@ -67,6 +72,13 @@
                 }
             }
 
+            leaderboard = Leaderboard.OrderBy(x => x.timestamp).ToList();
+            j = 1;
+            foreach (var item in leaderboard)
+            {
+                item.rank = j;
+                j++;
+            }
             StateHasChanged();
         }
     }
