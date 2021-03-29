@@ -18,7 +18,6 @@
     <HeaderContent>
         <MudTh></MudTh>
         <MudTh>Guild</MudTh>
-        <MudTh>Region</MudTh>
         <MudTh>Realm</MudTh>
         <MudTh></MudTh>
         <MudTh>Progress</MudTh>
@@ -26,57 +25,39 @@
     <RowTemplate>
         <MudTd DataLabel="Rank">
             @if (context.rank <= 3)
-                {
+            {
                 <b style="color: #FF8000">@context.rank</b>
-                }
-                else if (context.rank > 3 && context.rank <= 10)
-                {
+            }
+            else if (context.rank > 3 && context.rank <= 10)
+            {
                 <b style="color: #A335EE">@context.rank</b>
-                }
-                else
-                {
+            }
+            else
+            {
                 <b style="color: #0070DD">@context.rank</b>
-                }
+            }
         </MudTd>
         <MudTd DataLabel="Guild">
             @if (context.faction == "ALLIANCE")
-                {
+            {
                 <span style="color: #0C81CE;">@context.name</span>
-                }
-                else
-                {
+            }
+            else
+            {
                 <span style="color: #CD2B00;">@context.name</span>
-                }
+            }
 
         </MudTd>
-        <MudTd DataLabel="Region">
-            @if (context.region == "cn")
-                {
-                <MudAvatar Image="img/flag-china.png" Size="Size.Small" Class="ma-2" />
-                }
-                else if (context.region == "eu")
-                {
-                <MudAvatar Image="img/flag-european-union.png" Size="Size.Small" Class="ma-2" />
-                }
-                else if (context.region == "us")
-                {
-                <MudAvatar Image="img/flag-united-states.png" Size="Size.Small" Class="ma-2" />
-                }
-                else
-                {
-                <b>@context.region</b>
-                }
-        </MudTd>
-        <MudTd DataLabel="Realm">@context.realm</MudTd>
+        <MudTd DataLabel="Realm"><MudChip Size="Size.Small" Label="true">@context.region</MudChip> @context.realm</MudTd>
         <MudTd DataLabel="Progress">
             @if (context.faction == "ALLIANCE")
-                {
+            {
                 <MudAvatar Image="img/alliance.png" Size="Size.Small" Class="ma-2" />
-                }
-                else
-                {
+            }
+            else
+            {
                 <MudAvatar Image="img/horde.png" Size="Size.Small" Class="ma-2" />
-                }
+            }
         </MudTd>
         <MudTd DataLabel="Progress">8/8 (Mythic)</MudTd>
     </RowTemplate>
@@ -100,7 +81,7 @@
 
     public string raidName = "castle-nathria";
 
-    //public List<GuildRecord> records { get; set; }
+    public List<GuildRecord> records { get; set; }
 
     private string searchString = "";
 
@@ -115,10 +96,10 @@
     private async Task<TableData<GuildRecord>> ServerReload(TableState state)
     {
         // bind records from database
-        List<GuildRecord> records = await _context.Records.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToListAsync();
+        records = _context.Records.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToList();
 
-        // if record is older than 5 min then all a new record from the api and update the database
-        if (records.Count == 0 || records[0].age < DateTime.Now.AddMinutes(-1))
+        // if record is older than 10 min then all a new record from the api and update the database
+        if (records.Count == 0 || records[0].age < DateTime.Now.AddMinutes(-10))
         {
             // Call Blizzard API
             // Mythic Raid Leaderboard API
@@ -133,8 +114,8 @@
                 string resultAlliance = apiResponseAlliance.Content.ReadAsStringAsync().Result;
 
                 // Convert to data arrays
-                LeaderboardEntries? GuildRankingsListHorde = JsonConvert.DeserializeObject<LeaderboardEntries>(resultHorde);
-                LeaderboardEntries? GuildRankingsListAlliance = JsonConvert.DeserializeObject<LeaderboardEntries>(resultAlliance);
+                var GuildRankingsListHorde = JsonConvert.DeserializeObject<LeaderboardEntries>(resultHorde);
+                var GuildRankingsListAlliance = JsonConvert.DeserializeObject<LeaderboardEntries>(resultAlliance);
 
                 // combine the two data arrays
                 GuildRanking[] guildRankingsArray = new GuildRanking[GuildRankingsListAlliance.entries.Length + GuildRankingsListHorde.entries.Length];
@@ -153,7 +134,7 @@
                 // remove old records
                 var rows = from x in _context.Records where x.raidName.Equals(raidName) select x;
                 _context.RemoveRange(rows);
-                await _context.SaveChangesAsync();
+                _context.SaveChanges();
 
                 // add new records
                 records = new List<GuildRecord>();
@@ -175,14 +156,16 @@
                 }
 
                 _context.Records.AddRange(records);
-                await _context.SaveChangesAsync();
+                _context.SaveChanges();
 
 
                 // bind the new records to the view model!
-                records = await _context.Records.OrderBy(x => x.timestamp).ToListAsync();
+                records = _context.Records.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToList();
                 StateHasChanged();
             }
         }
+
+        StateHasChanged();
         return new TableData<GuildRecord>() { Items = records };
     }
 
