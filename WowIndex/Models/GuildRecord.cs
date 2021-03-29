@@ -25,5 +25,6 @@ namespace WowIndex.Models
 
         public long timestamp { get; set; }
 
+        public string raidName { get; set; }
     }
 }

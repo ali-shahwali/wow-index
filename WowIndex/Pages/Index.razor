@@ -1,92 +1,90 @@
 ﻿@page "/"
 
-@if (records == null)
+@if (table == null)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
 }
 
 <MudTabs Elevation="4" AlwaysShowScrollButtons="true" Rounded="false" Color="@Color.Dark">
-    <MudTabPanel Text="Castle Nathria" />
-    <MudTabPanel Text="Ny'alotha" />
-    <MudTabPanel Text="The Eternal Palace" />
-    <MudTabPanel Text="Crucible of Storms" />
-    <MudTabPanel Text="Battle of Dazar'alor" />
-    <MudTabPanel Text="Uldir" />
+    <MudTabPanel OnClick="@(e => ChangeRaid("castle-nathria"))" Text="Castle Nathria" />
+    <MudTabPanel OnClick="@(e => ChangeRaid("nyalotha-the-waking-city"))" Text="Ny'alotha" />
+    <MudTabPanel OnClick="@(e => ChangeRaid("the-eternal-palace"))" Text="The Eternal Palace" />
+    <MudTabPanel OnClick="@(e => ChangeRaid("crucible-of-storms"))" Text="Crucible of Storms" />
+    <MudTabPanel OnClick="@(e => ChangeRaid("battle-of-dazaralor"))" Text="Battle of Dazar'alor" />
+    <MudTabPanel OnClick="@(e => ChangeRaid("uldir"))" Text="Uldir" />
 </MudTabs>
 
-@if (records != null)
-{
-    <MudTable RowsPerPage="100" Dense="true" Height="calc(100vh - 164px)" FixedHeader="true" Items="@records" Hover="true">
-        <HeaderContent>
-            <MudTh></MudTh>
-            <MudTh>Guild</MudTh>
-            <MudTh>Region</MudTh>
-            <MudTh>Realm</MudTh>
-            <MudTh></MudTh>
-            <MudTh>Progress</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Rank">
-                @if (context.rank <= 3)
-                    {
-                    <b style="color: #FF8000">@context.rank</b>
-                    }
-                    else if (context.rank > 3 && context.rank <= 10)
-                    {
-                    <b style="color: #A335EE">@context.rank</b>
-                    }
-                    else
-                    {
-                    <b style="color: #0070DD">@context.rank</b>
-                    }
-            </MudTd>
-            <MudTd DataLabel="Guild">
-                @if (context.faction == "ALLIANCE")
-                    {
-                    <span style="color: #0C81CE;">@context.name</span>
-                    }
-                    else
-                    {
-                    <span style="color: #CD2B00;">@context.name</span>
-                    }
+<MudTable ServerData="@(new Func<TableState, Task<TableData<GuildRecord>>>(ServerReload))" RowsPerPage="100" Dense="true" Height="calc(100vh - 164px)" FixedHeader="true" @ref="table" Hover="true">
+    <HeaderContent>
+        <MudTh></MudTh>
+        <MudTh>Guild</MudTh>
+        <MudTh>Region</MudTh>
+        <MudTh>Realm</MudTh>
+        <MudTh></MudTh>
+        <MudTh>Progress</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Rank">
+            @if (context.rank <= 3)
+                {
+                <b style="color: #FF8000">@context.rank</b>
+                }
+                else if (context.rank > 3 && context.rank <= 10)
+                {
+                <b style="color: #A335EE">@context.rank</b>
+                }
+                else
+                {
+                <b style="color: #0070DD">@context.rank</b>
+                }
+        </MudTd>
+        <MudTd DataLabel="Guild">
+            @if (context.faction == "ALLIANCE")
+                {
+                <span style="color: #0C81CE;">@context.name</span>
+                }
+                else
+                {
+                <span style="color: #CD2B00;">@context.name</span>
+                }
 
-            </MudTd>
-            <MudTd DataLabel="Region">
-                @if (context.region == "cn")
-                    {
-                    <MudAvatar Image="img/flag-china.png" Size="Size.Small" Class="ma-2" />
-                    }
-                    else if (context.region == "eu")
-                    {
-                    <MudAvatar Image="img/flag-european-union.png" Size="Size.Small" Class="ma-2" />
-                    }
-                    else if (context.region == "us")
-                    {
-                    <MudAvatar Image="img/flag-united-states.png" Size="Size.Small" Class="ma-2" />
-                    }
-                    else
-                    {
-                    <b>@context.region</b>
-                    }
-            </MudTd>
-            <MudTd DataLabel="Realm">@context.realm</MudTd>
-            <MudTd DataLabel="Progress">
-                @if (context.faction == "ALLIANCE")
-                    {
-                    <MudAvatar Image="img/alliance.png" Size="Size.Small" Class="ma-2" />
-                    }
-                    else
-                    {
-                    <MudAvatar Image="img/horde.png" Size="Size.Small" Class="ma-2" />
-                    }
-            </MudTd>
-            <MudTd DataLabel="Progress">8/8 (Mythic)</MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager />
-        </PagerContent>
-    </MudTable>
-}
+        </MudTd>
+        <MudTd DataLabel="Region">
+            @if (context.region == "cn")
+                {
+                <MudAvatar Image="img/flag-china.png" Size="Size.Small" Class="ma-2" />
+                }
+                else if (context.region == "eu")
+                {
+                <MudAvatar Image="img/flag-european-union.png" Size="Size.Small" Class="ma-2" />
+                }
+                else if (context.region == "us")
+                {
+                <MudAvatar Image="img/flag-united-states.png" Size="Size.Small" Class="ma-2" />
+                }
+                else
+                {
+                <b>@context.region</b>
+                }
+        </MudTd>
+        <MudTd DataLabel="Realm">@context.realm</MudTd>
+        <MudTd DataLabel="Progress">
+            @if (context.faction == "ALLIANCE")
+                {
+                <MudAvatar Image="img/alliance.png" Size="Size.Small" Class="ma-2" />
+                }
+                else
+                {
+                <MudAvatar Image="img/horde.png" Size="Size.Small" Class="ma-2" />
+                }
+        </MudTd>
+        <MudTd DataLabel="Progress">8/8 (Mythic)</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
 @code {
 
     /*
@@ -98,9 +96,11 @@
     Short-term Throttle - 100 requests per second
 
     */
+    public MudTable<GuildRecord> table;
 
+    public string raidName = "castle-nathria";
 
-    public List<GuildRecord> records { get; set; }
+    //public List<GuildRecord> records { get; set; }
 
     private string searchString = "";
 
@@ -112,29 +112,32 @@
         return APIclient;
     }
 
-    protected override async Task OnInitializedAsync()
+    private async Task<TableData<GuildRecord>> ServerReload(TableState state)
     {
         // bind records from database
-        records = await _context.Records.OrderBy(x => x.timestamp).ToListAsync();
+        List<GuildRecord> records = await _context.Records.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToListAsync();
 
         // if record is older than 5 min then all a new record from the api and update the database
-        if (records.Count == 0 || records[0].age < DateTime.Now.AddMinutes(-5))
+        if (records.Count == 0 || records[0].age < DateTime.Now.AddMinutes(-1))
         {
             // Call Blizzard API
-            var apiResponseAlliance = await apiConnection().GetAsync("data/wow/leaderboard/hall-of-fame/castle-nathria/alliance?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2");
-            var apiResponseHorde = await apiConnection().GetAsync("data/wow/leaderboard/hall-of-fame/castle-nathria/horde?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2");
+            // Mythic Raid Leaderboard API
+            // Returns the leaderboard for a given raid and faction
+            var apiResponseAlliance = await apiConnection().GetAsync($"data/wow/leaderboard/hall-of-fame/{raidName}/alliance?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2");
+            var apiResponseHorde = await apiConnection().GetAsync($"data/wow/leaderboard/hall-of-fame/{raidName}/horde?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2");
+
             if (apiResponseHorde.IsSuccessStatusCode && apiResponseAlliance.IsSuccessStatusCode)
             {
                 // get json strings
-                var resultHorde = apiResponseHorde.Content.ReadAsStringAsync().Result;
-                var resultAlliance = apiResponseAlliance.Content.ReadAsStringAsync().Result;
+                string resultHorde = apiResponseHorde.Content.ReadAsStringAsync().Result;
+                string resultAlliance = apiResponseAlliance.Content.ReadAsStringAsync().Result;
 
                 // Convert to data arrays
-                var GuildRankingsListHorde = JsonConvert.DeserializeObject<LeaderboardEntries>(resultHorde);
-                var GuildRankingsListAlliance = JsonConvert.DeserializeObject<LeaderboardEntries>(resultAlliance);
+                LeaderboardEntries? GuildRankingsListHorde = JsonConvert.DeserializeObject<LeaderboardEntries>(resultHorde);
+                LeaderboardEntries? GuildRankingsListAlliance = JsonConvert.DeserializeObject<LeaderboardEntries>(resultAlliance);
 
                 // combine the two data arrays
-                var guildRankingsArray = new GuildRanking[GuildRankingsListAlliance.entries.Length + GuildRankingsListHorde.entries.Length];
+                GuildRanking[] guildRankingsArray = new GuildRanking[GuildRankingsListAlliance.entries.Length + GuildRankingsListHorde.entries.Length];
                 int j = 0;
                 for (int i = 0; i < guildRankingsArray.Length; i++)
                 {
@@ -148,14 +151,14 @@
                 }
 
                 // remove old records
-                var rows = from x in _context.Records select x;
+                var rows = from x in _context.Records where x.raidName.Equals(raidName) select x;
                 _context.RemoveRange(rows);
                 await _context.SaveChangesAsync();
 
                 // add new records
                 records = new List<GuildRecord>();
                 j = 1;
-                foreach (var guild in guildRankingsArray.OrderBy(x => x.timestamp).ToList())
+                foreach (GuildRanking guild in guildRankingsArray.OrderBy(x => x.timestamp).ToList())
                 {
                     records.Add(new GuildRecord()
                     {
@@ -165,7 +168,8 @@
                         name = guild.guild.name,
                         faction = guild.faction.type,
                         age = DateTime.Now,
-                        timestamp = guild.timestamp
+                        timestamp = guild.timestamp,
+                        raidName = raidName
                     });
                     j++;
                 }
@@ -179,5 +183,13 @@
                 StateHasChanged();
             }
         }
+        return new TableData<GuildRecord>() { Items = records };
+    }
+
+    public async Task ChangeRaid(string raid)
+    {
+        raidName = raid;
+
+        await table.ReloadServerData();
     }
 }
