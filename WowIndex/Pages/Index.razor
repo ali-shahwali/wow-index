@@ -9,11 +9,6 @@
 {
     <MudContainer>
         <MudTable RowsPerPage="100" Dense="true" Height="calc(100vh - 116px)" FixedHeader="true" Items="@records" Hover="true">
-            <!--<ToolBarContent>
-                <MudText Typo="Typo.h6">Top 200 guilds</MudText>
-                <MudToolBarSpacer />-->
-            @*<MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>*@
-            <!--</ToolBarContent>-->
             <HeaderContent>
                 <MudTh></MudTh>
                 <MudTh>Guild</MudTh>
@@ -27,7 +22,24 @@
                     {
                     <MudTd Class="ally-blue" DataLabel="Rank"><b>@context.rank</b></MudTd>
                     <MudTd Class="ally-blue" DataLabel="Guild">@context.name</MudTd>
-                    <MudTd Class="ally-blue" DataLabel="Region">@context.region</MudTd>
+                    <MudTd Class="ally-blue" DataLabel="Region">
+                        @if (context.region == "cn")
+                            {
+                            <MudAvatar Image="img/flag-china.png" Size="Size.Small" Class="ma-2" />
+                            }
+                            else if (context.region == "eu")
+                            {
+                            <MudAvatar Image="img/flag-european-union.png" Size="Size.Small" Class="ma-2" />
+                            }
+                            else if (context.region == "us")
+                            {
+                            <MudAvatar Image="img/flag-united-states.png" Size="Size.Small" Class="ma-2" />
+                            }
+                            else
+                            {
+                            @context.region
+                            }
+                    </MudTd>
                     <MudTd Class="ally-blue" DataLabel="Realm">@context.realm</MudTd>
                     <MudTd Class="ally-blue" DataLabel="Progress">
                         <MudAvatar Image="img/alliance.png" Size="Size.Small" Class="ma-2" />
@@ -38,7 +50,24 @@
                     {
                     <MudTd Class="horde-red" DataLabel="Rank"><b>@context.rank</b></MudTd>
                     <MudTd Class="horde-red" DataLabel="Guild">@context.name</MudTd>
-                    <MudTd Class="horde-red" DataLabel="Region">@context.region</MudTd>
+                    <MudTd Class="horde-red" DataLabel="Region">
+                        @if (context.region == "cn")
+                            {
+                            <MudAvatar Image="img/flag-china.png" Size="Size.Small" Class="ma-2" />
+                            }
+                            else if (context.region == "eu")
+                            {
+                            <MudAvatar Image="img/flag-european-union.png" Size="Size.Small" Class="ma-2" />
+                            }
+                            else if (context.region == "us")
+                            {
+                            <MudAvatar Image="img/flag-united-states.png" Size="Size.Small" Class="ma-2" />
+                            }
+                            else
+                            {
+                            @context.region
+                            }
+                    </MudTd>
                     <MudTd Class="horde-red" DataLabel="Realm">@context.realm</MudTd>
                     <MudTd Class="horde-red" DataLabel="Progress">
                         <MudAvatar Image="img/horde.png" Size="Size.Small" Class="ma-2" />
@@ -71,7 +100,7 @@
         records = await _context.Records.OrderBy(x => x.timestamp).ToListAsync();
 
         // if record is older than 1 min then all a new record from the api and update the database
-        if (records.Count == 0 || records[0].age < DateTime.Now.AddSeconds(-30))
+        if (records.Count == 0 || records[0].age < DateTime.Now.AddMinutes(-1))
         {
             // Call Blizzard API
             var apiResponseAlliance = await apiConnection().GetAsync("data/wow/leaderboard/hall-of-fame/castle-nathria/alliance?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2");
@@ -100,13 +129,16 @@
                     }
                 }
 
-                // reset the database table
-                await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE Records");
+                // remove old records
+                var rows = from o in _context.Records select o;
+                _context.RemoveRange(rows);
                 await _context.SaveChangesAsync();
 
+                // add new records
+                records = new List<GuildRecord>();
                 foreach (var guild in guildRankingsArray.ToList())
                 {
-                    await _context.Records.AddAsync(new GuildRecord()
+                    records.Add(new GuildRecord()
                     {
                         rank = guild.rank,
                         region = guild.region,
@@ -117,7 +149,11 @@
                     });
                 }
 
+                _context.Records.AddRange(records);
                 await _context.SaveChangesAsync();
+
+
+                // bind the new records to the view model!
                 records = await _context.Records.OrderBy(x => x.timestamp).ToListAsync();
                 StateHasChanged();
             }
