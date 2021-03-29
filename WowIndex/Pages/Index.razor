@@ -136,17 +136,20 @@
 
                 // add new records
                 records = new List<GuildRecord>();
-                foreach (var guild in guildRankingsArray.ToList())
+                j = 1;
+                foreach (var guild in guildRankingsArray.OrderBy(x => x.timestamp).ToList())
                 {
                     records.Add(new GuildRecord()
                     {
-                        rank = guild.rank,
+                        rank = j,
                         region = guild.region,
+                        realm = guild.guild.realm.name,
                         name = guild.guild.name,
                         faction = guild.faction.type,
                         age = DateTime.Now,
                         timestamp = guild.timestamp
                     });
+                    j++;
                 }
 
                 _context.Records.AddRange(records);
