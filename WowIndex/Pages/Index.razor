@@ -5,83 +5,128 @@
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
 }
 
+<MudTabs Elevation="4" AlwaysShowScrollButtons="true" Rounded="false" Color="@Color.Dark">
+    <MudTabPanel Text="Castle Nathria" />
+    <MudTabPanel Text="Ny'alotha" />
+    <MudTabPanel Text="The Eternal Palace" />
+    <MudTabPanel Text="Crucible of Storms" />
+    <MudTabPanel Text="Battle of Dazar'alor" />
+    <MudTabPanel Text="Uldir" />
+</MudTabs>
+
 @if (records != null)
 {
-    <MudContainer>
-        <MudTable RowsPerPage="100" Dense="true" Height="calc(100vh - 116px)" FixedHeader="true" Items="@records" Hover="true">
-            <HeaderContent>
-                <MudTh></MudTh>
-                <MudTh>Guild</MudTh>
-                <MudTh>Region</MudTh>
-                <MudTh>Realm</MudTh>
-                <MudTh></MudTh>
-                <MudTh>Progress</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                @if (context.faction == "ALLIANCE")
-                    {
-                    <MudTd Class="ally-blue" DataLabel="Rank"><b>@context.rank</b></MudTd>
-                    <MudTd Class="ally-blue" DataLabel="Guild">@context.name</MudTd>
-                    <MudTd Class="ally-blue" DataLabel="Region">
-                        @if (context.region == "cn")
-                            {
-                            <MudAvatar Image="img/flag-china.png" Size="Size.Small" Class="ma-2" />
-                            }
-                            else if (context.region == "eu")
-                            {
-                            <MudAvatar Image="img/flag-european-union.png" Size="Size.Small" Class="ma-2" />
-                            }
-                            else if (context.region == "us")
-                            {
-                            <MudAvatar Image="img/flag-united-states.png" Size="Size.Small" Class="ma-2" />
-                            }
-                            else
-                            {
-                            @context.region
-                            }
-                    </MudTd>
-                    <MudTd Class="ally-blue" DataLabel="Realm">@context.realm</MudTd>
-                    <MudTd Class="ally-blue" DataLabel="Progress">
-                        <MudAvatar Image="img/alliance.png" Size="Size.Small" Class="ma-2" />
-                    </MudTd>
-                    <MudTd Class="ally-blue" DataLabel="Progress"></MudTd>
-                    }
-                    else
-                    {
-                    <MudTd Class="horde-red" DataLabel="Rank"><b>@context.rank</b></MudTd>
-                    <MudTd Class="horde-red" DataLabel="Guild">@context.name</MudTd>
-                    <MudTd Class="horde-red" DataLabel="Region">
-                        @if (context.region == "cn")
-                            {
-                            <MudAvatar Image="img/flag-china.png" Size="Size.Small" Class="ma-2" />
-                            }
-                            else if (context.region == "eu")
-                            {
-                            <MudAvatar Image="img/flag-european-union.png" Size="Size.Small" Class="ma-2" />
-                            }
-                            else if (context.region == "us")
-                            {
-                            <MudAvatar Image="img/flag-united-states.png" Size="Size.Small" Class="ma-2" />
-                            }
-                            else
-                            {
-                            @context.region
-                            }
-                    </MudTd>
-                    <MudTd Class="horde-red" DataLabel="Realm">@context.realm</MudTd>
-                    <MudTd Class="horde-red" DataLabel="Progress">
-                        <MudAvatar Image="img/horde.png" Size="Size.Small" Class="ma-2" />
-                    </MudTd>
-                    <MudTd Class="horde-red" DataLabel="Progress"></MudTd>
-                    }
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager />
-            </PagerContent>
-        </MudTable>
-    </MudContainer>
+    <MudTable RowsPerPage="100" Dense="true" Height="calc(100vh - 164px)" FixedHeader="true" Items="@records" Hover="true">
+        <HeaderContent>
+            <MudTh></MudTh>
+            <MudTh>Guild</MudTh>
+            <MudTh>Region</MudTh>
+            <MudTh>Realm</MudTh>
+            <MudTh></MudTh>
+            <MudTh>Progress</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            @if (context.faction == "ALLIANCE")
+                {
+                <MudTd Class="ally-blue" DataLabel="Rank">
+                    @if (context.rank <= 3)
+                        {
+                        <b style="color: #FF8000">@context.rank</b>
+                        }
+                        else if (context.rank > 3 && context.rank <= 10)
+                        {
+                        <b style="color: #A335EE">@context.rank</b>
+                        }
+                        else
+                        {
+                        <b>@context.rank</b>
+                        }
+                </MudTd>
+                <MudTd Class="ally-blue" DataLabel="Guild">@context.name</MudTd>
+                <MudTd Class="ally-blue" DataLabel="Region">
+                    @if (context.region == "cn")
+                        {
+                        <MudAvatar Image="img/flag-china.png" Size="Size.Small" Class="ma-2" />
+                        }
+                        else if (context.region == "eu")
+                        {
+                        <MudAvatar Image="img/flag-european-union.png" Size="Size.Small" Class="ma-2" />
+                        }
+                        else if (context.region == "us")
+                        {
+                        <MudAvatar Image="img/flag-united-states.png" Size="Size.Small" Class="ma-2" />
+                        }
+                        else
+                        {
+                        <b>@context.rank</b>
+                        }
+                </MudTd>
+                <MudTd Class="ally-blue" DataLabel="Realm">@context.realm</MudTd>
+                <MudTd Class="ally-blue" DataLabel="Progress">
+                    <MudAvatar Image="img/alliance.png" Size="Size.Small" Class="ma-2" />
+                </MudTd>
+                <MudTd Class="ally-blue" DataLabel="Progress">8/8 (Mythic)</MudTd>
+                }
+                else
+                {
+                <MudTd Class="horde-red" DataLabel="Rank">
+                    @if (context.rank <= 3)
+                        {
+                        <b style="color: #FF8000">@context.rank</b>
+                        }
+                        else if (context.rank > 3 && context.rank <= 10)
+                        {
+                        <b style="color: #A335EE">@context.rank</b>
+                        }
+                        else
+                        {
+                        @context.rank
+                        }
+                </MudTd>
+                <MudTd Class="horde-red" DataLabel="Guild">@context.name</MudTd>
+                <MudTd Class="horde-red" DataLabel="Region">
+                    @if (context.region == "cn")
+                        {
+                        <MudAvatar Image="img/flag-china.png" Size="Size.Small" Class="ma-2" />
+                        }
+                        else if (context.region == "eu")
+                        {
+                        <MudAvatar Image="img/flag-european-union.png" Size="Size.Small" Class="ma-2" />
+                        }
+                        else if (context.region == "us")
+                        {
+                        <MudAvatar Image="img/flag-united-states.png" Size="Size.Small" Class="ma-2" />
+                        }
+                        else
+                        {
+                        @context.region
+                        }
+                </MudTd>
+                <MudTd Class="horde-red" DataLabel="Realm">@context.realm</MudTd>
+                <MudTd Class="horde-red" DataLabel="Progress">
+                    <MudAvatar Image="img/horde.png" Size="Size.Small" Class="ma-2" />
+                </MudTd>
+                <MudTd Class="horde-red" DataLabel="Progress">8/8 (Mythic)</MudTd>
+                }
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
 }
 @code {
+
+    /*
+
+    Notice: Blizzard API Request Limits
+
+    Long-term Quota - 36,000 requests per hour
+
+    Short-term Throttle - 100 requests per second
+
+    */
+
+
     public List<GuildRecord> records { get; set; }
 
     private string searchString = "";
@@ -99,8 +144,8 @@
         // bind records from database
         records = await _context.Records.OrderBy(x => x.timestamp).ToListAsync();
 
-        // if record is older than 1 min then all a new record from the api and update the database
-        if (records.Count == 0 || records[0].age < DateTime.Now.AddMinutes(-1))
+        // if record is older than 5 min then all a new record from the api and update the database
+        if (records.Count == 0 || records[0].age < DateTime.Now.AddMinutes(-5))
         {
             // Call Blizzard API
             var apiResponseAlliance = await apiConnection().GetAsync("data/wow/leaderboard/hall-of-fame/castle-nathria/alliance?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2");
