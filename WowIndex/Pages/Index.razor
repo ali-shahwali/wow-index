@@ -26,88 +26,61 @@
             <MudTh>Progress</MudTh>
         </HeaderContent>
         <RowTemplate>
-            @if (context.faction == "ALLIANCE")
-                {
-                <MudTd Class="ally-blue" DataLabel="Rank">
-                    @if (context.rank <= 3)
-                        {
-                        <b style="color: #FF8000">@context.rank</b>
-                        }
-                        else if (context.rank > 3 && context.rank <= 10)
-                        {
-                        <b style="color: #A335EE">@context.rank</b>
-                        }
-                        else
-                        {
-                        <b>@context.rank</b>
-                        }
-                </MudTd>
-                <MudTd Class="ally-blue" DataLabel="Guild">@context.name</MudTd>
-                <MudTd Class="ally-blue" DataLabel="Region">
-                    @if (context.region == "cn")
-                        {
-                        <MudAvatar Image="img/flag-china.png" Size="Size.Small" Class="ma-2" />
-                        }
-                        else if (context.region == "eu")
-                        {
-                        <MudAvatar Image="img/flag-european-union.png" Size="Size.Small" Class="ma-2" />
-                        }
-                        else if (context.region == "us")
-                        {
-                        <MudAvatar Image="img/flag-united-states.png" Size="Size.Small" Class="ma-2" />
-                        }
-                        else
-                        {
-                        <b>@context.rank</b>
-                        }
-                </MudTd>
-                <MudTd Class="ally-blue" DataLabel="Realm">@context.realm</MudTd>
-                <MudTd Class="ally-blue" DataLabel="Progress">
+            <MudTd DataLabel="Rank">
+                @if (context.rank <= 3)
+                    {
+                    <b style="color: #FF8000">@context.rank</b>
+                    }
+                    else if (context.rank > 3 && context.rank <= 10)
+                    {
+                    <b style="color: #A335EE">@context.rank</b>
+                    }
+                    else
+                    {
+                    <b style="color: #0070DD">@context.rank</b>
+                    }
+            </MudTd>
+            <MudTd DataLabel="Guild">
+                @if (context.faction == "ALLIANCE")
+                    {
+                    <span style="color: #0C81CE;">@context.name</span>
+                    }
+                    else
+                    {
+                    <span style="color: #CD2B00;">@context.name</span>
+                    }
+
+            </MudTd>
+            <MudTd DataLabel="Region">
+                @if (context.region == "cn")
+                    {
+                    <MudAvatar Image="img/flag-china.png" Size="Size.Small" Class="ma-2" />
+                    }
+                    else if (context.region == "eu")
+                    {
+                    <MudAvatar Image="img/flag-european-union.png" Size="Size.Small" Class="ma-2" />
+                    }
+                    else if (context.region == "us")
+                    {
+                    <MudAvatar Image="img/flag-united-states.png" Size="Size.Small" Class="ma-2" />
+                    }
+                    else
+                    {
+                    <b>@context.region</b>
+                    }
+            </MudTd>
+            <MudTd DataLabel="Realm">@context.realm</MudTd>
+            <MudTd DataLabel="Progress">
+                @if (context.faction == "ALLIANCE")
+                    {
                     <MudAvatar Image="img/alliance.png" Size="Size.Small" Class="ma-2" />
-                </MudTd>
-                <MudTd Class="ally-blue" DataLabel="Progress">8/8 (Mythic)</MudTd>
-                }
-                else
-                {
-                <MudTd Class="horde-red" DataLabel="Rank">
-                    @if (context.rank <= 3)
-                        {
-                        <b style="color: #FF8000">@context.rank</b>
-                        }
-                        else if (context.rank > 3 && context.rank <= 10)
-                        {
-                        <b style="color: #A335EE">@context.rank</b>
-                        }
-                        else
-                        {
-                        @context.rank
-                        }
-                </MudTd>
-                <MudTd Class="horde-red" DataLabel="Guild">@context.name</MudTd>
-                <MudTd Class="horde-red" DataLabel="Region">
-                    @if (context.region == "cn")
-                        {
-                        <MudAvatar Image="img/flag-china.png" Size="Size.Small" Class="ma-2" />
-                        }
-                        else if (context.region == "eu")
-                        {
-                        <MudAvatar Image="img/flag-european-union.png" Size="Size.Small" Class="ma-2" />
-                        }
-                        else if (context.region == "us")
-                        {
-                        <MudAvatar Image="img/flag-united-states.png" Size="Size.Small" Class="ma-2" />
-                        }
-                        else
-                        {
-                        @context.region
-                        }
-                </MudTd>
-                <MudTd Class="horde-red" DataLabel="Realm">@context.realm</MudTd>
-                <MudTd Class="horde-red" DataLabel="Progress">
+                    }
+                    else
+                    {
                     <MudAvatar Image="img/horde.png" Size="Size.Small" Class="ma-2" />
-                </MudTd>
-                <MudTd Class="horde-red" DataLabel="Progress">8/8 (Mythic)</MudTd>
-                }
+                    }
+            </MudTd>
+            <MudTd DataLabel="Progress">8/8 (Mythic)</MudTd>
         </RowTemplate>
         <PagerContent>
             <MudTablePager />
@@ -175,7 +148,7 @@
                 }
 
                 // remove old records
-                var rows = from o in _context.Records select o;
+                var rows = from x in _context.Records select x;
                 _context.RemoveRange(rows);
                 await _context.SaveChangesAsync();
 
