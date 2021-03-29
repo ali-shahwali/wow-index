@@ -19,7 +19,7 @@ namespace WowIndex.Models
 
         public string faction { get; set; }
 
-        public int rank { get; set; }
+        public long rank { get; set; }
 
         public int progress { get; set; }
 

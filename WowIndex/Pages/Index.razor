@@ -1,5 +1,4 @@
 ﻿@page "/"
-@inject WowIndex.Data.ApplicationDbContext _context
 
 @if (records == null)
 {
@@ -54,8 +53,7 @@
     </MudContainer>
 }
 @code {
-
-    public List<GuildRecord> records;
+    public List<GuildRecord> records { get; set; }
 
     private string searchString = "";
 
@@ -69,79 +67,60 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var results = _context.Records.FirstOrDefault();
+        // bind records from database
+        records = await _context.Records.OrderBy(x => x.timestamp).ToListAsync();
 
-        if(results == null  || results.age < DateTime.Now.AddMinutes(-1))
+        // if record is older than 1 min then all a new record from the api and update the database
+        if (records.Count == 0 || records[0].age < DateTime.Now.AddSeconds(-30))
         {
-            records = new List<GuildRecord>();
+            // Call Blizzard API
             var apiResponseAlliance = await apiConnection().GetAsync("data/wow/leaderboard/hall-of-fame/castle-nathria/alliance?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2");
             var apiResponseHorde = await apiConnection().GetAsync("data/wow/leaderboard/hall-of-fame/castle-nathria/horde?namespace=dynamic-us&locale=en_US&access_token=USOnT59Qy4a16BgShX3ktbzt0SeqzoljP2");
             if (apiResponseHorde.IsSuccessStatusCode && apiResponseAlliance.IsSuccessStatusCode)
             {
+                // get json strings
                 var resultHorde = apiResponseHorde.Content.ReadAsStringAsync().Result;
                 var resultAlliance = apiResponseAlliance.Content.ReadAsStringAsync().Result;
+
+                // Convert to data arrays
                 var GuildRankingsListHorde = JsonConvert.DeserializeObject<LeaderboardEntries>(resultHorde);
                 var GuildRankingsListAlliance = JsonConvert.DeserializeObject<LeaderboardEntries>(resultAlliance);
 
-                GuildRanking[] Leaderboard = new GuildRanking[GuildRankingsListAlliance.entries.Length + GuildRankingsListHorde.entries.Length];
-
+                // combine the two data arrays
+                var guildRankingsArray = new GuildRanking[GuildRankingsListAlliance.entries.Length + GuildRankingsListHorde.entries.Length];
                 int j = 0;
-                for (int i = 0; i < Leaderboard.Length; i++)
+                for (int i = 0; i < guildRankingsArray.Length; i++)
                 {
                     if (i < 100)
-                        Leaderboard[i] = GuildRankingsListHorde.entries[i];
+                        guildRankingsArray[i] = GuildRankingsListHorde.entries[i];
                     else
                     {
-                        Leaderboard[i] = GuildRankingsListAlliance.entries[j];
+                        guildRankingsArray[i] = GuildRankingsListAlliance.entries[j];
                         j++;
                     }
                 }
 
+                // reset the database table
                 await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE Records");
                 await _context.SaveChangesAsync();
 
-                List<GuildRanking> leaderboard = Leaderboard.OrderBy(x => x.timestamp).ToList();
-                j = 1;
-                foreach (var item in leaderboard)
+                foreach (var guild in guildRankingsArray.ToList())
                 {
-                    GuildRecord record = new GuildRecord()
+                    await _context.Records.AddAsync(new GuildRecord()
                     {
-                        rank = j,
-                        realm = item.region,
-                        region = item.region,
-                        name = item.guild.name,
-                        faction = item.faction.type,
+                        rank = guild.rank,
+                        region = guild.region,
+                        name = guild.guild.name,
+                        faction = guild.faction.type,
                         age = DateTime.Now,
-                        timestamp = item.timestamp
-                    };
-                    _context.Records.Add(record);
-                    j++;
+                        timestamp = guild.timestamp
+                    });
                 }
 
                 await _context.SaveChangesAsync();
-
                 records = await _context.Records.OrderBy(x => x.timestamp).ToListAsync();
                 StateHasChanged();
             }
         }
-        else
-        {
-            records = await _context.Records.OrderBy(x => x.timestamp).ToListAsync();
-        }
     }
-
-    /*
-    private bool FilterFunc(GuildRanking element)
-    {
-        if (string.IsNullOrWhiteSpace(searchString))
-            return true;
-        if (element.Sign.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
-        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
-        if ($"{element.Number} {element.Position} {element.Molar}".Contains(searchString))
-            return true;
-        return false;
-    }
-    */
 }
