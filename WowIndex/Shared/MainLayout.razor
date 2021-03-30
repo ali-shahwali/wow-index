@@ -8,6 +8,15 @@
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudAppBarSpacer />
+        @if (isLoggedIn)
+        {
+
+        }
+        else
+        {
+            <MudButton Class="mr-5" StartIcon="@Icons.Material.Filled.NotStarted" Link="/Login" Color="Color.Success">Login</MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.NotStarted" Link="/Register" Color="Color.Success">Register</MudButton>
+        }
         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
@@ -26,6 +35,8 @@
 </MudLayout>
 
 @code {
+
+    bool isLoggedIn = false;
 
     bool _drawerOpen = true;
 
@@ -54,5 +65,19 @@
             ActionDisabledBackground = "rgba(255,255,255, 0.12)"
         }
     };
+
+    [CascadingParameter]
+    protected Task<AuthenticationState> AuthStat { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        var user = (await AuthStat).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            isLoggedIn = false;
+        }
+    }
 
 }
