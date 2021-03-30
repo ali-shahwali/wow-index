@@ -10,8 +10,8 @@ using WowIndex.Data;
 namespace WowIndex.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210328204542_Model3")]
-    partial class Model3
+    [Migration("20210330202548_Model10")]
+    partial class Model10
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -240,11 +240,20 @@ namespace WowIndex.Data.Migrations
                     b.Property<int>("progress")
                         .HasColumnType("int");
 
+                    b.Property<string>("raidName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("rank")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("realm")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("region")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("timestamp")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 

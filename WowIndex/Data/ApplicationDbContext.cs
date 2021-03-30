@@ -16,5 +16,6 @@ namespace WowIndex.Data
         
 
         public DbSet<GuildRecord> Records { get; set; }
+
     }
 }
