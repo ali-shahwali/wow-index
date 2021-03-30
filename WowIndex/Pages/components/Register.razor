@@ -15,10 +15,14 @@
         return APIclient;
     }
 
+    //PostAsync();
     private async Task Submit()
     {
         string code = GetQueryParm("code", NavigationManager);
-        //var authToken = await apiConnection("https://eu.battle.net/oauth/token").PostAsync($"?grant_type=authorization_code&code={code}&redirect_uri=https%3A%2F%2Flocalhost%3A44374%2FRegister&client_id=1982e5a534d049c2be0c44fa9a4c3171");
+        HttpClient client = apiConnection("https://eu.battle.net/oauth/token");
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", "1982e5a534d049c2be0c44fa9a4c3171:6J4G57M927DI3z3adm5iI3hIvn185CbG");
+        client.DefaultRequestHeaders.Add("Content-Type", "multipart/form-data");
+        var response = await client.PostAsync($"?grant_type=authorization_code&code={code}&redirect_uri=https%3A%2F%2Flocalhost%3A44374%2FRegister&client_id=1982e5a534d049c2be0c44fa9a4c3171", null);
     }
 
     private async Task Authorize()
