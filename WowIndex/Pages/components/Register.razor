@@ -1,35 +1,57 @@
 ﻿@page "/Register"
 
-<MudButton OnClick="Authorize">Authorize</MudButton>
-<MudButton OnClick="Submit">Submit</MudButton>
+<MudButton OnClick="AuthorizationRequest">1. Authorization Request</MudButton>
+<MudButton OnClick="AccessTokenRequest">2. Access Token Request</MudButton>
 
+<p>@AccessToken</p>
 
 @code {
+    //public string ClientId = Guid.Parse(Configuration["APIUserId"]);
+    //public string ClientId = Guid.Parse(Configuration["APIUserId"]);
 
+    public string AccessToken { get; set; }
 
-    public HttpClient apiConnection(string uri)
+    // 1. Get code
+    private async Task AuthorizationRequest()
     {
-        var APIclient = new HttpClient();
-        APIclient.BaseAddress = new Uri(uri);
+        // build request
+        var client = new HttpClient();
+        client.BaseAddress = new Uri("https://eu.battle.net/oauth/authorize");
+        var responseType = "code";
+        var clientId = "28750bf968ea4ae693014cdd27e5f912";
+        var redirectURI = "https%3A%2F%2Flocalhost%3A44374%2FRegister";
+        var scope = "wow.profile";
 
-        return APIclient;
-    }
+        // send request
+        var auth = await client.GetAsync($"?response_type={responseType}&client_id={clientId}&redirect_uri={redirectURI}&scope={scope}");
 
-    //PostAsync();
-    private async Task Submit()
-    {
-        string code = GetQueryParm("code", NavigationManager);
-        HttpClient client = apiConnection("https://eu.battle.net/oauth/token");
-        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", "1982e5a534d049c2be0c44fa9a4c3171:6J4G57M927DI3z3adm5iI3hIvn185CbG");
-        client.DefaultRequestHeaders.Add("Content-Type", "multipart/form-data");
-        var response = await client.PostAsync($"?grant_type=authorization_code&code={code}&redirect_uri=https%3A%2F%2Flocalhost%3A44374%2FRegister&client_id=1982e5a534d049c2be0c44fa9a4c3171", null);
-    }
-
-    private async Task Authorize()
-    {
-        var auth = await apiConnection("https://eu.battle.net/oauth/authorize").GetAsync("?response_type=code&client_id=1982e5a534d049c2be0c44fa9a4c3171&redirect_uri=https%3A%2F%2Flocalhost%3A44374%2FRegister&scope=wow.profile");
+        // navigate to ruturn url
         NavigationManager.NavigateTo(auth.RequestMessage.RequestUri.OriginalString);
+    }
 
+    // 2. Trade our code for an access token
+    private async Task AccessTokenRequest()
+    {
+        // build request
+        var client = new HttpClient();
+        client.BaseAddress = new Uri("https://eu.battle.net/oauth/token");
+
+        // Get code from return url (provided by blizzard)
+        var grantType = "client_credentials";
+        //var grantType = "authorization_code";
+        var code = GetQueryParm("code", NavigationManager);
+        var redirectURI = "https%3A%2F%2Flocalhost%3A44374%2FRegister";
+        var clientId = "28750bf968ea4ae693014cdd27e5f912";
+        var clientSecret = "jYawcRjFNgX42AMDK6RGivUVa9I9swiH";
+
+        //client.DefaultRequestHeaders.Add("Content-Type", "multipart/form-data");
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes($"{clientId}:{clientSecret}")));
+
+        // Send request
+        var request = await client.PostAsync($"?grant_type={grantType}&code={code}&redirect_uri={redirectURI}", null);
+
+        AccessToken = request.Content.ReadAsStringAsync().Result;
+        StateHasChanged();
     }
 
     string GetQueryParm(string parmName, NavigationManager nav)
