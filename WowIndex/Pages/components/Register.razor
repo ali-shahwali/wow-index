@@ -1,7 +1,8 @@
 ﻿@page "/Register"
-@inject IJSRuntime _jsRuntime
 
-<MudButton OnClick="@(e => Authorize())">Authorize</MudButton>
+<MudButton OnClick="Authorize">Authorize</MudButton>
+<MudButton OnClick="Submit">Submit</MudButton>
+
 
 @code {
 
@@ -14,18 +15,23 @@
         return APIclient;
     }
 
-    protected async override Task OnInitializedAsync()
+    private async Task Submit()
     {
-
-        // https://localhost:44374
-        //await _jsRuntime.InvokeVoidAsync("blazorOpen", new object[2] { auth.RequestMessage.RequestUri.OriginalString, "_blank" });
-        //var token = await apiConnection("https://eu.battle.net/oauth/token").PostAsync("?grant_type=authorization_code&code={code}&redirect_uri=https://localhost:44374&client_id=1982e5a534d049c2be0c44fa9a4c3171", auth.Content);
-        //string t = await token.Content.ReadAsStringAsync();
+        string code = GetQueryParm("code", NavigationManager);
+        //var authToken = await apiConnection("https://eu.battle.net/oauth/token").PostAsync($"?grant_type=authorization_code&code={code}&redirect_uri=https%3A%2F%2Flocalhost%3A44374%2FRegister&client_id=1982e5a534d049c2be0c44fa9a4c3171");
     }
 
     private async Task Authorize()
     {
         var auth = await apiConnection("https://eu.battle.net/oauth/authorize").GetAsync("?response_type=code&client_id=1982e5a534d049c2be0c44fa9a4c3171&redirect_uri=https%3A%2F%2Flocalhost%3A44374%2FRegister&scope=wow.profile");
         NavigationManager.NavigateTo(auth.RequestMessage.RequestUri.OriginalString);
+
+    }
+
+    string GetQueryParm(string parmName, NavigationManager nav)
+    {
+        var uriBuilder = new UriBuilder(nav.Uri);
+        var q = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
+        return q[parmName] ?? "";
     }
 }
