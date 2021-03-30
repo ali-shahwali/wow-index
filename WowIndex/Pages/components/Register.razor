@@ -4,12 +4,16 @@
 <MudButton OnClick="AccessTokenRequest">2. Access Token Request</MudButton>
 
 <p>@AccessToken</p>
+<hr />
+<p>@userData</p>
 
 @code {
     //public string ClientId = Guid.Parse(Configuration["APIUserId"]);
     //public string ClientId = Guid.Parse(Configuration["APIUserId"]);
 
     public string AccessToken { get; set; }
+
+    public string userData { get; set; }
 
     // 1. Get code
     private async Task AuthorizationRequest()
@@ -50,7 +54,29 @@
         // Send request
         var request = await client.PostAsync($"?grant_type={grantType}&code={code}&redirect_uri={redirectURI}", null);
 
-        AccessToken = request.Content.ReadAsStringAsync().Result;
+        var response = request.Content.ReadAsStringAsync().Result;
+
+        // {"access_token":"EUbkChoUBbG8o4MtOg8FfDRcM5jQLaOuqk","token_type":"bearer","expires_in":86399}
+
+        AccessToken = response.Split('"')[3];
+
+        await GetUserInfo(AccessToken);
+
+        StateHasChanged();
+    }
+
+    // 3. Get account information
+    private async Task GetUserInfo(string accessToken)
+    {
+        // build request
+        var client = new HttpClient();
+        client.BaseAddress = new Uri("https://eu.battle.net/oauth/userinfo");
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+        // send request
+        var auth = await client.GetAsync($"");
+
+        userData = auth.Content.ReadAsStringAsync().Result;
         StateHasChanged();
     }
 
