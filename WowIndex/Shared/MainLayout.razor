@@ -10,12 +10,32 @@
         <MudAppBarSpacer />
         @if (isLoggedIn)
         {
-
+            if (hasProfile)
+            {
+                <form method="post" action="Identity/Account/LogOut">
+                    <MudButton ButtonType="ButtonType.Submit">
+                        <MudMenuItem>
+                            Log out
+                        </MudMenuItem>
+                    </MudButton>
+                </form>
+            }
+            else
+            {
+                <form method="post" action="Identity/Account/LogOut">
+                    <MudButton ButtonType="ButtonType.Submit">
+                        <MudMenuItem>
+                            Log out
+                        </MudMenuItem>
+                    </MudButton>
+                </form>
+                <MudButton StartIcon="@Icons.Material.Filled.NotStarted" Link="/setupProfile" Color="Color.Success">Setup profile!</MudButton>
+            }
         }
         else
         {
-            <MudButton Class="mr-5" StartIcon="@Icons.Material.Filled.NotStarted" Link="/Login" Color="Color.Success">Login</MudButton>
-            <MudButton StartIcon="@Icons.Material.Filled.NotStarted" Link="/Register" Color="Color.Success">Register</MudButton>
+            <MudButton Class="mr-5" StartIcon="@Icons.Material.Filled.NotStarted" Link="/Identity/Account/Login" Color="Color.Success">Login</MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.NotStarted" Link="/setupProfile" Color="Color.Success">Register</MudButton>
         }
         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
     </MudAppBar>
@@ -35,6 +55,8 @@
 </MudLayout>
 
 @code {
+
+    bool hasProfile = false;
 
     bool isLoggedIn = false;
 
@@ -77,6 +99,12 @@
         if (!user.Identity.IsAuthenticated)
         {
             isLoggedIn = false;
+        }
+
+        var profile = await _context.Characters.Where(x => user.Identity.Name.Equals(x.Username)).FirstOrDefaultAsync();
+        if(profile == null)
+        {
+            hasProfile = false;
         }
     }
 
