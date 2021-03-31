@@ -66,9 +66,9 @@
         // build request
         var client = new HttpClient();
         client.BaseAddress = new Uri("https://eu.battle.net/oauth/authorize");
-        var responseType = "code";
-        var redirectURI = "https%3A%2F%2Flocalhost%3A44374%2FRegister";
-        var scope = "wow.profile";
+        string responseType = "code";
+        string redirectURI = "https%3A%2F%2Flocalhost%3A44374%2FRegister";
+        string scope = "wow.profile";
 
         // send request
         var auth = await client.GetAsync($"?response_type={responseType}&client_id={clientId}&redirect_uri={redirectURI}&scope={scope}");
@@ -101,7 +101,7 @@
 
         // {"access_token":"EUbkChoUBbG8o4MtOg8FfDRcM5jQLaOuqk","token_type":"bearer","expires_in":86399}
 
-        var AccessToken = response.Split('"')[3];
+        string AccessToken = response.Split('"')[3];
 
         await GetUserInfo(AccessToken);
     }
@@ -117,7 +117,7 @@
         // send request
         var auth = await client.GetAsync($"profile/user/wow?namespace=profile-eu&locale=en_US&access_token={accessToken}");
 
-        var userData = auth.Content.ReadAsStringAsync().Result;
+        string userData = await auth.Content.ReadAsStringAsync();
 
         UserProfile = JsonConvert.DeserializeObject<WoWUserProfilePOCO>(userData);
 
@@ -130,17 +130,13 @@
             foreach (var character in account.characters)
             {
                 var media = await client.GetAsync($"profile/wow/character/{character.realm.slug.ToLower()}/{character.name.ToLower()}/character-media?namespace=profile-eu&locale=en_US&access_token={accessToken}");
-                var mediaContent = media.Content.ReadAsStringAsync().Result;
-                WowIndex.Models.characterMedia.WowCharacterMediaPOCO wowCharacterMediaItem = new WowIndex.Models.characterMedia.WowCharacterMediaPOCO();
+                var mediaContent = await media.Content.ReadAsStringAsync();
 
-                wowCharacterMediaItem = JsonConvert.DeserializeObject<WowIndex.Models.characterMedia.WowCharacterMediaPOCO>(mediaContent);
+                WowIndex.Models.characterMedia.WowCharacterMediaPOCO wowCharacterMediaItem = JsonConvert.DeserializeObject<WowIndex.Models.characterMedia.WowCharacterMediaPOCO>(mediaContent);
 
-                if (wowCharacterMediaItem != null)
+                if (wowCharacterMediaItem != null && wowCharacterMediaItem.render_url != null)
                 {
-                    if (wowCharacterMediaItem.render_url != null)
-                    {
-                        CharacterMedia.Add(wowCharacterMediaItem);
-                    }
+                    CharacterMedia.Add(wowCharacterMediaItem);
                 }
             }
         }
