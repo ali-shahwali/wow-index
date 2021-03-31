@@ -1,4 +1,4 @@
-﻿@page "/register/{region}"
+﻿@page "/authorize/{region}"
 
 
 @code {
@@ -22,7 +22,7 @@
         //string grantType = "client_credentials";
         string grantType = "authorization_code";
         string code = GetQueryParm("code", NavigationManager);
-        string redirectURI = $"https%3A%2F%2Flocalhost%3A44374%2Fregister%2F{region}";
+        string redirectURI = $"https%3A%2F%2Flocalhost%3A44374%2Fauthorize%2F{region}";
 
         //client.DefaultRequestHeaders.Add("Content-Type", "multipart/form-data");
         client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes($"{clientId}:{clientSecret}")));
@@ -59,6 +59,12 @@
         string avatar_url = "", bust_url = "", render_url = "";
         if (UserProfile != null)
         {
+            Models.UserProfile.Profile profile = new Models.UserProfile.Profile()
+            {
+                AspEmail = email,
+                ProfileUri = "https://i.imgur.com/t6xqQoy.jpg"
+            };
+            _context.Profiles.Add(profile);
             foreach (var account in UserProfile.wow_accounts)
             {
                 foreach (var character in account.characters)
@@ -77,8 +83,8 @@
                     _context.Characters.Add(new Models.UserProfile.Character
                     {
                         CharacterName = character.name,
-                        age = DateTime.Now,
-                        Username = email,
+                        ExpirationDate = DateTime.Now.AddDays(1),
+                        Email = email,
                         Realm = character.realm.name,
                         Region = region,
                         Level = character.level,
@@ -97,9 +103,8 @@
 
             await _context.SaveChangesAsync();
 
-            NavigationManager.NavigateTo($"/Profile");
+            NavigationManager.NavigateTo("/profile");
         }
-
     }
 
     string GetQueryParm(string parmName, NavigationManager nav)

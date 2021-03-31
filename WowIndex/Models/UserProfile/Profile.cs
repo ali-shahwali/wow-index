@@ -11,6 +11,6 @@ namespace WowIndex.Models.UserProfile
 
         public string AspEmail { get; set; }
 
-        public string Code { get; set; }
+        public string ProfileUri { get; set; }
     }
 }

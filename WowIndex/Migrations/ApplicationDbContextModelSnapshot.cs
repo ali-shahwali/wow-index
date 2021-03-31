@@ -268,6 +268,12 @@ namespace WowIndex.Migrations
                     b.Property<string>("CharacterName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ExpirationDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Faction")
                         .HasColumnType("nvarchar(max)");
 
@@ -286,12 +292,6 @@ namespace WowIndex.Migrations
                     b.Property<string>("Region")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Username")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("age")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("avatar_url")
                         .HasColumnType("nvarchar(max)");
 
@@ -304,6 +304,24 @@ namespace WowIndex.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Characters");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.UserProfile.Profile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("AspEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProfileUri")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Profiles");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

@@ -10,7 +10,7 @@ namespace WowIndex.Models.UserProfile
         public int Id { get; set; }
 
         // Email
-        public string Username { get; set; }
+        public string Email { get; set; }
 
         public string CharacterName { get; set; }
 
@@ -24,7 +24,7 @@ namespace WowIndex.Models.UserProfile
 
         public string Region { get; set; }
 
-        public DateTime age { get; set; }
+        public DateTime ExpirationDate { get; set; }
 
         public string Gender { get; set; }
 

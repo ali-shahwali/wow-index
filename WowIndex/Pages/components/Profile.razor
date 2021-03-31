@@ -1,29 +1,23 @@
-﻿@page "/Profile"
+﻿@page "/profile"
 
 <MudContainer>
-    <MudButton OnClick="AuthorizationRequest">1. Authorization Request</MudButton>
-    <MudButton OnClick="AccessTokenRequest">2. Access Token Request</MudButton>
-
-    @if (UserProfile != null)
+    @if (characters != null)
     {
         <MudGrid Class="mt-8">
-            @foreach (var account in UserProfile.wow_accounts)
-            {
-                foreach (var character1 in account.characters)
+                @foreach (var character in characters)
                 {
                     <MudItem xs="12" sm="6" md="4">
                         <MudCard>
-                            @{
-                                var img = "";
-
-                                if (CharacterMediaList.Where(r => r.character.id == character1.id).FirstOrDefault() != null)
-                                {
-                                    img = CharacterMediaList.Where(r => r.character.id == character1.id).FirstOrDefault().render_url;
-                                }
+                            @if (character.render_url != null)
+                            {
+                                <MudCardMedia Image="@character.render_url" Height="200" />
                             }
-                            <MudCardMedia Image="@img" Height="200" />
+                            else
+                            {
+                                <MudCardMedia Image="" Height="200" />
+                            }
                             <MudCardContent>
-                                <MudText Typo="Typo.h5">@character1.name</MudText>
+                                <MudText Typo="Typo.h5">@character.CharacterName</MudText>
                                 <MudText Typo="Typo.body2">Old paint found on a stone house door.</MudText>
                                 <MudText Typo="Typo.body2">This photo was taken in a small village in Istra Croatia.</MudText>
                             </MudCardContent>
@@ -47,89 +41,20 @@
     private string clientId = "28750bf968ea4ae693014cdd27e5f912";
     private string clientSecret = "jYawcRjFNgX42AMDK6RGivUVa9I9swiH";
 
+    public bool isExpired = false;
+
+    public List<Models.UserProfile.Character> characters;
     // 1. Get code
-    private async Task AuthorizationRequest()
+    protected override async Task OnInitializedAsync()
     {
-        // build request
-        var client = new HttpClient();
-        client.BaseAddress = new Uri("https://eu.battle.net/oauth/authorize");
-        string responseType = "code";
-        string redirectURI = "https%3A%2F%2Flocalhost%3A44374%2FRegister";
-        string scope = "wow.profile";
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var email = authState.User.Identity.Name;
+        characters = await _context.Characters.Where(x => x.Email.Equals(email)).ToListAsync();
 
-        // send request
-        var auth = await client.GetAsync($"?response_type={responseType}&client_id={clientId}&redirect_uri={redirectURI}&scope={scope}");
-
-        // navigate to ruturn url
-        NavigationManager.NavigateTo(auth.RequestMessage.RequestUri.OriginalString);
+        if (characters[0].ExpirationDate < DateTime.Now)
+            isExpired = true;
     }
 
-    // 2. Trade our code for an access token
-    private async Task AccessTokenRequest()
-    {
-        // build request
-        var client = new HttpClient();
-        client.BaseAddress = new Uri("https://eu.battle.net/oauth/token");
-
-        // Get code from return url (provided by blizzard)
-        //string grantType = "client_credentials";
-        string grantType = "authorization_code";
-        string code = GetQueryParm("code", NavigationManager);
-        string redirectURI = "https%3A%2F%2Flocalhost%3A44374%2FRegister";
-
-
-        //client.DefaultRequestHeaders.Add("Content-Type", "multipart/form-data");
-        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes($"{clientId}:{clientSecret}")));
-
-        // Send request
-        var request = await client.PostAsync($"?grant_type={grantType}&code={code}&redirect_uri={redirectURI}&scope=wow.profile", null);
-
-        string response = await request.Content.ReadAsStringAsync();
-
-        // {"access_token":"EUbkChoUBbG8o4MtOg8FfDRcM5jQLaOuqk","token_type":"bearer","expires_in":86399}
-
-        string AccessToken = response.Split('"')[3];
-
-        await GetUserInfo(AccessToken);
-    }
-
-    // 3. Get account information
-    private async Task GetUserInfo(string accessToken)
-    {
-        // build request
-        HttpClient client = new HttpClient();
-        client.BaseAddress = new Uri("https://eu.api.blizzard.com/");
-        //client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-
-        // send request
-        var auth = await client.GetAsync($"profile/user/wow?namespace=profile-eu&locale=en_US&access_token={accessToken}");
-
-        string userData = await auth.Content.ReadAsStringAsync();
-
-        UserProfile = JsonConvert.DeserializeObject<WowIndex.Models.POCO.UserAccount.WoWUserProfilePOCO>(userData);
-
-        var CharacterMedia = new List<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO>();
-
-        CharacterMediaList = CharacterMedia;
-
-        foreach (var account in UserProfile.wow_accounts)
-        {
-            foreach (var character in account.characters)
-            {
-                var media = await client.GetAsync($"profile/wow/character/{character.realm.slug.ToLower()}/{character.name.ToLower()}/character-media?namespace=profile-eu&locale=en_US&access_token={accessToken}");
-                var mediaContent = await media.Content.ReadAsStringAsync();
-
-                WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO wowCharacterMediaItem = JsonConvert.DeserializeObject<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO>(mediaContent);
-
-                if (wowCharacterMediaItem != null && wowCharacterMediaItem.render_url != null)
-                {
-                    CharacterMedia.Add(wowCharacterMediaItem);
-                }
-            }
-        }
-
-        StateHasChanged();
-    }
 
     string GetQueryParm(string parmName, NavigationManager nav)
     {

@@ -10,34 +10,39 @@
         <MudAppBarSpacer />
         @if (isLoggedIn)
         {
-            if (hasProfile)
+
+            if (!hasProfile)
             {
-                <form method="post" action="Identity/Account/LogOut">
-                    <MudButton ButtonType="ButtonType.Submit">
-                        <MudMenuItem>
-                            Log out
-                        </MudMenuItem>
-                    </MudButton>
-                </form>
+                <MudButton StartIcon="@Icons.Material.Filled.NotStarted" Link="/setupProfile" Color="Color.Success">Setup profile!</MudButton>
+
             }
             else
             {
-                <form method="post" action="Identity/Account/LogOut">
-                    <MudButton ButtonType="ButtonType.Submit">
-                        <MudMenuItem>
-                            Log out
-                        </MudMenuItem>
-                    </MudButton>
-                </form>
-                <MudButton StartIcon="@Icons.Material.Filled.NotStarted" Link="/setupProfile" Color="Color.Success">Setup profile!</MudButton>
+                <MudButton StartIcon="@Icons.Material.Filled.NotStarted" Link="/profile" Color="Color.Success">Profile!</MudButton>
+
             }
+            <MudMenu Class="ml-5" Direction="Direction.Right" OffsetY="true">
+                <ActivatorContent>
+                    <MudAvatar Color="Color.Transparent">
+                        <MudIcon Icon="@Icons.Material.Filled.MoreVert" />
+                    </MudAvatar>
+                </ActivatorContent>
+                <ChildContent>
+                    <form method="post" action="Identity/Account/LogOut">
+                        <button type="submit">
+                            <MudMenuItem>
+                                Logga ut
+                            </MudMenuItem>
+                        </button>
+                    </form>
+                </ChildContent>
+            </MudMenu>
         }
         else
         {
             <MudButton Class="mr-5" StartIcon="@Icons.Material.Filled.NotStarted" Link="/Identity/Account/Login" Color="Color.Success">Login</MudButton>
-            <MudButton StartIcon="@Icons.Material.Filled.NotStarted" Link="/setupProfile" Color="Color.Success">Register</MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.NotStarted" Link="/Identity/Account/Register" Color="Color.Success">Register</MudButton>
         }
-        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
         <MudNavMenu Class="mud-width-full">
@@ -56,9 +61,9 @@
 
 @code {
 
-    bool hasProfile = false;
+    bool hasProfile = true;
 
-    bool isLoggedIn = false;
+    bool isLoggedIn = true;
 
     bool _drawerOpen = true;
 
@@ -101,7 +106,7 @@
             isLoggedIn = false;
         }
 
-        var profile = await _context.Characters.Where(x => user.Identity.Name.Equals(x.Username)).FirstOrDefaultAsync();
+        var profile = await _context.Characters.Where(x => user.Identity.Name.Equals(x.Email)).FirstOrDefaultAsync();
         if(profile == null)
         {
             hasProfile = false;

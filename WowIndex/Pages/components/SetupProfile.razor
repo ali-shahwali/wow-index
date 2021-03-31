@@ -50,7 +50,7 @@
             var client = new HttpClient();
             client.BaseAddress = new Uri($"https://{region}.battle.net/oauth/authorize");
             string responseType = "code";
-            string redirectURI = $"https%3A%2F%2Flocalhost%3A44374%2Fregister%2F{region}";
+            string redirectURI = $"https%3A%2F%2Flocalhost%3A44374%2Fauthorize%2F{region}";
             string scope = "wow.profile";
 
             // send request
