@@ -1,10 +1,9 @@
-﻿@page "/Register/{region}"
-
+﻿@page "/register/{region}"
 
 
 @code {
     [Parameter]
-    public string region { get; set; } 
+    public string region { get; set; }
 
     public WowIndex.Models.POCO.UserAccount.WoWUserProfilePOCO UserProfile { get; set; }
 
@@ -13,17 +12,17 @@
     private string clientId = "1982e5a534d049c2be0c44fa9a4c3171";
     private string clientSecret = "6J4G57M927DI3z3adm5iI3hIvn185CbG";
 
-    protected override async Task OnInitializedAsync()
+    protected async override Task OnInitializedAsync()
     {
         // build request
         var client = new HttpClient();
-        client.BaseAddress = new Uri($"https://{region.ToLower()}.battle.net/oauth/token");
+        client.BaseAddress = new Uri($"https://{region}.battle.net/oauth/token");
 
         // Get code from return url (provided by blizzard)
         //string grantType = "client_credentials";
         string grantType = "authorization_code";
         string code = GetQueryParm("code", NavigationManager);
-        string redirectURI = $"https%3A%2F%2Flocalhost%3A44374%2FRegister%2F{region}";
+        string redirectURI = $"https%3A%2F%2Flocalhost%3A44374%2Fregister%2F{region}";
 
         //client.DefaultRequestHeaders.Add("Content-Type", "multipart/form-data");
         client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes($"{clientId}:{clientSecret}")));
@@ -45,19 +44,19 @@
     {
         // build request
         HttpClient client = new HttpClient();
-        client.BaseAddress = new Uri($"https://{region.ToLower()}.api.blizzard.com/");
+        client.BaseAddress = new Uri($"https://{region}.api.blizzard.com/");
         //client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
         // send request
-        var auth = await client.GetAsync($"profile/user/wow?namespace=profile-{region.ToLower()}&locale=en_US&access_token={accessToken}");
+        var auth = await client.GetAsync($"profile/user/wow?namespace=profile-{region}&locale=en_US&access_token={accessToken}");
         string userData = await auth.Content.ReadAsStringAsync();
 
         UserProfile = JsonConvert.DeserializeObject<WowIndex.Models.POCO.UserAccount.WoWUserProfilePOCO>(userData);
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         string email = authState.User.Identity.Name;
-
         CharacterMediaList = new List<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO>();
 
+        string avatar_url = "", bust_url = "", render_url = "";
         foreach (var account in UserProfile.wow_accounts)
         {
             foreach (var character in account.characters)
@@ -67,24 +66,30 @@
 
                 WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO wowCharacterMediaItem = JsonConvert.DeserializeObject<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO>(mediaContent);
 
-                if (wowCharacterMediaItem != null && wowCharacterMediaItem.render_url != null)
+                if(wowCharacterMediaItem != null)
                 {
-                    _context.Characters.Add(new Models.UserProfile.Character
-                    {
-                        CharacterName = character.name,
-                        age = DateTime.Now,
-                        Username = email,
-                        Realm = character.realm.name,
-                        Region = region.ToLower(),
-                        Level = character.level,
-                        Faction = character.faction.name,
-                        Race = character.playable_race.name,
-                        Gender = character.gender.name,
-                        avatar_url = wowCharacterMediaItem.avatar_url,
-                        bust_url = wowCharacterMediaItem.bust_url,
-                        render_url = wowCharacterMediaItem.render_url
-                    });
+                    avatar_url = wowCharacterMediaItem.avatar_url;
+                    bust_url = wowCharacterMediaItem.bust_url;
+                    render_url = wowCharacterMediaItem.render_url;
                 }
+                _context.Characters.Add(new Models.UserProfile.Character
+                {
+                    CharacterName = character.name,
+                    age = DateTime.Now,
+                    Username = email,
+                    Realm = character.realm.name,
+                    Region = region,
+                    Level = character.level,
+                    Faction = character.faction.name,
+                    Race = character.playable_race.name,
+                    Gender = character.gender.name,
+                    avatar_url = avatar_url,
+                    bust_url = bust_url,
+                    render_url = render_url
+                });
+                avatar_url = "";
+                bust_url = "";
+                render_url = "";
             }
         }
 

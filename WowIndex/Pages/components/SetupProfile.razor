@@ -9,10 +9,10 @@
                 <MudGrid>
                     <MudItem xs="12">
                         <MudSelect Required="true" T="string" @bind-Value="region" Label="Region">
-                            <MudSelectItem Value="@("Eu")">Europe</MudSelectItem>
-                            <MudSelectItem Value="@("Us")">North America</MudSelectItem>
-                            <MudSelectItem Value="@("Kr")">Korea/우리 나라</MudSelectItem>
-                            <MudSelectItem Value="@("Cn")">China/中國/中国</MudSelectItem>
+                            <MudSelectItem Value="@("eu")">Europe</MudSelectItem>
+                            <MudSelectItem Value="@("us")">North America</MudSelectItem>
+                            <MudSelectItem Value="@("kr")">Korea/우리 나라</MudSelectItem>
+                            <MudSelectItem Value="@("cn")">China/中國/中国</MudSelectItem>
                         </MudSelect>
                     </MudItem>
                     <MudItem Class="d-flex justify-end" xs="6">
@@ -48,9 +48,9 @@
         {
             // build request
             var client = new HttpClient();
-            client.BaseAddress = new Uri($"https://{region.ToLower()}.battle.net/oauth/authorize");
+            client.BaseAddress = new Uri($"https://{region}.battle.net/oauth/authorize");
             string responseType = "code";
-            string redirectURI = $"https%3A%2F%2Flocalhost%3A44374%2FRegister%2F{region}";
+            string redirectURI = $"https%3A%2F%2Flocalhost%3A44374%2Fregister%2F{region}";
             string scope = "wow.profile";
 
             // send request
