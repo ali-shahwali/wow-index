@@ -37,6 +37,8 @@
                     </form>
                 </ChildContent>
             </MudMenu>
+
+            <MudAvatar Class="ml-5" Image="@ProfilePic" />
         }
         else
         {
@@ -61,6 +63,8 @@
 
 @code {
 
+    public string ProfilePic { get; set; }
+
     bool hasProfile = true;
 
     bool isLoggedIn = true;
@@ -77,10 +81,10 @@
         Palette = new Palette()
         {
             Black = "#27272f",
-            Background = "#32333d",
+            Background = "#1F1F1F",
             BackgroundGrey = "#27272f",
             Surface = "#141414",
-            DrawerBackground = "#27272f",
+            DrawerBackground = "#1F1F1F",
             DrawerText = "rgba(255,255,255, 0.50)",
             DrawerIcon = "rgba(255,255,255, 0.50)",
             AppbarBackground = "#0A0A0A",
@@ -110,6 +114,10 @@
         if(profile == null)
         {
             hasProfile = false;
+        }
+        else
+        {
+            ProfilePic = profile.render_url;
         }
     }
 

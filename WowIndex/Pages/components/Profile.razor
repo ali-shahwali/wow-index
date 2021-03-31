@@ -4,30 +4,37 @@
     @if (characters != null)
     {
         <MudGrid Class="mt-8">
-                @foreach (var character in characters)
-                {
-                    <MudItem xs="12" sm="6" md="4">
-                        <MudCard>
-                            @if (character.render_url != null)
-                            {
-                                <MudCardMedia Image="@character.render_url" Height="200" />
+            @foreach (var character in characters)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard>
+                        @if (character.render_url != null)
+                        {
+                            <MudCardMedia Image="@character.render_url" Height="200" />
+                        }
+                        else
+                        {
+                            <MudCardMedia Image="" Height="200" />
+                        }
+                    <MudCardContent>
+                        <MudText Typo="Typo.h5">@character.CharacterName</MudText>
+                        <MudText Typo="Typo.caption">@character.Realm</MudText>
+                        <MudDivider Class="my-5" />
+                        <MudText Typo="Typo.body2">@character.Faction.</MudText>
+                        <MudText Typo="Typo.body2">temp</MudText>
+                    </MudCardContent>
+                        <MudCardActions>
+                            @{
+                                var realmSlug = character.Realm.Replace(" ", "-").ToLower();
+                                string armoryLink = $"https://worldofwarcraft.com/en-gb/character/{character.Region}/{realmSlug}/{character.CharacterName.ToLower()}";
                             }
-                            else
-                            {
-                                <MudCardMedia Image="" Height="200" />
-                            }
-                            <MudCardContent>
-                                <MudText Typo="Typo.h5">@character.CharacterName</MudText>
-                                <MudText Typo="Typo.body2">Old paint found on a stone house door.</MudText>
-                                <MudText Typo="Typo.body2">This photo was taken in a small village in Istra Croatia.</MudText>
-                            </MudCardContent>
-                            <MudCardActions>
-                                <MudButton Variant="Variant.Text" Color="Color.Primary">Share</MudButton>
-                                <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
-                            </MudCardActions>
-                        </MudCard>
-                    </MudItem>
-                }
+
+
+                            <a href="@armoryLink" target="_blank">link</a>
+                            <MudButton Link="@armoryLink" Variant="Variant.Text" Color="Color.Primary">View in Armory</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
             }
         </MudGrid>
     }
@@ -49,7 +56,9 @@
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var email = authState.User.Identity.Name;
-        characters = await _context.Characters.Where(x => x.Email.Equals(email)).ToListAsync();
+
+        // get users chars from the database
+        characters = await _context.Characters.Where(x => x.Email.Equals(email)).OrderByDescending(x => x.avatar_url).ToListAsync();
 
         if (characters[0].ExpirationDate < DateTime.Now)
             isExpired = true;

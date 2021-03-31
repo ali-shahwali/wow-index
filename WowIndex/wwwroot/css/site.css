@@ -1,3 +1,11 @@
 .mud-table-cell {
     border-bottom-color: #27272F;
 }
+
+.mud-divider {
+    background-color: #27272F;
+}
+
+.mud-table-pagination-toolbar {
+    border-top-color: #27272F;
+}
