@@ -1,0 +1,70 @@
+﻿@page "/setupProfile"
+
+<MudContainer Class="mt-16" MaxWidth="MaxWidth.Medium">
+    <EditForm Model="@region" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator />
+        <MudGrid Spacing="6" Class="mt-16">
+            <MudItem xs="7">
+                <MudText Typo="Typo.h5" GutterBottom="true">Connect to Battle.net</MudText>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudSelect Required="true" T="string" @bind-Value="region" Label="Region">
+                            <MudSelectItem Value="@("Eu")">Europe</MudSelectItem>
+                            <MudSelectItem Value="@("Us")">North America</MudSelectItem>
+                            <MudSelectItem Value="@("Kr")">Korea/우리 나라</MudSelectItem>
+                            <MudSelectItem Value="@("Cn")">China/中國/中国</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem Class="d-flex justify-end" xs="6">
+                        @{ 
+                            var flag = "";
+                        }
+                        <MudButton Disabled="region.Equals(flag)" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Connect</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+        </MudGrid>
+    </EditForm>
+</MudContainer>
+
+@code {
+        // TODO:
+        // To keep the number of requests down we should do the same as with the leaderboard and store the data in the database and
+        // and only grab now api data if it's older than 15mins or so.
+
+        // TODO:
+        // Requests need to be dynamic and suppost all regions and not just assume eu.
+
+    [Parameter]
+    public string region { get; set; }= "";
+
+    private string clientId = "1982e5a534d049c2be0c44fa9a4c3171";
+    private string clientSecret = "6J4G57M927DI3z3adm5iI3hIvn185CbG";
+
+    private async Task OnValidSubmit()
+    {
+        string str = NavigationManager.Uri.Split('/')[3];
+        if (str.Equals("setupProfile"))
+        {
+            // build request
+            var client = new HttpClient();
+            client.BaseAddress = new Uri($"https://{region.ToLower()}.battle.net/oauth/authorize");
+            string responseType = "code";
+            string redirectURI = $"https%3A%2F%2Flocalhost%3A44374%2FRegister%2F{region}";
+            string scope = "wow.profile";
+
+            // send request
+            var auth = await client.GetAsync($"?response_type={responseType}&client_id={clientId}&redirect_uri={redirectURI}&scope={scope}");
+
+            // navigate to ruturn url
+            NavigationManager.NavigateTo(auth.RequestMessage.RequestUri.OriginalString);
+        }
+    }
+
+    string GetQueryParm(string parmName, NavigationManager nav)
+    {
+        var uriBuilder = new UriBuilder(nav.Uri);
+        var q = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
+        return q[parmName] ?? "";
+    }
+}

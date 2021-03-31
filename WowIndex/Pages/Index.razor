@@ -118,11 +118,11 @@
                 string resultAlliance = apiResponseAlliance.Content.ReadAsStringAsync().Result;
 
                 // Convert to data arrays
-                var GuildRankingsListHorde = JsonConvert.DeserializeObject<LeaderboardEntriesPOCO>(resultHorde);
-                var GuildRankingsListAlliance = JsonConvert.DeserializeObject<LeaderboardEntriesPOCO>(resultAlliance);
+                var GuildRankingsListHorde = JsonConvert.DeserializeObject<WowIndex.Models.POCO.Index.LeaderboardEntriesPOCO>(resultHorde);
+                var GuildRankingsListAlliance = JsonConvert.DeserializeObject<WowIndex.Models.POCO.Index.LeaderboardEntriesPOCO>(resultAlliance);
 
                 // combine the two data arrays
-                GuildRanking[] guildRankingsArray = new GuildRanking[GuildRankingsListAlliance.entries.Length + GuildRankingsListHorde.entries.Length];
+                WowIndex.Models.POCO.Index.GuildRanking[] guildRankingsArray = new WowIndex.Models.POCO.Index.GuildRanking[GuildRankingsListAlliance.entries.Length + GuildRankingsListHorde.entries.Length];
                 int j = 0;
                 for (int i = 0; i < guildRankingsArray.Length; i++)
                 {
@@ -143,7 +143,7 @@
                 // add new records
                 records = new List<GuildRecord>();
                 j = 1;
-                foreach (GuildRanking guild in guildRankingsArray.OrderBy(x => x.timestamp).ToList())
+                foreach (WowIndex.Models.POCO.Index.GuildRanking guild in guildRankingsArray.OrderBy(x => x.timestamp).ToList())
                 {
                     records.Add(new GuildRecord()
                     {

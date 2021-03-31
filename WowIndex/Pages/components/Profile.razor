@@ -1,0 +1,144 @@
+﻿@page "/Profile/{Id:int}"
+
+<MudContainer>
+    <MudButton OnClick="AuthorizationRequest">1. Authorization Request</MudButton>
+    <MudButton OnClick="AccessTokenRequest">2. Access Token Request</MudButton>
+
+    @if (UserProfile != null)
+    {
+        <MudGrid Class="mt-8">
+            @foreach (var account in UserProfile.wow_accounts)
+            {
+                foreach (var character1 in account.characters)
+                {
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudCard>
+                            @{
+                                var img = "";
+
+                                if (CharacterMediaList.Where(r => r.character.id == character1.id).FirstOrDefault() != null)
+                                {
+                                    img = CharacterMediaList.Where(r => r.character.id == character1.id).FirstOrDefault().render_url;
+                                }
+                            }
+                            <MudCardMedia Image="@img" Height="200" />
+                            <MudCardContent>
+                                <MudText Typo="Typo.h5">@character1.name</MudText>
+                                <MudText Typo="Typo.body2">Old paint found on a stone house door.</MudText>
+                                <MudText Typo="Typo.body2">This photo was taken in a small village in Istra Croatia.</MudText>
+                            </MudCardContent>
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Text" Color="Color.Primary">Share</MudButton>
+                                <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    public WowIndex.Models.POCO.UserAccount.WoWUserProfilePOCO UserProfile { get; set; }
+
+    public List<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO> CharacterMediaList { get; set; }
+
+    private string clientId = "28750bf968ea4ae693014cdd27e5f912";
+    private string clientSecret = "jYawcRjFNgX42AMDK6RGivUVa9I9swiH";
+
+    // 1. Get code
+    private async Task AuthorizationRequest()
+    {
+        // build request
+        var client = new HttpClient();
+        client.BaseAddress = new Uri("https://eu.battle.net/oauth/authorize");
+        string responseType = "code";
+        string redirectURI = "https%3A%2F%2Flocalhost%3A44374%2FRegister";
+        string scope = "wow.profile";
+
+        // send request
+        var auth = await client.GetAsync($"?response_type={responseType}&client_id={clientId}&redirect_uri={redirectURI}&scope={scope}");
+
+        // navigate to ruturn url
+        NavigationManager.NavigateTo(auth.RequestMessage.RequestUri.OriginalString);
+    }
+
+    // 2. Trade our code for an access token
+    private async Task AccessTokenRequest()
+    {
+        // build request
+        var client = new HttpClient();
+        client.BaseAddress = new Uri("https://eu.battle.net/oauth/token");
+
+        // Get code from return url (provided by blizzard)
+        //string grantType = "client_credentials";
+        string grantType = "authorization_code";
+        string code = GetQueryParm("code", NavigationManager);
+        string redirectURI = "https%3A%2F%2Flocalhost%3A44374%2FRegister";
+
+
+        //client.DefaultRequestHeaders.Add("Content-Type", "multipart/form-data");
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes($"{clientId}:{clientSecret}")));
+
+        // Send request
+        var request = await client.PostAsync($"?grant_type={grantType}&code={code}&redirect_uri={redirectURI}&scope=wow.profile", null);
+
+        string response = await request.Content.ReadAsStringAsync();
+
+        // {"access_token":"EUbkChoUBbG8o4MtOg8FfDRcM5jQLaOuqk","token_type":"bearer","expires_in":86399}
+
+        string AccessToken = response.Split('"')[3];
+
+        await GetUserInfo(AccessToken);
+    }
+
+    // 3. Get account information
+    private async Task GetUserInfo(string accessToken)
+    {
+        // build request
+        HttpClient client = new HttpClient();
+        client.BaseAddress = new Uri("https://eu.api.blizzard.com/");
+        //client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+        // send request
+        var auth = await client.GetAsync($"profile/user/wow?namespace=profile-eu&locale=en_US&access_token={accessToken}");
+
+        string userData = await auth.Content.ReadAsStringAsync();
+
+        UserProfile = JsonConvert.DeserializeObject<WowIndex.Models.POCO.UserAccount.WoWUserProfilePOCO>(userData);
+
+        var CharacterMedia = new List<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO>();
+
+        CharacterMediaList = CharacterMedia;
+
+        foreach (var account in UserProfile.wow_accounts)
+        {
+            foreach (var character in account.characters)
+            {
+                var media = await client.GetAsync($"profile/wow/character/{character.realm.slug.ToLower()}/{character.name.ToLower()}/character-media?namespace=profile-eu&locale=en_US&access_token={accessToken}");
+                var mediaContent = await media.Content.ReadAsStringAsync();
+
+                WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO wowCharacterMediaItem = JsonConvert.DeserializeObject<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO>(mediaContent);
+
+                if (wowCharacterMediaItem != null && wowCharacterMediaItem.render_url != null)
+                {
+                    CharacterMedia.Add(wowCharacterMediaItem);
+                }
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    string GetQueryParm(string parmName, NavigationManager nav)
+    {
+        var uriBuilder = new UriBuilder(nav.Uri);
+        var q = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
+        return q[parmName] ?? "";
+    }
+}

@@ -1,4 +1,4 @@
-﻿namespace WowIndex.Models.characterMedia
+﻿namespace WowIndex.Models.POCO.characterMedia
 {
 
     public class WowCharacterMediaPOCO

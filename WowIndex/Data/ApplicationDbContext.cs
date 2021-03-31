@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using WowIndex.Models.Index;
 
 namespace WowIndex.Data
 {
@@ -15,7 +14,9 @@ namespace WowIndex.Data
         }
         
 
-        public DbSet<GuildRecord> Records { get; set; }
+        public DbSet<WowIndex.Models.Index.GuildRecord> Records { get; set; }
+
+        public DbSet<WowIndex.Models.UserProfile.Character> Characters { get; set; } 
 
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-namespace WowIndex.Models.Index
+namespace WowIndex.Models.POCO.Index
 {
     public class LeaderboardEntriesPOCO
     {

@@ -1,4 +1,4 @@
-﻿namespace WowIndex.Models.UserAccount
+﻿namespace WowIndex.Models.POCO.UserAccount
 {
     public class WoWUserProfilePOCO
     {

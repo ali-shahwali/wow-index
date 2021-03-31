@@ -1,95 +1,29 @@
-﻿@page "/Register"
-@using WowIndex.Models.UserAccount
-@using Microsoft.Extensions.Configuration
-@inject IConfiguration Configuration
+﻿@page "/Register/{region}"
 
-<MudContainer>
-    <MudButton OnClick="AuthorizationRequest">1. Authorization Request</MudButton>
-    <MudButton OnClick="AccessTokenRequest">2. Access Token Request</MudButton>
-
-    @if (UserProfile != null)
-    {
-        <MudGrid Class="mt-8">
-            @foreach (var account in UserProfile.wow_accounts)
-            {
-                foreach (var character1 in account.characters)
-                {
-                    <MudItem xs="12" sm="6" md="4">
-                        <MudCard>
-                            @{
-                                var img = "";
-
-                                if (CharacterMediaList.Where(r => r.character.id == character1.id).FirstOrDefault() != null)
-                                {
-                                    img = CharacterMediaList.Where(r => r.character.id == character1.id).FirstOrDefault().render_url;
-                                }
-                            }
-                            <MudCardMedia Image="@img" Height="200" />
-                            <MudCardContent>
-                                <MudText Typo="Typo.h5">@character1.name</MudText>
-                                <MudText Typo="Typo.body2">Old paint found on a stone house door.</MudText>
-                                <MudText Typo="Typo.body2">This photo was taken in a small village in Istra Croatia.</MudText>
-                            </MudCardContent>
-                            <MudCardActions>
-                                <MudButton Variant="Variant.Text" Color="Color.Primary">Share</MudButton>
-                                <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
-                            </MudCardActions>
-                        </MudCard>
-                    </MudItem>
-                }
-            }
-        </MudGrid>
-    }
-
-</MudContainer>
 
 
 @code {
-    // TODO:
-    // To keep the number of requests down we should do the same as with the leaderboard and store the data in the database and
-    // and only grab now api data if it's older than 15mins or so.
+    [Parameter]
+    public string region { get; set; } 
 
-    // TODO:
-    // Requests need to be dynamic and suppost all regions and not just assume eu.
+    public WowIndex.Models.POCO.UserAccount.WoWUserProfilePOCO UserProfile { get; set; }
 
+    public List<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO> CharacterMediaList { get; set; }
 
-    public WowIndex.Models.UserAccount.WoWUserProfilePOCO UserProfile { get; set; }
+    private string clientId = "1982e5a534d049c2be0c44fa9a4c3171";
+    private string clientSecret = "6J4G57M927DI3z3adm5iI3hIvn185CbG";
 
-    public List<WowIndex.Models.characterMedia.WowCharacterMediaPOCO> CharacterMediaList { get; set; }
-
-    private string clientId = "28750bf968ea4ae693014cdd27e5f912";
-    private string clientSecret = "jYawcRjFNgX42AMDK6RGivUVa9I9swiH";
-
-    // 1. Get code
-    private async Task AuthorizationRequest()
+    protected override async Task OnInitializedAsync()
     {
         // build request
         var client = new HttpClient();
-        client.BaseAddress = new Uri("https://eu.battle.net/oauth/authorize");
-        string responseType = "code";
-        string redirectURI = "https%3A%2F%2Flocalhost%3A44374%2FRegister";
-        string scope = "wow.profile";
-
-        // send request
-        var auth = await client.GetAsync($"?response_type={responseType}&client_id={clientId}&redirect_uri={redirectURI}&scope={scope}");
-
-        // navigate to ruturn url
-        NavigationManager.NavigateTo(auth.RequestMessage.RequestUri.OriginalString);
-    }
-
-    // 2. Trade our code for an access token
-    private async Task AccessTokenRequest()
-    {
-        // build request
-        var client = new HttpClient();
-        client.BaseAddress = new Uri("https://eu.battle.net/oauth/token");
+        client.BaseAddress = new Uri($"https://{region.ToLower()}.battle.net/oauth/token");
 
         // Get code from return url (provided by blizzard)
         //string grantType = "client_credentials";
         string grantType = "authorization_code";
         string code = GetQueryParm("code", NavigationManager);
-        string redirectURI = "https%3A%2F%2Flocalhost%3A44374%2FRegister";
-
+        string redirectURI = $"https%3A%2F%2Flocalhost%3A44374%2FRegister%2F{region}";
 
         //client.DefaultRequestHeaders.Add("Content-Type", "multipart/form-data");
         client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes($"{clientId}:{clientSecret}")));
@@ -111,37 +45,50 @@
     {
         // build request
         HttpClient client = new HttpClient();
-        client.BaseAddress = new Uri("https://eu.api.blizzard.com/");
+        client.BaseAddress = new Uri($"https://{region.ToLower()}.api.blizzard.com/");
         //client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
         // send request
-        var auth = await client.GetAsync($"profile/user/wow?namespace=profile-eu&locale=en_US&access_token={accessToken}");
-
+        var auth = await client.GetAsync($"profile/user/wow?namespace=profile-{region.ToLower()}&locale=en_US&access_token={accessToken}");
         string userData = await auth.Content.ReadAsStringAsync();
 
-        UserProfile = JsonConvert.DeserializeObject<WoWUserProfilePOCO>(userData);
+        UserProfile = JsonConvert.DeserializeObject<WowIndex.Models.POCO.UserAccount.WoWUserProfilePOCO>(userData);
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        string email = authState.User.Identity.Name;
 
-        var CharacterMedia = new List<Models.characterMedia.WowCharacterMediaPOCO>();
-
-        CharacterMediaList = CharacterMedia;
+        CharacterMediaList = new List<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO>();
 
         foreach (var account in UserProfile.wow_accounts)
         {
             foreach (var character in account.characters)
             {
-                var media = await client.GetAsync($"profile/wow/character/{character.realm.slug.ToLower()}/{character.name.ToLower()}/character-media?namespace=profile-eu&locale=en_US&access_token={accessToken}");
+                var media = await client.GetAsync($"profile/wow/character/{character.realm.slug.ToLower()}/{character.name.ToLower()}/character-media?namespace=profile-{region.ToLower()}&locale=en_US&access_token={accessToken}");
                 var mediaContent = await media.Content.ReadAsStringAsync();
 
-                WowIndex.Models.characterMedia.WowCharacterMediaPOCO wowCharacterMediaItem = JsonConvert.DeserializeObject<WowIndex.Models.characterMedia.WowCharacterMediaPOCO>(mediaContent);
+                WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO wowCharacterMediaItem = JsonConvert.DeserializeObject<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO>(mediaContent);
 
                 if (wowCharacterMediaItem != null && wowCharacterMediaItem.render_url != null)
                 {
-                    CharacterMedia.Add(wowCharacterMediaItem);
+                    _context.Characters.Add(new Models.UserProfile.Character
+                    {
+                        CharacterName = character.name,
+                        age = DateTime.Now,
+                        Username = email,
+                        Realm = character.realm.name,
+                        Region = region.ToLower(),
+                        Level = character.level,
+                        Faction = character.faction.name,
+                        Race = character.playable_race.name,
+                        Gender = character.gender.name,
+                        avatar_url = wowCharacterMediaItem.avatar_url,
+                        bust_url = wowCharacterMediaItem.bust_url,
+                        render_url = wowCharacterMediaItem.render_url
+                    });
                 }
             }
         }
 
-        StateHasChanged();
+        await _context.SaveChangesAsync();
     }
 
     string GetQueryParm(string parmName, NavigationManager nav)
