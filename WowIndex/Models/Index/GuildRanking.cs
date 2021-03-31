@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-namespace WowIndex.Models
+namespace WowIndex.Models.Index
 {
     public class GuildRanking
     {

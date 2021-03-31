@@ -1,21 +1,61 @@
 ﻿@page "/Register"
+@using WowIndex.Models.UserAccount
 @using Microsoft.Extensions.Configuration
 @inject IConfiguration Configuration
 
-<MudButton OnClick="AuthorizationRequest">1. Authorization Request</MudButton>
-<MudButton OnClick="AccessTokenRequest">2. Access Token Request</MudButton>
+<MudContainer>
+    <MudButton OnClick="AuthorizationRequest">1. Authorization Request</MudButton>
+    <MudButton OnClick="AccessTokenRequest">2. Access Token Request</MudButton>
 
-<p>@AccessToken</p>
-<hr />
-<p>@userData</p>
+    @if (UserProfile != null)
+    {
+        <MudGrid Class="mt-8">
+            @foreach (var account in UserProfile.wow_accounts)
+            {
+                foreach (var character1 in account.characters)
+                {
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudCard>
+                            @{
+                                var img = "";
+
+                                if (CharacterMediaList.Where(r => r.character.id == character1.id).FirstOrDefault() != null)
+                                {
+                                    img = CharacterMediaList.Where(r => r.character.id == character1.id).FirstOrDefault().render_url;
+                                }
+                            }
+                            <MudCardMedia Image="@img" Height="200" />
+                            <MudCardContent>
+                                <MudText Typo="Typo.h5">@character1.name</MudText>
+                                <MudText Typo="Typo.body2">Old paint found on a stone house door.</MudText>
+                                <MudText Typo="Typo.body2">This photo was taken in a small village in Istra Croatia.</MudText>
+                            </MudCardContent>
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Text" Color="Color.Primary">Share</MudButton>
+                                <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            }
+        </MudGrid>
+    }
+
+</MudContainer>
+
 
 @code {
-    //public string ClientId = Guid.Parse(Configuration["APIUserId"]);
-    //public string ClientId = Guid.Parse(Configuration["APIUserId"]);
+    // TODO:
+    // To keep the number of requests down we should do the same as with the leaderboard and store the data in the database and
+    // and only grab now api data if it's older than 15mins or so.
 
-    public string AccessToken { get; set; }
+    // TODO:
+    // Requests need to be dynamic and suppost all regions and not just assume eu.
 
-    public string userData { get; set; }
+
+    public WowIndex.Models.UserAccount.WoWUserProfilePOCO UserProfile { get; set; }
+
+    public List<WowIndex.Models.characterMedia.WowCharacterMediaPOCO> CharacterMediaList { get; set; }
 
     private string clientId = "28750bf968ea4ae693014cdd27e5f912";
     private string clientSecret = "jYawcRjFNgX42AMDK6RGivUVa9I9swiH";
@@ -61,11 +101,9 @@
 
         // {"access_token":"EUbkChoUBbG8o4MtOg8FfDRcM5jQLaOuqk","token_type":"bearer","expires_in":86399}
 
-        AccessToken = response.Split('"')[3];
+        var AccessToken = response.Split('"')[3];
 
         await GetUserInfo(AccessToken);
-
-        StateHasChanged();
     }
 
     // 3. Get account information
@@ -73,13 +111,40 @@
     {
         // build request
         HttpClient client = new HttpClient();
-        client.BaseAddress = new Uri("https://eu.api.blizzard.com/profile/user/wow");
+        client.BaseAddress = new Uri("https://eu.api.blizzard.com/");
         //client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
         // send request
-        var auth = await client.GetAsync($"?namespace=profile-eu&locale=en_US&access_token={accessToken}");
+        var auth = await client.GetAsync($"profile/user/wow?namespace=profile-eu&locale=en_US&access_token={accessToken}");
 
-        userData = auth.Content.ReadAsStringAsync().Result;
+        var userData = auth.Content.ReadAsStringAsync().Result;
+
+        UserProfile = JsonConvert.DeserializeObject<WoWUserProfilePOCO>(userData);
+
+        var CharacterMedia = new List<Models.characterMedia.WowCharacterMediaPOCO>();
+
+        CharacterMediaList = CharacterMedia;
+
+        foreach (var account in UserProfile.wow_accounts)
+        {
+            foreach (var character in account.characters)
+            {
+                var media = await client.GetAsync($"profile/wow/character/{character.realm.slug.ToLower()}/{character.name.ToLower()}/character-media?namespace=profile-eu&locale=en_US&access_token={accessToken}");
+                var mediaContent = media.Content.ReadAsStringAsync().Result;
+                WowIndex.Models.characterMedia.WowCharacterMediaPOCO wowCharacterMediaItem = new WowIndex.Models.characterMedia.WowCharacterMediaPOCO();
+
+                wowCharacterMediaItem = JsonConvert.DeserializeObject<WowIndex.Models.characterMedia.WowCharacterMediaPOCO>(mediaContent);
+
+                if (wowCharacterMediaItem != null)
+                {
+                    if (wowCharacterMediaItem.render_url != null)
+                    {
+                        CharacterMedia.Add(wowCharacterMediaItem);
+                    }
+                }
+            }
+        }
+
         StateHasChanged();
     }
 
