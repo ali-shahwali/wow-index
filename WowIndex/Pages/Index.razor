@@ -102,7 +102,7 @@
         records = _context.Records.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToList();
 
         // if record is older than 10 min then all a new record from the api and update the database
-        if (records.Count == 0 || records[0].age < DateTime.Now.AddMinutes(-1))
+        if((raidName.Equals("castle-nathria") && records[0].age < DateTime.Now.AddMinutes(-1)) || records.Count == 0) // WHAT THE FUCK??
         {
             isLoading = true;
             // Call Blizzard API

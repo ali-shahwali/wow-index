@@ -13,37 +13,36 @@
 
             if (!hasProfile)
             {
-                <MudButton StartIcon="@Icons.Material.Filled.NotStarted" Link="/setupProfile" Color="Color.Success">Setup profile!</MudButton>
-
+                <MudButton StartIcon="@Icons.Material.Filled.NotStarted" Link="/setupProfile" Color="Color.Success">Get started!</MudButton>
             }
-            else
-            {
-                <MudButton StartIcon="@Icons.Material.Filled.NotStarted" Link="/profile" Color="Color.Success">Profile!</MudButton>
-
-            }
-            <MudMenu Class="ml-5" Direction="Direction.Right" OffsetY="true">
+            <MudText><span style="color: #FF8000">@BattleTagName</span>@BattleTagId</MudText>
+            <MudMenu Class="ml-5 p-5" Direction="Direction.Right" OffsetY="true">
                 <ActivatorContent>
-                    <MudAvatar Color="Color.Transparent">
-                        <MudIcon Icon="@Icons.Material.Filled.MoreVert" />
+                    <MudAvatar Image="@ProfilePic" Color="Color.Transparent">
+
                     </MudAvatar>
                 </ActivatorContent>
                 <ChildContent>
-                    <form method="post" action="Identity/Account/LogOut">
+                    @if (hasProfile)
+                    {
+                        <MudMenuItem Link="/profile">
+                            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AccountCircle"> Profile</MudButton>
+                        </MudMenuItem>
+                    }
+                    <form style="width: 250px" method="post" action="Identity/Account/LogOut">
                         <button type="submit">
                             <MudMenuItem>
-                                Logga ut
+                                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Logout">Logout</MudButton>
                             </MudMenuItem>
                         </button>
                     </form>
                 </ChildContent>
             </MudMenu>
-
-            <MudAvatar Class="ml-5" Image="@ProfilePic" />
         }
         else
         {
-            <MudButton Class="mr-5" StartIcon="@Icons.Material.Filled.NotStarted" Link="/Identity/Account/Login" Color="Color.Success">Login</MudButton>
-            <MudButton StartIcon="@Icons.Material.Filled.NotStarted" Link="/Identity/Account/Register" Color="Color.Success">Register</MudButton>
+            <MudButton Class="mr-5" StartIcon="@Icons.Material.Filled.Login" Link="/Identity/Account/Login" Color="Color.Primary">Login</MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.PersonAdd" Link="/Identity/Account/Register" Color="Color.Success">Register</MudButton>
         }
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
@@ -63,7 +62,11 @@
 
 @code {
 
-    public string ProfilePic { get; set; }
+    public string ProfilePic { get; set; } = "";
+
+    public string BattleTagName = "";
+
+    public string BattleTagId = "";
 
     bool hasProfile = true;
 
@@ -110,14 +113,17 @@
             isLoggedIn = false;
         }
 
-        var profile = await _context.Characters.Where(x => user.Identity.Name.Equals(x.Email)).FirstOrDefaultAsync();
-        if(profile == null)
+        var character = _context.Characters.Where(x => user.Identity.Name.Equals(x.Email)).FirstOrDefault();
+        var profile = await _context.Profiles.Where(x => user.Identity.Name.Equals(x.AspEmail)).FirstOrDefaultAsync();
+        if(character == null)
         {
             hasProfile = false;
         }
         else
         {
-            ProfilePic = profile.render_url;
+            ProfilePic = character.avatar_url;
+            BattleTagName = profile.BattleTag.Split('#')[0];
+            BattleTagId = "#" + profile.BattleTag.Split('#')[1];
         }
     }
 

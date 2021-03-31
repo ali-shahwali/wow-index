@@ -1,4 +1,5 @@
 ﻿@page "/profile"
+@inject IJSRuntime _jsRuntime
 
 <MudContainer>
     @if (characters != null)
@@ -21,17 +22,21 @@
                         <MudText Typo="Typo.caption">@character.Realm</MudText>
                         <MudDivider Class="my-5" />
                         <MudText Typo="Typo.body2">@character.Faction.</MudText>
-                        <MudText Typo="Typo.body2">temp</MudText>
+                        @if (character.render_url == null || character.render_url.Equals(""))
+                        {
+                            <MudText Typo="Typo.body2">INACTIVE</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">@character.Race</MudText>
+                        }
                     </MudCardContent>
                         <MudCardActions>
                             @{
                                 var realmSlug = character.Realm.Replace(" ", "-").ToLower();
                                 string armoryLink = $"https://worldofwarcraft.com/en-gb/character/{character.Region}/{realmSlug}/{character.CharacterName.ToLower()}";
                             }
-
-
-                            <a href="@armoryLink" target="_blank">link</a>
-                            <MudButton Link="@armoryLink" Variant="Variant.Text" Color="Color.Primary">View in Armory</MudButton>
+                            <MudButton OnClick="@(e => OpenInNewTab(armoryLink))" Variant="Variant.Text" Color="Color.Primary">View in Armory</MudButton>
                         </MudCardActions>
                     </MudCard>
                 </MudItem>
@@ -70,5 +75,11 @@
         var uriBuilder = new UriBuilder(nav.Uri);
         var q = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
         return q[parmName] ?? "";
+    }
+
+    private async Task OpenInNewTab(string link)
+    {
+        await _jsRuntime.InvokeVoidAsync("blazorOpen", new object[2] { link, "_blank" });
+
     }
 }

@@ -51,6 +51,13 @@
         var auth = await client.GetAsync($"profile/user/wow?namespace=profile-{region}&locale=en_US&access_token={accessToken}");
         string userData = await auth.Content.ReadAsStringAsync();
 
+        HttpClient btagClient = new HttpClient();
+        btagClient.BaseAddress = new Uri($"https://{region}.battle.net/oauth/userinfo");
+        //client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        var btagAuth = await btagClient.GetAsync($"?access_token={accessToken}");
+        string btagResponse = await btagAuth.Content.ReadAsStringAsync();
+        string btag = btagResponse.Split('"')[9];
+
         UserProfile = JsonConvert.DeserializeObject<WowIndex.Models.POCO.UserAccount.WoWUserProfilePOCO>(userData);
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         string email = authState.User.Identity.Name;
@@ -62,7 +69,8 @@
             Models.UserProfile.Profile profile = new Models.UserProfile.Profile()
             {
                 AspEmail = email,
-                ProfileUri = "https://i.imgur.com/t6xqQoy.jpg"
+                ProfileUri = "https://i.imgur.com/t6xqQoy.jpg",
+                BattleTag = btag
             };
             _context.Profiles.Add(profile);
             foreach (var account in UserProfile.wow_accounts)
