@@ -7,11 +7,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WowIndex.Data;
 
-namespace WowIndex.Data.Migrations
+namespace WowIndex.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210330202548_Model10")]
-    partial class Model10
+    [Migration("20210331153143_keoneNew")]
+    partial class keoneNew
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -221,7 +221,7 @@ namespace WowIndex.Data.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
-            modelBuilder.Entity("WowIndex.Models.GuildRecord", b =>
+            modelBuilder.Entity("WowIndex.Models.Index.GuildRecord", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -258,6 +258,54 @@ namespace WowIndex.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Records");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.UserProfile.Character", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("CharacterName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Faction")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Gender")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Race")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Realm")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Region")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("age")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("avatar_url")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("bust_url")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("render_url")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Characters");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

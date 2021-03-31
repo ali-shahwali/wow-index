@@ -16,7 +16,9 @@ namespace WowIndex.Data
 
         public DbSet<WowIndex.Models.Index.GuildRecord> Records { get; set; }
 
-        public DbSet<WowIndex.Models.UserProfile.Character> Characters { get; set; } 
+        public DbSet<WowIndex.Models.UserProfile.Character> Characters { get; set; }
+
+        //public DbSet<WowIndex.Models.UserProfile.Profile> Profiles { get; set; }
 
     }
 }

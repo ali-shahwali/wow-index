@@ -57,43 +57,49 @@
         CharacterMediaList = new List<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO>();
 
         string avatar_url = "", bust_url = "", render_url = "";
-        foreach (var account in UserProfile.wow_accounts)
+        if (UserProfile != null)
         {
-            foreach (var character in account.characters)
+            foreach (var account in UserProfile.wow_accounts)
             {
-                var media = await client.GetAsync($"profile/wow/character/{character.realm.slug.ToLower()}/{character.name.ToLower()}/character-media?namespace=profile-{region.ToLower()}&locale=en_US&access_token={accessToken}");
-                var mediaContent = await media.Content.ReadAsStringAsync();
-
-                WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO wowCharacterMediaItem = JsonConvert.DeserializeObject<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO>(mediaContent);
-
-                if(wowCharacterMediaItem != null)
+                foreach (var character in account.characters)
                 {
-                    avatar_url = wowCharacterMediaItem.avatar_url;
-                    bust_url = wowCharacterMediaItem.bust_url;
-                    render_url = wowCharacterMediaItem.render_url;
+                    var media = await client.GetAsync($"profile/wow/character/{character.realm.slug.ToLower()}/{character.name.ToLower()}/character-media?namespace=profile-{region.ToLower()}&locale=en_US&access_token={accessToken}");
+                    var mediaContent = await media.Content.ReadAsStringAsync();
+
+                    WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO wowCharacterMediaItem = JsonConvert.DeserializeObject<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO>(mediaContent);
+
+                    if (wowCharacterMediaItem != null)
+                    {
+                        avatar_url = wowCharacterMediaItem.avatar_url;
+                        bust_url = wowCharacterMediaItem.bust_url;
+                        render_url = wowCharacterMediaItem.render_url;
+                    }
+                    _context.Characters.Add(new Models.UserProfile.Character
+                    {
+                        CharacterName = character.name,
+                        age = DateTime.Now,
+                        Username = email,
+                        Realm = character.realm.name,
+                        Region = region,
+                        Level = character.level,
+                        Faction = character.faction.name,
+                        Race = character.playable_race.name,
+                        Gender = character.gender.name,
+                        avatar_url = avatar_url,
+                        bust_url = bust_url,
+                        render_url = render_url
+                    });
+                    avatar_url = "";
+                    bust_url = "";
+                    render_url = "";
                 }
-                _context.Characters.Add(new Models.UserProfile.Character
-                {
-                    CharacterName = character.name,
-                    age = DateTime.Now,
-                    Username = email,
-                    Realm = character.realm.name,
-                    Region = region,
-                    Level = character.level,
-                    Faction = character.faction.name,
-                    Race = character.playable_race.name,
-                    Gender = character.gender.name,
-                    avatar_url = avatar_url,
-                    bust_url = bust_url,
-                    render_url = render_url
-                });
-                avatar_url = "";
-                bust_url = "";
-                render_url = "";
             }
+
+            await _context.SaveChangesAsync();
+
+            NavigationManager.NavigateTo($"/Profile");
         }
 
-        await _context.SaveChangesAsync();
     }
 
     string GetQueryParm(string parmName, NavigationManager nav)

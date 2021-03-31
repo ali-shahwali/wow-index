@@ -1,4 +1,4 @@
-﻿@page "/Profile/{Id:int}"
+﻿@page "/Profile"
 
 <MudContainer>
     <MudButton OnClick="AuthorizationRequest">1. Authorization Request</MudButton>
@@ -40,10 +40,6 @@
 </MudContainer>
 
 @code {
-
-    [Parameter]
-    public int Id { get; set; }
-
     public WowIndex.Models.POCO.UserAccount.WoWUserProfilePOCO UserProfile { get; set; }
 
     public List<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO> CharacterMediaList { get; set; }
