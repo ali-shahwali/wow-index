@@ -6,7 +6,7 @@
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
 }
 
-<MudTabs Elevation="4" AlwaysShowScrollButtons="true" Rounded="false" Color="@Color.Dark">
+<MudTabs Centered="true" Elevation="4" AlwaysShowScrollButtons="true" Rounded="false" Color="@Color.Dark">
     <MudTabPanel OnClick="@(e => ChangeRaid("castle-nathria"))" Text="Castle Nathria" />
     <MudTabPanel OnClick="@(e => ChangeRaid("nyalotha-the-waking-city"))" Text="Ny'alotha" />
     <MudTabPanel OnClick="@(e => ChangeRaid("the-eternal-palace"))" Text="The Eternal Palace" />
@@ -41,17 +41,36 @@
                 }
             </MudTd>
             <MudTd DataLabel="Guild">
+                @{
+                    var nameSlug = context.name.Replace(" ", "-").ToLower();
+                    var realmSlug = context.realm.Replace(" ", "-").ToLower();
+                    var armoryLink = $"https://worldofwarcraft.com/en-gb/guild/{context.region}/{realmSlug}/{nameSlug}";
+                }
                 @if (context.faction == "ALLIANCE")
                 {
-                    <span style="color: #0C81CE;">@context.name</span>
+                    if (context.region == "cn")
+                    {
+                        <a style="color: #0C81CE;">@context.name</a>
+                    }
+                    else
+                    {
+                        <a href="@armoryLink" target="_blank" style="color: #0C81CE;">@context.name</a>
+                    }
                 }
                 else
                 {
-                    <span style="color: #CD2B00;">@context.name</span>
+                    if (context.region == "cn")
+                    {
+                        <a style="color: #CD2B00;">@context.name</a>
+                    }
+                    else
+                    {
+                        <a href="@armoryLink" target="_blank" style="color: #CD2B00;">@context.name</a>
+                    }
                 }
 
             </MudTd>
-            <MudTd DataLabel="Realm"><MudChip Size="Size.Small" Label="true">@context.region</MudChip> @context.realm</MudTd>
+            <MudTd DataLabel="Realm"><MudChip Size="Size.Small" Label="true">@context.region.ToUpper()</MudChip> @context.realm</MudTd>
             <MudTd DataLabel="Progress">
                 @if (context.faction == "ALLIANCE")
                 {
@@ -62,11 +81,23 @@
                     <MudAvatar Image="img/horde.png" Size="Size.Small" Class="ma-2" />
                 }
             </MudTd>
-            <MudTd DataLabel="Progress">8/8 (Mythic)</MudTd>
+            <MudTd DataLabel="Progress">
+                @if (context.region == "cn")
+                {
+                    var msg = $"Limited Data for this region ({context.region.ToUpper()})";
+                    <MudTooltip Text="@msg">
+                        <MudIcon Icon="@Icons.Material.Outlined.Info" />
+                    </MudTooltip>
+                }
+                else
+                {
+                    <b style="color: forestgreen;">8/8 (M)</b>
+                }
+            </MudTd>
         }
     </RowTemplate>
     <PagerContent>
-        <MudTablePager />
+        <MudTablePager DisableRowsPerPage="true" />
     </PagerContent>
 </MudTable>
 
@@ -102,7 +133,7 @@
         records = _context.Records.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToList();
 
         // if record is older than 10 min then all a new record from the api and update the database
-        if((raidName.Equals("castle-nathria") && records[0].age < DateTime.Now.AddMinutes(-1)) || records.Count == 0) // WHAT THE FUCK??
+        if (records.Count == 0 || (raidName.Equals("castle-nathria") && records[0].age < DateTime.Now.AddMinutes(-1))) // WHAT THE FUCK??
         {
             isLoading = true;
             // Call Blizzard API

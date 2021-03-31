@@ -13,7 +13,7 @@
 
             if (!hasProfile)
             {
-                <MudButton StartIcon="@Icons.Material.Filled.NotStarted" Link="/setupProfile" Color="Color.Success">Get started!</MudButton>
+                <MudButton Link="/setupProfile" Variant="Variant.Outlined" Color="Color.Warning">Get started!</MudButton>
             }
             <MudText><span style="color: #FF8000">@BattleTagName</span>@BattleTagId</MudText>
             <MudMenu Class="ml-5 p-5" Direction="Direction.Right" OffsetY="true">
@@ -25,8 +25,8 @@
                 <ChildContent>
                     @if (hasProfile)
                     {
-                        <MudMenuItem Link="/profile">
-                            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AccountCircle"> Profile</MudButton>
+                        <MudMenuItem>
+                            <MudButton Link="/profile" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AccountCircle"> Profile</MudButton>
                         </MudMenuItem>
                     }
                     <form style="width: 250px" method="post" action="Identity/Account/LogOut">
@@ -48,11 +48,12 @@
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
         <MudNavMenu Class="mud-width-full">
             <MudText Typo="Typo.h6" Class="px-4 mt-1" Style="color: #FF8000">wowindex.io</MudText>
-            <MudText Typo="Typo.body2" Class="px-4 mud-text-secondary">Warcraft data</MudText>
+            <MudText Typo="Typo.body2" Class="px-4 mud-text-secondary">Warcraft rankings</MudText>
             <MudDivider Class="my-2" />
-            <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3">Leaderboards</MudText>
-            <MudNavLink Href="/" Icon="@Icons.Filled.Dashboard">Raids</MudNavLink>
-            <MudNavLink Href="/servers" Icon="@Icons.Filled.Storage">Mythic +</MudNavLink>
+            @*<MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3">Leaderboards</MudText>*@
+            <MudNavLink Href="/" Icon="@Icons.Filled.Home">Home</MudNavLink>
+            <MudNavLink Href="/about" Icon="@Icons.Filled.Info">About</MudNavLink>
+            <MudNavLink Href="/contact" Icon="@Icons.Filled.AlternateEmail">Contact</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
@@ -62,7 +63,7 @@
 
 @code {
 
-    public string ProfilePic { get; set; } = "";
+    public string ProfilePic { get; set; } = "img/profile-icon.svg";
 
     public string BattleTagName = "";
 
@@ -84,13 +85,13 @@
         Palette = new Palette()
         {
             Black = "#27272f",
-            Background = "#1F1F1F",
+            Background = "#141414",
             BackgroundGrey = "#27272f",
-            Surface = "#141414",
+            Surface = "#1F1F1F",
             DrawerBackground = "#1F1F1F",
             DrawerText = "rgba(255,255,255, 0.50)",
             DrawerIcon = "rgba(255,255,255, 0.50)",
-            AppbarBackground = "#0A0A0A",
+            AppbarBackground = "#232940",
             AppbarText = "rgba(255,255,255, 0.70)",
             TextPrimary = "rgba(255,255,255, 0.70)",
             TextSecondary = "rgba(255,255,255, 0.50)",

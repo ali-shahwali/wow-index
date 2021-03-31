@@ -9,3 +9,11 @@
 .mud-table-pagination-toolbar {
     border-top-color: #27272F;
 }
+
+.mud-tabs-toolbar-dark {
+    background-color: #1F1F1F;
+}
+
+.mud-table-sticky-header * .mud-table-root .mud-table-head * .mud-table-cell {
+    background-color: #0A0A0A;
+}
