@@ -33,7 +33,7 @@
                     </MudCardContent>
                         <MudCardActions>
                             @{
-                                var realmSlug = character.Realm.Replace(" ", "-").ToLower();
+                                string realmSlug = character.Realm.Replace(" ", "-").ToLower();
                                 string armoryLink = $"https://worldofwarcraft.com/en-gb/character/{character.Region}/{realmSlug}/{character.CharacterName.ToLower()}";
                             }
                             <MudButton OnClick="@(e => OpenInNewTab(armoryLink))" Variant="Variant.Text" Color="Color.Primary">View in Armory</MudButton>
@@ -47,7 +47,6 @@
 
 @code {
     public WowIndex.Models.POCO.UserAccount.WoWUserProfilePOCO UserProfile { get; set; }
-
     public List<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO> CharacterMediaList { get; set; }
 
     private string clientId = "28750bf968ea4ae693014cdd27e5f912";
@@ -56,19 +55,18 @@
     public bool isExpired = false;
 
     public List<Models.UserProfile.Character> characters;
-    // 1. Get code
+
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var email = authState.User.Identity.Name;
+        string email = authState.User.Identity.Name;
 
         // get users chars from the database
         characters = await _context.Characters.Where(x => x.Email.Equals(email)).OrderByDescending(x => x.avatar_url).ToListAsync();
 
         if (characters[0].ExpirationDate < DateTime.Now)
             isExpired = true;
-    }
-
+    } 
 
     string GetQueryParm(string parmName, NavigationManager nav)
     {
@@ -80,6 +78,5 @@
     private async Task OpenInNewTab(string link)
     {
         await _jsRuntime.InvokeVoidAsync("blazorOpen", new object[2] { link, "_blank" });
-
     }
 }

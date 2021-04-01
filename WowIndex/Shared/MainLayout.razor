@@ -26,7 +26,7 @@
                     @if (hasProfile)
                     {
                         <MudMenuItem>
-                            <MudButton Link="/profile" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AccountCircle"> Profile</MudButton>
+                            <MudButton OnClick="OpenProfilePage" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AccountCircle">Profile</MudButton>
                         </MudMenuItem>
                     }
                     <form style="width: 250px" method="post" action="Identity/Account/LogOut">
@@ -63,16 +63,15 @@
 
 @code {
 
+    [Parameter]
+    public string region { get; set; }
+
     public string ProfilePic { get; set; } = "img/profile-icon.svg";
-
     public string BattleTagName = "";
-
     public string BattleTagId = "";
 
     bool hasProfile = true;
-
     bool isLoggedIn = true;
-
     bool _drawerOpen = true;
 
     void DrawerToggle()
@@ -122,9 +121,23 @@
         }
         else
         {
+            region = character.Region;
             ProfilePic = character.avatar_url;
             BattleTagName = profile.BattleTag.Split('#')[0];
             BattleTagId = "#" + profile.BattleTag.Split('#')[1];
+        }
+    }
+
+    private async Task OpenProfilePage()
+    {
+        var user = (await AuthStat).User;
+        var character = await _context.Characters.Where(x => user.Identity.Name.Equals(x.Email)).FirstOrDefaultAsync();
+
+        if (character.ExpirationDate < DateTime.Now.AddSeconds(-3))
+            NavigationManager.NavigateTo($"/refreshProfile/{region}");
+        else
+        {
+            NavigationManager.NavigateTo("/profile");
         }
     }
 

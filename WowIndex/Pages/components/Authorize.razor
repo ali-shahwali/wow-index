@@ -2,6 +2,12 @@
 
 
 @code {
+    /*
+        This page authorizes a user registered on wowindex.io
+
+        Retrieves all relevant information from blizzard
+    */
+
     [Parameter]
     public string region { get; set; }
 
@@ -12,19 +18,25 @@
     private string clientId = "1982e5a534d049c2be0c44fa9a4c3171";
     private string clientSecret = "6J4G57M927DI3z3adm5iI3hIvn185CbG";
 
+    private bool hasProfile = false;
+
     protected async override Task OnInitializedAsync()
     {
+        // check if authorization is for refresh purposes or setup purposes
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var checkProfile = await _context.Profiles.Where(x => x.AspEmail.Equals(authState.User.Identity.Name)).FirstOrDefaultAsync();
+        if (checkProfile != null)
+            hasProfile = true;
+
         // build request
         var client = new HttpClient();
         client.BaseAddress = new Uri($"https://{region}.battle.net/oauth/token");
 
-        // Get code from return url (provided by blizzard)
-        //string grantType = "client_credentials";
+        // query parameters
         string grantType = "authorization_code";
-        string code = GetQueryParm("code", NavigationManager);
+        string code = GetQueryParam("code", NavigationManager);
         string redirectURI = $"https%3A%2F%2Flocalhost%3A44374%2Fauthorize%2F{region}";
 
-        //client.DefaultRequestHeaders.Add("Content-Type", "multipart/form-data");
         client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes($"{clientId}:{clientSecret}")));
 
         // Send request
@@ -32,53 +44,52 @@
 
         string response = await request.Content.ReadAsStringAsync();
 
-        // {"access_token":"EUbkChoUBbG8o4MtOg8FfDRcM5jQLaOuqk","token_type":"bearer","expires_in":86399}
-
+        // oauth access token, 24 hour TTL
         string AccessToken = response.Split('"')[3];
 
         await GetUserInfo(AccessToken);
     }
 
-    // 3. Get account information
     private async Task GetUserInfo(string accessToken)
     {
-        // build request
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        string email = authState.User.Identity.Name;
+
+        // setup connections for character data
         HttpClient client = new HttpClient();
         client.BaseAddress = new Uri($"https://{region}.api.blizzard.com/");
-        //client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-
-        // send request
         var auth = await client.GetAsync($"profile/user/wow?namespace=profile-{region}&locale=en_US&access_token={accessToken}");
         string userData = await auth.Content.ReadAsStringAsync();
 
-        HttpClient btagClient = new HttpClient();
-        btagClient.BaseAddress = new Uri($"https://{region}.battle.net/oauth/userinfo");
-        //client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-        var btagAuth = await btagClient.GetAsync($"?access_token={accessToken}");
-        string btagResponse = await btagAuth.Content.ReadAsStringAsync();
-        string btag = btagResponse.Split('"')[9];
-
-        UserProfile = JsonConvert.DeserializeObject<WowIndex.Models.POCO.UserAccount.WoWUserProfilePOCO>(userData);
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        string email = authState.User.Identity.Name;
-        CharacterMediaList = new List<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO>();
-
-        string avatar_url = "", bust_url = "", render_url = "";
-        if (UserProfile != null)
+        // create profile for user on profile setup
+        if (!hasProfile)
         {
+            HttpClient btagClient = new HttpClient();
+            btagClient.BaseAddress = new Uri($"https://{region}.battle.net/oauth/userinfo");
+            var btagAuth = await btagClient.GetAsync($"?access_token={accessToken}");
+            string btagResponse = await btagAuth.Content.ReadAsStringAsync();
+
             Models.UserProfile.Profile profile = new Models.UserProfile.Profile()
             {
                 AspEmail = email,
                 ProfileUri = "https://i.imgur.com/t6xqQoy.jpg",
-                BattleTag = btag
+                BattleTag = btagResponse.Split('"')[9]
             };
             _context.Profiles.Add(profile);
+        }
+
+        UserProfile = JsonConvert.DeserializeObject<WowIndex.Models.POCO.UserAccount.WoWUserProfilePOCO>(userData);
+
+        // null prevention
+        string avatar_url = "", bust_url = "", render_url = "";
+        if (UserProfile != null)
+        {
             foreach (var account in UserProfile.wow_accounts)
             {
                 foreach (var character in account.characters)
                 {
                     var media = await client.GetAsync($"profile/wow/character/{character.realm.slug.ToLower()}/{character.name.ToLower()}/character-media?namespace=profile-{region.ToLower()}&locale=en_US&access_token={accessToken}");
-                    var mediaContent = await media.Content.ReadAsStringAsync();
+                    string mediaContent = await media.Content.ReadAsStringAsync();
 
                     WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO wowCharacterMediaItem = JsonConvert.DeserializeObject<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO>(mediaContent);
 
@@ -88,10 +99,10 @@
                         bust_url = wowCharacterMediaItem.bust_url;
                         render_url = wowCharacterMediaItem.render_url;
                     }
-                    _context.Characters.Add(new Models.UserProfile.Character
+                    Models.UserProfile.Character c = new Models.UserProfile.Character
                     {
                         CharacterName = character.name,
-                        ExpirationDate = DateTime.Now.AddDays(1),
+                        ExpirationDate = DateTime.Now.AddMinutes(1),
                         Email = email,
                         Realm = character.realm.name,
                         Region = region,
@@ -102,7 +113,17 @@
                         avatar_url = avatar_url,
                         bust_url = bust_url,
                         render_url = render_url
-                    });
+                    };
+
+                    // updates old character or adds new character if needed
+                    var oldCharacter = _context.Characters.Where(x => c.CharacterName.Equals(x.CharacterName)).FirstOrDefault();
+                    if (hasProfile && oldCharacter != null)
+                    {
+                        _context.Remove(oldCharacter);
+                        _context.SaveChanges();
+                    }
+
+                    _context.Characters.Add(c);
                     avatar_url = "";
                     bust_url = "";
                     render_url = "";
@@ -115,7 +136,7 @@
         }
     }
 
-    string GetQueryParm(string parmName, NavigationManager nav)
+    string GetQueryParam(string parmName, NavigationManager nav)
     {
         var uriBuilder = new UriBuilder(nav.Uri);
         var q = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);

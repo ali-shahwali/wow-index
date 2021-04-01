@@ -60,11 +60,4 @@
             NavigationManager.NavigateTo(auth.RequestMessage.RequestUri.OriginalString);
         }
     }
-
-    string GetQueryParm(string parmName, NavigationManager nav)
-    {
-        var uriBuilder = new UriBuilder(nav.Uri);
-        var q = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
-        return q[parmName] ?? "";
-    }
 }

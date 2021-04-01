@@ -1,0 +1,29 @@
+﻿@page "/refreshProfile/{region}"
+
+@code {
+    [Parameter]
+    public string region { get; set; }
+
+    private string clientId = "1982e5a534d049c2be0c44fa9a4c3171";
+    private string clientSecret = "6J4G57M927DI3z3adm5iI3hIvn185CbG";
+
+    protected override async Task OnInitializedAsync()
+    {
+        string str = NavigationManager.Uri.Split('/')[3];
+        if (str.Equals("refreshProfile"))
+        {
+            // build request
+            var client = new HttpClient();
+            client.BaseAddress = new Uri($"https://{region}.battle.net/oauth/authorize");
+            string responseType = "code";
+            string redirectURI = $"https%3A%2F%2Flocalhost%3A44374%2Fauthorize%2F{region}";
+            string scope = "wow.profile";
+
+            // send request
+            var auth = await client.GetAsync($"?response_type={responseType}&client_id={clientId}&redirect_uri={redirectURI}&scope={scope}");
+
+            // navigate to ruturn url
+            NavigationManager.NavigateTo(auth.RequestMessage.RequestUri.OriginalString);
+        }
+    }
+}
