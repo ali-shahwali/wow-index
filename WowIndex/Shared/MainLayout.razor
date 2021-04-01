@@ -47,13 +47,13 @@
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
         <MudNavMenu Class="mud-width-full">
-            <MudText Typo="Typo.h6" Class="px-4 mt-1" Style="color: #FF8000">wowindex.io</MudText>
+            <MudText Typo="Typo.h6" Class="px-4 mt-1" Style="color: #FFFFFF">wowindex.io</MudText>
             <MudText Typo="Typo.body2" Class="px-4 mud-text-secondary">Warcraft rankings</MudText>
             <MudDivider Class="my-2" />
             @*<MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3">Leaderboards</MudText>*@
-            <MudNavLink Href="/" Icon="@Icons.Filled.Home">Home</MudNavLink>
-            <MudNavLink Href="/about" Icon="@Icons.Filled.Info">About</MudNavLink>
-            <MudNavLink Href="/contact" Icon="@Icons.Filled.AlternateEmail">Contact</MudNavLink>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Outlined.Home">Home</MudNavLink>
+            <MudNavLink Href="/about" Icon="@Icons.Outlined.Info">About</MudNavLink>
+            <MudNavLink Href="/contact" Icon="@Icons.Outlined.AlternateEmail">Contact</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
@@ -87,12 +87,12 @@
             Background = "#141414",
             BackgroundGrey = "#27272f",
             Surface = "#1F1F1F",
-            DrawerBackground = "#1F1F1F",
-            DrawerText = "rgba(255,255,255, 0.50)",
+            DrawerBackground = "#000000",
+            DrawerText = "#b3b3b3",
             DrawerIcon = "rgba(255,255,255, 0.50)",
             AppbarBackground = "#232940",
             AppbarText = "rgba(255,255,255, 0.70)",
-            TextPrimary = "rgba(255,255,255, 0.70)",
+            TextPrimary = "#FFFFFF",
             TextSecondary = "rgba(255,255,255, 0.50)",
             ActionDefault = "#adadb1",
             ActionDisabled = "rgba(255,255,255, 0.26)",
@@ -115,7 +115,7 @@
 
         var character = _context.Characters.Where(x => user.Identity.Name.Equals(x.Email)).FirstOrDefault();
         var profile = await _context.Profiles.Where(x => user.Identity.Name.Equals(x.AspEmail)).FirstOrDefaultAsync();
-        if(character == null)
+        if (character == null)
         {
             hasProfile = false;
         }

@@ -6,8 +6,12 @@
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
 }
 
-<MudTabs Centered="true" Elevation="4" AlwaysShowScrollButtons="true" Rounded="false" Color="@Color.Dark">
-    <MudTabPanel OnClick="@(e => ChangeRaid("castle-nathria"))" Text="Castle Nathria" />
+<MudItem xs="12">
+    <MudText Class="my-5 mx-5" Typo="Typo.h5" GutterBottom="true">Global Raid Leaderboards</MudText>
+</MudItem>
+
+<MudTabs Centered="false" Elevation="4" AlwaysShowScrollButtons="true" Rounded="false" Color="@Color.Dark">
+    <MudTabPanel Style="min-width: 250px;" OnClick="@(e => ChangeRaid("castle-nathria"))" Text="Castle Nathria" BadgeData='"LIVE"' />
     <MudTabPanel OnClick="@(e => ChangeRaid("nyalotha-the-waking-city"))" Text="Ny'alotha" />
     <MudTabPanel OnClick="@(e => ChangeRaid("the-eternal-palace"))" Text="The Eternal Palace" />
     <MudTabPanel OnClick="@(e => ChangeRaid("crucible-of-storms"))" Text="Crucible of Storms" />
@@ -15,7 +19,7 @@
     <MudTabPanel OnClick="@(e => ChangeRaid("uldir"))" Text="Uldir" />
 </MudTabs>
 
-<MudTable ServerData="@(new Func<TableState, Task<TableData<GuildRecord>>>(ServerReload))" RowsPerPage="100" Dense="true" Height="calc(100vh - 164px)" FixedHeader="true" @ref="table" Hover="true">
+<MudTable ServerData="@(new Func<TableState, Task<TableData<GuildRecord>>>(ServerReload))" RowsPerPage="100" Dense="true" Height="calc(100vh - 236px)" FixedHeader="true" @ref="table" Hover="true">
     <HeaderContent>
         <MudTh></MudTh>
         <MudTh>Guild</MudTh>
@@ -54,7 +58,7 @@
                     }
                     else
                     {
-                        <a href="@armoryLink" target="_blank" style="color: #0C81CE;">@context.name</a>
+                        <a href="@armoryLink" target="_blank" style="color: #0C81CE; text-decoration: underline">@context.name</a>
                     }
                 }
                 else
@@ -65,7 +69,7 @@
                     }
                     else
                     {
-                        <a href="@armoryLink" target="_blank" style="color: #CD2B00;">@context.name</a>
+                        <a href="@armoryLink" target="_blank" style="color: #CD2B00; text-decoration: underline">@context.name</a>
                     }
                 }
 
@@ -132,8 +136,10 @@
         // bind records from database
         records = _context.Records.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToList();
 
+        var RequestInterval = DateTime.Now.AddMinutes(-Int32.Parse(Configuration["LiveRaidApiRequestInterval"]));
+
         // if record is older than 10 min then all a new record from the api and update the database
-        if (records.Count == 0 || (raidName.Equals("castle-nathria") && records[0].age < DateTime.Now.AddMinutes(-1))) // WHAT THE FUCK??
+            if (records.Count == 0 || (raidName.Equals("castle-nathria") && records[0].age < RequestInterval)) // WHAT THE FUCK??
         {
             isLoading = true;
             // Call Blizzard API

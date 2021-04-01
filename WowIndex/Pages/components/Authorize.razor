@@ -15,13 +15,14 @@
 
     public List<WowIndex.Models.POCO.characterMedia.WowCharacterMediaPOCO> CharacterMediaList { get; set; }
 
-    private string clientId = "1982e5a534d049c2be0c44fa9a4c3171";
-    private string clientSecret = "6J4G57M927DI3z3adm5iI3hIvn185CbG";
-
     private bool hasProfile = false;
 
     protected async override Task OnInitializedAsync()
     {
+        // get values from appsettings.json
+        var clientId = Guid.Parse(Configuration["APIUserId"]);
+        var clientSecret = Guid.Parse(Configuration["APIUserId"]);
+
         // check if authorization is for refresh purposes or setup purposes
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var checkProfile = await _context.Profiles.Where(x => x.AspEmail.Equals(authState.User.Identity.Name)).FirstOrDefaultAsync();

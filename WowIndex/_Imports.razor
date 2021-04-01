@@ -13,8 +13,11 @@
 @using MudBlazor
 @using WowIndex.Pages
 @using Newtonsoft.Json
+@using Microsoft.Extensions.Configuration
+
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
+@inject IConfiguration Configuration
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject WowIndex.Data.ApplicationDbContext _context
