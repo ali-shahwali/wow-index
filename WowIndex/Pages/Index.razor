@@ -54,22 +54,30 @@
                 {
                     if (context.region == "cn")
                     {
-                        <a style="color: #0C81CE;">@context.name</a>
+                        <MudButton Disabled="true" Color="Color.Info">
+                            @context.name
+                        </MudButton>
                     }
                     else
                     {
-                        <a href="@armoryLink" target="_blank" style="color: #0C81CE; text-decoration: underline">@context.name</a>
+                        <MudButton Target="_blank" Link="@armoryLink" Color="Color.Info">
+                            @context.name
+                        </MudButton>
                     }
                 }
                 else
                 {
                     if (context.region == "cn")
                     {
-                        <a style="color: #CD2B00;">@context.name</a>
+                        <MudButton Disabled="true" Color="Color.Error">
+                            @context.name
+                        </MudButton>
                     }
                     else
                     {
-                        <a href="@armoryLink" target="_blank" style="color: #CD2B00; text-decoration: underline">@context.name</a>
+                        <MudButton Target="_blank" Link="@armoryLink" Color="Color.Error">
+                            @context.name
+                        </MudButton>
                     }
                 }
 
@@ -136,17 +144,17 @@
         // bind records from database
         records = _context.Records.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToList();
 
-        var RequestInterval = DateTime.Now.AddMinutes(-Int32.Parse(Configuration["LiveRaidApiRequestInterval"]));
+        DateTime RequestInterval = DateTime.Now.AddMinutes(-Int32.Parse(Configuration["LiveRaidApiRequestInterval"]));
 
         // if record is older than 10 min then all a new record from the api and update the database
-            if (records.Count == 0 || (raidName.Equals("castle-nathria") && records[0].age < RequestInterval)) // WHAT THE FUCK??
+        if (records.Count == 0 || (raidName.Equals("castle-nathria") && records[0].age < RequestInterval)) // WHAT THE FUCK??
         {
             isLoading = true;
             // Call Blizzard API
             // Mythic Raid Leaderboard API
             // Returns the leaderboard for a given raid and faction
-            var apiResponseAlliance = await apiConnection().GetAsync($"data/wow/leaderboard/hall-of-fame/{raidName}/alliance?namespace=dynamic-us&locale=en_US&access_token=USMWJGdEZdlXTp2yog1kjKnd4duVeDf8Zy");
-            var apiResponseHorde = await apiConnection().GetAsync($"data/wow/leaderboard/hall-of-fame/{raidName}/horde?namespace=dynamic-us&locale=en_US&access_token=USMWJGdEZdlXTp2yog1kjKnd4duVeDf8Zy");
+            var apiResponseAlliance = await apiConnection().GetAsync($"data/wow/leaderboard/hall-of-fame/{raidName}/alliance?namespace=dynamic-us&locale=en_US");
+            var apiResponseHorde = await apiConnection().GetAsync($"data/wow/leaderboard/hall-of-fame/{raidName}/horde?namespace=dynamic-us&locale=en_US");
 
             if (apiResponseHorde.IsSuccessStatusCode && apiResponseAlliance.IsSuccessStatusCode)
             {

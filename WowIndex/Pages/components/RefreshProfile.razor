@@ -4,11 +4,9 @@
     [Parameter]
     public string region { get; set; }
 
-    private string clientId = "1982e5a534d049c2be0c44fa9a4c3171";
-    private string clientSecret = "6J4G57M927DI3z3adm5iI3hIvn185CbG";
-
     protected override async Task OnInitializedAsync()
     {
+        string clientId = Configuration["APIClientID"];
         string str = NavigationManager.Uri.Split('/')[3];
         if (str.Equals("refreshProfile"))
         {

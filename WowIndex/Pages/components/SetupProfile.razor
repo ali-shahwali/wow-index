@@ -28,21 +28,19 @@
 </MudContainer>
 
 @code {
-        // TODO:
-        // To keep the number of requests down we should do the same as with the leaderboard and store the data in the database and
-        // and only grab now api data if it's older than 15mins or so.
+    // TODO:
+    // To keep the number of requests down we should do the same as with the leaderboard and store the data in the database and
+    // and only grab now api data if it's older than 15mins or so.
 
-        // TODO:
-        // Requests need to be dynamic and suppost all regions and not just assume eu.
+    // TODO:
+    // Requests need to be dynamic and suppost all regions and not just assume eu.
 
     [Parameter]
     public string region { get; set; }= "";
 
-    private string clientId = "1982e5a534d049c2be0c44fa9a4c3171";
-    private string clientSecret = "6J4G57M927DI3z3adm5iI3hIvn185CbG";
-
     private async Task OnValidSubmit()
     {
+        string clientId = Configuration["APIClientID"];
         string str = NavigationManager.Uri.Split('/')[3];
         if (str.Equals("setupProfile"))
         {

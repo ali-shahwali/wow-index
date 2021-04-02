@@ -20,5 +20,7 @@ namespace WowIndex.Data
 
         public DbSet<WowIndex.Models.UserProfile.Profile> Profiles { get; set; }
 
+        public DbSet<Token> Tokens { get; set; }
+
     }
 }

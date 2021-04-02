@@ -20,8 +20,8 @@
     protected async override Task OnInitializedAsync()
     {
         // get values from appsettings.json
-        var clientId = Guid.Parse(Configuration["APIUserId"]);
-        var clientSecret = Guid.Parse(Configuration["APIUserId"]);
+        string clientId = Configuration["APIClientID"];
+        string clientSecret = Configuration["APIClientSecret"];
 
         // check if authorization is for refresh purposes or setup purposes
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -30,7 +30,7 @@
             hasProfile = true;
 
         // build request
-        var client = new HttpClient();
+        HttpClient client = new HttpClient();
         client.BaseAddress = new Uri($"https://{region}.battle.net/oauth/token");
 
         // query parameters
@@ -103,7 +103,7 @@
                     Models.UserProfile.Character c = new Models.UserProfile.Character
                     {
                         CharacterName = character.name,
-                        ExpirationDate = DateTime.Now.AddMinutes(1),
+                        ExpirationDate = DateTime.Now.AddDays(1),
                         Email = email,
                         Realm = character.realm.name,
                         Region = region,
