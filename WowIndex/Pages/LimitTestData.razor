@@ -1,0 +1,28 @@
+﻿@page "/test"
+
+<h3>LimitTestData</h3>
+
+<MudButton OnClick="(GetAccessToken)"></MudButton>
+
+
+
+@code {
+
+
+
+    private async Task GetAccessToken()
+    {
+        string clientId = Configuration["APIClientID"];
+        var client = new HttpClient();
+        client.BaseAddress = new Uri($"https://eu.battle.net/oauth/authorize");
+        string responseType = "code";
+        string redirectURI = $"https%3A%2F%2Flocalhost%3A44374%2Fauthorize%2Feu";
+        string scope = "wow.profile";
+
+        // send request
+        var auth = await client.GetAsync($"?response_type={responseType}&client_id={clientId}&redirect_uri={redirectURI}&scope={scope}");
+
+        // navigate to ruturn url
+        NavigationManager.NavigateTo(auth.RequestMessage.RequestUri.OriginalString);
+    }
+}

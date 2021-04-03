@@ -24,3 +24,7 @@
     background-attachment: fixed;
     background-size: cover;
 }
+
+.searchField > .mud-input.mud-input-filled {
+    border-radius: 4px !important;
+}

@@ -8,6 +8,12 @@
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudAppBarSpacer />
+        <MudItem xs="12" sm="6" md="4">
+            <EditForm Model="@model" OnValidSubmit="Search">
+                <MudTextField Spellcheck="false" Class="searchField" @bind-Value="@model.SearchValue" Label="Search Guilds" Variant="Variant.Filled" Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Search" AdornmentColor="Color.Primary" DisableUnderLine="true"></MudTextField>
+            </EditForm>
+        </MudItem>
+        <MudAppBarSpacer />
         @if (isLoggedIn)
         {
 
@@ -63,6 +69,8 @@
 
 @code {
 
+    Models.Index.MainLayoutModel model = new Models.Index.MainLayoutModel();
+
     [Parameter]
     public string region { get; set; }
 
@@ -79,6 +87,34 @@
         _drawerOpen = !_drawerOpen;
 
     }
+
+    private void Search(EditContext context)
+    {
+        var searchQuery = model.SearchValue;
+
+        var guild = _context.Records.Where(x => x.name == searchQuery && x.raidName == "castle-nathria").FirstOrDefault();
+
+        if (guild != null)
+        {
+            // We found the guild in our database!
+            // check the age of this guild record
+            // send the user to this guilds page (update can be handled there)
+            string region = guild.region;
+            string realm = guild.realm;
+            string guildNameSlug = guild.name.Replace(" ", "-").ToLower();
+
+            // naviagte to guilds page
+            //NavigationManager.NavigateTo($"/guild/{region}/{realm}/{guildNameSlug}/");
+            Snackbar.Add("Got it!", Severity.Success);
+        }
+        else
+        {
+            // we did not find the guild in our database
+            // check wow api to see if guild exists and either add it to our database and redirect the user to its page or return guild not found
+            Snackbar.Add("Guild not found in database!", Severity.Error);
+        }
+    }
+
 
     MudTheme darkTheme = new MudTheme()
     {

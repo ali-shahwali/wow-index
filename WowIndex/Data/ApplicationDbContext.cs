@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace WowIndex.Data
 {
@@ -14,13 +11,24 @@ namespace WowIndex.Data
         }
         
 
-        public DbSet<WowIndex.Models.Index.GuildRecord> Records { get; set; }
+        public DbSet<Models.Index.GuildRecord> Records { get; set; }
 
-        public DbSet<WowIndex.Models.UserProfile.Character> Characters { get; set; }
+        public DbSet<Models.UserProfile.Character> Characters { get; set; }
 
-        public DbSet<WowIndex.Models.UserProfile.Profile> Profiles { get; set; }
+        public DbSet<Models.UserProfile.Profile> Profiles { get; set; }
 
         public DbSet<Token> Tokens { get; set; }
+
+
+
+
+
+        // Store all guilds in a table
+        public DbSet<Models.Guild> Guilds { get; set; }
+
+
+        // To reduce load on requests each raid will have its own table (we dont have to filter one huge table)
+        public DbSet<Models.RaidingLeaderboards.LeaderboardCastleNathria> LeaderboardCastleNathria { get; set; }
 
     }
 }
