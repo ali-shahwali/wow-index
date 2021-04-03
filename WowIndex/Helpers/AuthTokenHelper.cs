@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -10,50 +8,66 @@ namespace WowIndex.Helpers
 {
     public class AuthTokenHelper
     {
-
-        /// <summary>
-        /// Validates Oauth2 token
-        /// </summary>
-        /// <param name="_context">Database context</param>
-        /// <param name="forceRefresh">Set to true if request fails for desync issues</param>
-        /// <returns></returns>
-        public static async Task ValidateToken(ApplicationDbContext _context, bool forceRefresh)
+        public static HttpClient HttpClient()
         {
-            var storedToken = _context.Tokens.FirstOrDefault();
-            if (forceRefresh || storedToken == null || storedToken.ExpirationDate < DateTime.Now)
+            string clientId = "1982e5a534d049c2be0c44fa9a4c3171";
+            string clientSecret = "6J4G57M927DI3z3adm5iI3hIvn185CbG";
+            HttpClient client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($"{clientId}:{clientSecret}")));
+            client.BaseAddress = new Uri($"https://eu.battle.net/oauth/token");
+
+            return client;
+        }
+
+
+
+        public static async Task<Token> ValidateToken(ApplicationDbContext _context)
+        {
+            var TokenInDatabase = _context.Tokens.FirstOrDefault();
+
+            // NO TOKEN
+            if (TokenInDatabase == null)
             {
-                var rows = from x in _context.Tokens select x;
-                _context.RemoveRange(rows);
-                _context.SaveChanges();
-
-                string clientId = "1982e5a534d049c2be0c44fa9a4c3171";
-                string clientSecret = "6J4G57M927DI3z3adm5iI3hIvn185CbG";
-
-                HttpClient client = new HttpClient();
-                client.BaseAddress = new Uri($"https://eu.battle.net/oauth/token");
-
-                // query parameters
-                string grantType = "client_credentials";
-
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes($"{clientId}:{clientSecret}")));
-
-                // Send request
-                var request = await client.PostAsync($"?grant_type={grantType}&scope=wow.profile", null);
-
-                string response = await request.Content.ReadAsStringAsync();
-
-                // oauth access token, 24 hour TTL
-                string AccessToken = response.Split('"')[3];
-
-                Data.Token newToken = new Data.Token()
+                return await GetNewToken(_context);
+            }
+            else
+            {
+                // OUTDATED TOKEN
+                if (TokenInDatabase.ExpirationDate < DateTime.Now)
                 {
-                    token = AccessToken,
-                    ExpirationDate = DateTime.Now.AddSeconds(86399),
-                };
+                    _context.Remove(TokenInDatabase);
+                    _context.SaveChanges();
 
+                    return await GetNewToken(_context);
+                }
+
+                // TOKEN IS FINE
+                return TokenInDatabase;
+            }
+        }
+
+
+
+        public static async Task<Token> GetNewToken(ApplicationDbContext _context)
+        {
+            // Get new token (oauth access token, 24 hour TTL)
+            var request = await HttpClient().PostAsync($"?grant_type=client_credentials&scope=wow.profile", null);
+            string response = await request.Content.ReadAsStringAsync();
+            string AccessToken = response.Split('"')[3];
+            var newToken = new Token()
+            {
+                token = AccessToken,
+                ExpirationDate = DateTime.Now.AddSeconds(86399),
+            };
+
+            // this is so dumb but i need this if statment here or it will enter twice...
+            if (_context.Tokens.FirstOrDefault() == null)
+            {
                 _context.Tokens.Add(newToken);
                 _context.SaveChanges();
             }
+
+            return newToken;
         }
     }
 }
