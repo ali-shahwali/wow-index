@@ -1,0 +1,40 @@
+﻿@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var storedToken = await _context.Tokens.FirstOrDefaultAsync();
+        if (storedToken == null || storedToken.ExpirationDate < DateTime.Now)
+        {
+            var rows = from x in _context.Tokens select x;
+            _context.RemoveRange(rows);
+            _context.SaveChanges();
+
+            string clientId = Configuration["APIClientID"];
+            string clientSecret = Configuration["APIClientSecret"];
+
+            HttpClient client = new HttpClient();
+            client.BaseAddress = new Uri($"https://eu.battle.net/oauth/token");
+
+            // query parameters
+            string grantType = "client_credentials";
+
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes($"{clientId}:{clientSecret}")));
+
+            // Send request
+            var request = await client.PostAsync($"?grant_type={grantType}&scope=wow.profile", null);
+
+            string response = await request.Content.ReadAsStringAsync();
+
+            // oauth access token, 24 hour TTL
+            string AccessToken = response.Split('"')[3];
+
+            Data.Token newToken = new Data.Token()
+            {
+                token = AccessToken,
+                ExpirationDate = DateTime.Now.AddSeconds(86399),
+            };
+
+            _context.Tokens.Add(newToken);
+            await _context.SaveChangesAsync();
+        }
+    }
+}
