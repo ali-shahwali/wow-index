@@ -24,11 +24,11 @@ namespace WowIndex.Data
 
 
         // Store all guilds in a table
-        public DbSet<Models.Guild> Guilds { get; set; }
+        //public DbSet<Models.Guild> Guilds { get; set; }
 
 
         // To reduce load on requests each raid will have its own table (we dont have to filter one huge table)
-        public DbSet<Models.RaidingLeaderboards.LeaderboardCastleNathria> LeaderboardCastleNathria { get; set; }
+        //public DbSet<Models.RaidingLeaderboards.LeaderboardCastleNathria> LeaderboardCastleNathria { get; set; }
 
     }
 }

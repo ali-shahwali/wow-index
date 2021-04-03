@@ -153,8 +153,9 @@
             // Call Blizzard API
             // Mythic Raid Leaderboard API
             // Returns the leaderboard for a given raid and faction
-            var apiResponseAlliance = await apiConnection().GetAsync($"data/wow/leaderboard/hall-of-fame/{raidName}/alliance?namespace=dynamic-us&locale=en_US");
-            var apiResponseHorde = await apiConnection().GetAsync($"data/wow/leaderboard/hall-of-fame/{raidName}/horde?namespace=dynamic-us&locale=en_US");
+            var accessToken = _context.Tokens.FirstOrDefault();
+            var apiResponseAlliance = await apiConnection().GetAsync($"data/wow/leaderboard/hall-of-fame/{raidName}/alliance?namespace=dynamic-us&locale=en_US&access_token={accessToken.token}");
+            var apiResponseHorde = await apiConnection().GetAsync($"data/wow/leaderboard/hall-of-fame/{raidName}/horde?namespace=dynamic-us&locale=en_US&access_token={accessToken.token}");
 
             if (apiResponseHorde.IsSuccessStatusCode && apiResponseAlliance.IsSuccessStatusCode)
             {
