@@ -52,8 +52,30 @@
     {
         var region = "us";
         var realm = "illidan";
-        var name = "maxibabe"; // maxibabe, poddk
-        model = CustomScrapers.ScrapePlayerShadowlandsRaidAchievements(region, realm, name);
+        var guildSlug = "complexity-limit";
+
+        HttpClient client = new HttpClient();
+        client.BaseAddress = new Uri($"https://{region}.api.blizzard.com/");
+
+        var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
+
+        var response = await client.GetAsync($"data/wow/guild/{realm}/{guildSlug}/roster?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}");
+
+        string rosterString = await response.Content.ReadAsStringAsync();
+
+        var roster = JsonConvert.DeserializeObject<Models.POCO.GuildRosterPOCO>(rosterString);
+        var rosterMembers = roster.members;
+
+        List<List<Models.RaidAchievement>> model = new List<List<Models.RaidAchievement>>();
+        foreach (var item in rosterMembers)
+        {
+            if(item.character.level == 60)
+            {
+                List<Models.RaidAchievement> achievementProgress = CustomScrapers.ScrapePlayerShadowlandsRaidAchievements(region, realm, item.character.name);
+                model.Add(achievementProgress);
+            }
+        }
+
         StateHasChanged();
     }
 }

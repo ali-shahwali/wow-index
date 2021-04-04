@@ -13,22 +13,18 @@ namespace WowIndex.CustomScrapers
         /// Returns a list of players raid achievements from the Shadowlands Expansion
         /// </summary>
         /// <returns></returns>
-        public static List<Models.RaidAchievement> ScrapePlayerShadowlandsRaidAchievements(string _region, string _realm, string _name)
+        public static List<Models.RaidAchievement> ScrapePlayerShadowlandsRaidAchievements(string region, string realm, string name)
         {
-            var region = _region;
-            var realm = _realm;
-            var name = _name;
-
             HtmlAgilityPack.HtmlWeb web = new HtmlAgilityPack.HtmlWeb();
             HtmlAgilityPack.HtmlDocument doc = web.Load($"https://worldofwarcraft.com/en-gb/character/{region}/{realm}/{name}/achievements/dungeons-raids/shadowlands-raid");
 
             var scriptsInSource = doc.DocumentNode.Descendants().Where(n => n.Name == "script").ToList();
 
             // get player data
-            var playerData = scriptsInSource[9].InnerHtml;
+            string playerData = scriptsInSource[9].InnerHtml;
 
             // initial clean up
-            var cleanedJsonData = playerData.Remove(0, 35);
+            string cleanedJsonData = playerData.Remove(0, 35);
             cleanedJsonData = cleanedJsonData.Remove(cleanedJsonData.Length - 2, 2);
             JObject obj = JObject.Parse(cleanedJsonData);
 
@@ -49,9 +45,10 @@ namespace WowIndex.CustomScrapers
 
             foreach (var item in jsonObject.achievements)
             {
-                var steps = new List<Models.POCO.ShadowlandsRaidPOCO.Step>();
+                //var steps = new List<Models.POCO.ShadowlandsRaidPOCO.Step>();
 
                 // get progress steps for this achievement
+                /*
                 foreach (WowIndex.Models.POCO.ShadowlandsRaidPOCO.Step step in item.progressSteps)
                 {
                     steps.Add(new Models.POCO.ShadowlandsRaidPOCO.Step
@@ -59,20 +56,38 @@ namespace WowIndex.CustomScrapers
                         completed = step.completed,
                         description = step.description
                     });
-                }
+                }*/
 
-                var stepsTotal = steps.Count();
-                var stepsCompleted = steps.Where(x => x.completed == true).Count();
+                //var stepsTotal = steps.Count();
+                //var stepsCompleted = steps.Where(x => x.completed == true).Count();
 
                 // build result
-                result.Add(new Models.RaidAchievement
+                if(item.name.Split(':')[0].Equals("Mythic"))
                 {
-                    Name = item.name,
-                    Description = item.description,
-                    StepsTotal = stepsTotal,
-                    StepsCompleted = stepsCompleted,
-                    Time = item.time
-                });
+                    if(item.time.ToString().Equals("1/1/0001 12:00:00 AM"))
+                    result.Add(new Models.RaidAchievement
+                    {
+                        Name = item.name,
+                        Description = item.description,
+                        isCompleted = false,
+                        //StepsTotal = stepsTotal,
+                        //StepsCompleted = stepsCompleted,
+                        Time = item.time
+                    });
+                    else
+                    {
+                        result.Add(new Models.RaidAchievement
+                        {
+                            Name = item.name,
+                            Description = item.description,
+                            isCompleted = true,
+                            //StepsTotal = stepsTotal,
+                            //StepsCompleted = stepsCompleted,
+                            Time = item.time
+                        });
+                    }
+                }
+                
             }
 
             return result;

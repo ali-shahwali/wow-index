@@ -169,11 +169,11 @@
                 string resultAlliance = apiResponseAlliance.Content.ReadAsStringAsync().Result;
 
                 // Convert to data arrays
-                var GuildRankingsListHorde = JsonConvert.DeserializeObject<WowIndex.Models.POCO.Index.LeaderboardEntriesPOCO>(resultHorde);
-                var GuildRankingsListAlliance = JsonConvert.DeserializeObject<WowIndex.Models.POCO.Index.LeaderboardEntriesPOCO>(resultAlliance);
+                var GuildRankingsListHorde = JsonConvert.DeserializeObject<Models.POCO.Index.LeaderboardEntriesPOCO>(resultHorde);
+                var GuildRankingsListAlliance = JsonConvert.DeserializeObject<Models.POCO.Index.LeaderboardEntriesPOCO>(resultAlliance);
 
                 // combine the two data arrays
-                WowIndex.Models.POCO.Index.GuildRanking[] guildRankingsArray = new WowIndex.Models.POCO.Index.GuildRanking[GuildRankingsListAlliance.entries.Length + GuildRankingsListHorde.entries.Length];
+                Models.POCO.Index.GuildRanking[] guildRankingsArray = new Models.POCO.Index.GuildRanking[GuildRankingsListAlliance.entries.Length + GuildRankingsListHorde.entries.Length];
                 int j = 0;
                 for (int i = 0; i < guildRankingsArray.Length; i++)
                 {
