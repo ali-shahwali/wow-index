@@ -3,6 +3,7 @@
 @using WowIndex.CustomScrapers
 
 <MudContainer>
+
     <MudText Class="my-6" Typo="Typo.h4">&lt;LIMIT&gt;Maxibabe - Castle Nathria Achievements</MudText>
     <MudGrid Class="mt-8">
         @foreach (var item in model)
@@ -66,13 +67,14 @@
         var roster = JsonConvert.DeserializeObject<Models.POCO.GuildRosterPOCO>(rosterString);
         var rosterMembers = roster.members;
 
-        List<List<Models.RaidAchievement>> model = new List<List<Models.RaidAchievement>>();
+        var progressCounts = new List<int>();
+
         foreach (var item in rosterMembers)
         {
             if(item.character.level == 60)
             {
-                List<Models.RaidAchievement> achievementProgress = CustomScrapers.ScrapePlayerShadowlandsRaidAchievements(region, realm, item.character.name);
-                model.Add(achievementProgress);
+                var completedAchievements = CustomScrapers.ScrapePlayerShadowlandsRaidAchievements(region, realm, item.character.name).Result;
+                progressCounts.Add(completedAchievements.Count());
             }
         }
 
