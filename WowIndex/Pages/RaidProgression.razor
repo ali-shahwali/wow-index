@@ -1,0 +1,42 @@
+﻿@page "/progress"
+@using WowIndex.Models.RaidingLeaderboards
+@using Microsoft.Extensions.Configuration
+@inject WowIndex.Data.ApplicationDbContext _context
+
+<h3>Raid Progression</h3>
+
+<MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardCastleNathria>>>(ServerReload))" RowsPerPage="100" Dense="true" Height="calc(100vh - 236px)" FixedHeader="true" @ref="table" Hover="true">
+    <HeaderContent>
+        <MudTh></MudTh>
+        <MudTh>Guild</MudTh>
+        <MudTh>Realm</MudTh>
+        <MudTh></MudTh>
+        <MudTh>Progress</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Rank">
+            <b style="color: #0070DD"></b>
+        </MudTd>
+        <MudTd DataLabel="Guild">
+            <MudButton Disabled="true" Color="Color.Info">
+                @context.GuildId
+            </MudButton>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager DisableRowsPerPage="true" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    public MudTable<LeaderboardCastleNathria> table;
+
+    private async Task<TableData<LeaderboardCastleNathria>> ServerReload(TableState state)
+    {
+        // bind records from database
+        var records = await _context.LeaderboardCastleNathria.ToListAsync();
+
+        StateHasChanged();
+        return new TableData<LeaderboardCastleNathria>() { Items = records };
+    }
+}

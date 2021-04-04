@@ -1,5 +1,6 @@
 ﻿@page "/limitData"
 @using Newtonsoft.Json.Linq
+@using WowIndex.CustomScrapers
 
 <MudContainer>
     <MudText Class="my-6" Typo="Typo.h4">&lt;LIMIT&gt;Maxibabe - Castle Nathria Achievements</MudText>
@@ -49,65 +50,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Scrapper();
-    }
-
-    private void Scrapper()
-    {
-        HtmlAgilityPack.HtmlWeb web = new HtmlAgilityPack.HtmlWeb();
-        HtmlAgilityPack.HtmlDocument doc = web.Load("https://worldofwarcraft.com/en-gb/character/us/illidan/maxibabe/achievements/dungeons-raids/shadowlands-raid");
-
-        var scriptsInSource = doc.DocumentNode.Descendants().Where(n => n.Name == "script").ToList();
-
-        // get player data
-        var playerData = scriptsInSource[9].InnerHtml;
-
-        // initial clean up
-        var cleanedJsonData = playerData.Remove(0, 35);
-        cleanedJsonData = cleanedJsonData.Remove(cleanedJsonData.Length - 2, 2);
-        JObject obj = JObject.Parse(cleanedJsonData);
-
-        // drill 1
-        var achievementCategory = obj.SelectToken("achievementCategory");
-
-        // drill 2
-        var subcategories = achievementCategory.SelectToken("subcategories");
-
-        // drill 3 (shadowlands raid achivemnts)
-        var ShadowlandsRaid = subcategories.SelectToken("shadowlands-raid");
-
-        // throw it in a poco object
-        var jsonObject = JsonConvert.DeserializeObject<WowIndex.Models.POCO.ShadowlandsRaidPOCO.ShadowlandsRaidPOCO>(ShadowlandsRaid.ToString());
-
-        // chuck it into our model
-        foreach (var item in jsonObject.achievements)
-        {
-            var steps = new List<WowIndex.Models.POCO.ShadowlandsRaidPOCO.Step>();
-
-            // get progress steps for this achievement
-            foreach (WowIndex.Models.POCO.ShadowlandsRaidPOCO.Step step in item.progressSteps)
-            {
-                steps.Add(new WowIndex.Models.POCO.ShadowlandsRaidPOCO.Step
-                {
-                    completed = step.completed,
-                    description = step.description
-                });
-            }
-
-            var stepsTotal = steps.Count();
-            var stepsCompleted = steps.Where(x => x.completed == true).Count();
-
-            // build model
-            model.Add(new WowIndex.Models.RaidAchievement
-            {
-                Name = item.name,
-                Description = item.description,
-                StepsTotal = stepsTotal,
-                StepsCompleted = stepsCompleted,
-                Time = item.time
-            });
-        }
-
+        var region = "us";
+        var realm = "illidan";
+        var name = "maxibabe"; // maxibabe, poddk
+        model = CustomScrapers.ScrapePlayerShadowlandsRaidAchievements(region, realm, name);
         StateHasChanged();
     }
 }

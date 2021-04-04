@@ -8,10 +8,26 @@
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudAppBarSpacer />
-        <MudButton Link="/limitData">test</MudButton>
+        <MudButton Link="/limitData">Web Scrape Demo</MudButton>
         <MudItem xs="12" sm="6" md="4">
             <EditForm Model="@model" OnValidSubmit="Search">
-                <MudTextField Spellcheck="false" Class="searchField" @bind-Value="@model.SearchValue" Label="Search Guilds" Variant="Variant.Filled" Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Search" AdornmentColor="Color.Primary" DisableUnderLine="true"></MudTextField>
+                <MudGrid>
+                    <MudItem xs="2">
+                        <MudSelect DisableUnderLine="true" @bind-Value="@model.searchRegion" Class="searchSelect" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
+                            <MudSelectItem Value="@("eu")">EU</MudSelectItem>
+                            <MudSelectItem Value="@("us")">US</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="4">
+                        <MudTextField Spellcheck="false" Class="searchField" @bind-Value="@model.SearchGuild" Label="Guild name" Variant="Variant.Filled" Margin="Margin.Dense" DisableUnderLine="true"></MudTextField>
+                    </MudItem>
+                    <MudItem xs="4">
+                        <MudTextField Spellcheck="false" Class="searchField" @bind-Value="@model.SearchGuildRealm" Label="Realm" Variant="Variant.Filled" Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Search" AdornmentColor="Color.Primary" DisableUnderLine="true"></MudTextField>
+                    </MudItem>
+                    <MudItem xs="2">
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Search</MudButton>
+                    </MudItem>
+                </MudGrid>
             </EditForm>
         </MudItem>
         <MudAppBarSpacer />
@@ -58,7 +74,8 @@
             <MudText Typo="Typo.body2" Class="px-4 mud-text-secondary">Warcraft rankings</MudText>
             <MudDivider Class="my-2" />
             @*<MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3">Leaderboards</MudText>*@
-            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Outlined.Home">Home</MudNavLink>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Outlined.EmojiEvents">Hall of fame</MudNavLink>
+            <MudNavLink Href="/progress" Match="NavLinkMatch.All" Icon="@Icons.Filled.Stream">Live Raid Progression</MudNavLink>
             <MudNavLink Href="/about" Icon="@Icons.Outlined.Info">About</MudNavLink>
             <MudNavLink Href="/contact" Icon="@Icons.Outlined.AlternateEmail">Contact</MudNavLink>
         </MudNavMenu>
@@ -86,33 +103,86 @@
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
-
     }
 
-    private void Search(EditContext context)
+    public HttpClient apiConnection()
     {
-        var searchQuery = model.SearchValue;
+        var APIclient = new HttpClient();
+        APIclient.BaseAddress = new Uri("https://us.api.blizzard.com/");
 
-        var guild = _context.Records.Where(x => x.name == searchQuery && x.raidName == "castle-nathria").FirstOrDefault();
+        return APIclient;
+    }
+
+    // method to handle user guild search
+    private async Task Search(EditContext context)
+    {
+        var searchRegion = model.searchRegion;
+        var searchQuery = model.SearchGuild;
+        var searchQueryRealm = model.SearchGuildRealm;
+
+        // try to find guild in db
+        var guild = _context.Guilds.Where(x =>
+        x.Region == searchRegion &&
+        x.Name == searchQuery).FirstOrDefault();
 
         if (guild != null)
         {
             // We found the guild in our database!
             // check the age of this guild record
             // send the user to this guilds page (update can be handled there)
-            string region = guild.region;
-            string realm = guild.realm;
-            string guildNameSlug = guild.name.Replace(" ", "-").ToLower();
+            string region = guild.Region;
+            string realmSlug = guild.RealmSlug;
+            string guildNameSlug = guild.NameSlug;
 
             // naviagte to guilds page
-            //NavigationManager.NavigateTo($"/guild/{region}/{realm}/{guildNameSlug}/");
-            Snackbar.Add("Got it!", Severity.Success);
+            NavigationManager.NavigateTo($"/guild/{region}/{realmSlug}/{guildNameSlug}/");
         }
-        else
+        else // if guild is null
         {
-            // we did not find the guild in our database
-            // check wow api to see if guild exists and either add it to our database and redirect the user to its page or return guild not found
-            Snackbar.Add("Guild not found in database!", Severity.Error);
+            // get search values
+            var searchNameSlug = "";
+            var searchRealmSlug = "";
+            if (searchQuery != null && searchQueryRealm != null)
+            {
+                searchNameSlug = searchQuery.Replace(" ", "-").ToLower();
+                searchRealmSlug = searchQueryRealm.Replace(" ", "-").ToLower();
+            }
+
+            // check api for guild
+            var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
+            var request = await apiConnection().GetAsync($"data/wow/guild/{searchRealmSlug}/{searchNameSlug}?namespace=profile-eu&locale=en_US&access_token={accessToken.token}");
+
+            if (request.IsSuccessStatusCode)
+            {
+                // build guild poco
+                string result = request.Content.ReadAsStringAsync().Result;
+                var GuildObject = JsonConvert.DeserializeObject<WowIndex.Models.POCO.Index.LeaderboardEntriesPOCO>(result);
+
+                var newGuild = new WowIndex.Models.Guild()
+                {
+                    GuildId = 0,
+                    RecordCreationDate = DateTime.Now,
+                    Name = "",
+                    NameSlug = "",
+                    Region = "",
+                    Realm = "",
+                    RealmSlug = "",
+                    RealmId = 0,
+                    FactionType = "",
+                    FactionName = "",
+                };
+
+                // Add new guild to the db
+                _context.Guilds.Add(newGuild);
+                _context.SaveChanges();
+
+                // redirect user to guild page
+            }
+            else
+            {
+                // guild does not exist on API
+                Snackbar.Add("Guild not found, Please check region & spelling.", Severity.Normal);
+            }
         }
     }
 

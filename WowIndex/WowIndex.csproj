@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <Folder Include="Areas\Identity\Pages\Account\" />
-    <Folder Include="Migrations\" />
     <Folder Include="Pages\subcomponents\" />
     <Folder Include="Shared\" />
     <Folder Include="wwwroot\js\" />
