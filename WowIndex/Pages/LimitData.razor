@@ -1,7 +1,6 @@
 ﻿@page "/limitData"
-@using Newtonsoft.Json.Linq
 @using WowIndex.CustomScrapers
-
+@using System.Net.Http.Headers
 <MudContainer>
 
     <MudText Class="my-6" Typo="Typo.h4">&lt;LIMIT&gt;Maxibabe - Castle Nathria Achievements</MudText>
@@ -43,7 +42,7 @@
 
 
 @code {
-    List<WowIndex.Models.RaidAchievement> model = new List<WowIndex.Models.RaidAchievement>();
+        List<WowIndex.Models.RaidAchievement> model = new List<WowIndex.Models.RaidAchievement>();
 
     public string FullPage { get; set; }
 
@@ -51,9 +50,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var region = "us";
-        var realm = "illidan";
-        var guildSlug = "complexity-limit";
+        string region = "us";
+        string realm = "illidan";
+        string guildSlug = "complexity-limit";
 
         HttpClient client = new HttpClient();
         client.BaseAddress = new Uri($"https://{region}.api.blizzard.com/");
@@ -64,18 +63,47 @@
 
         string rosterString = await response.Content.ReadAsStringAsync();
 
-        var roster = JsonConvert.DeserializeObject<Models.POCO.GuildRosterPOCO>(rosterString);
-        var rosterMembers = roster.members;
+        Models.POCO.GuildRosterPOCO roster = JsonConvert.DeserializeObject<Models.POCO.GuildRosterPOCO>(rosterString);
+        Models.POCO.Member[] rosterMembers = roster.members.OrderBy(x => x.rank).ToArray();
 
-        var progressCounts = new List<int>();
-
-        foreach (var item in rosterMembers)
+        List<Models.POCO.CharacterAchievementPOCO.Achievement[]> allCharacters = new List<Models.POCO.CharacterAchievementPOCO.Achievement[]>();
+        int[] progressionCheck = new int[10];
+        int progression = 0;
+        client.DefaultRequestHeaders.Range = new RangeHeaderValue(0, 100);
+        byte[] bytes;
+        foreach (Models.POCO.Member item in rosterMembers)
         {
-            if(item.character.level == 60)
+            if (item.character.level == 60)
             {
-                var completedAchievements = CustomScrapers.ScrapePlayerShadowlandsRaidAchievements(region, realm, item.character.name).Result;
-                progressCounts.Add(completedAchievements.Count());
+
+                var characterResponse = await client.GetAsync($"profile/wow/character/{realm}/{item.character.name.ToLower()}/achievements?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}", HttpCompletionOption.ResponseHeadersRead);
+                using (var stream = await response.Content.ReadAsStreamAsync())
+                {
+                    bytes = new byte[100];
+                    var bytesread = stream.Read(bytes, 0, bytes.Length);
+                    stream.Close();
+                }
+                string r = System.Text.Encoding.UTF8.GetString(bytes);
             }
+            /*
+            Models.POCO.CharacterAchievementPOCO.CharacterAchievement characterAchievements = JsonConvert.DeserializeObject<Models.POCO.CharacterAchievementPOCO.CharacterAchievement>(characterString);
+            Models.POCO.CharacterAchievementPOCO.Achievement[] character = characterAchievements.achievements.Where(x => x.id >= 14356 && x.id <= 14365).ToArray();
+            if (character == null)
+                continue;
+
+            allCharacters.Add(character);
+            progressionCheck[character.Length - 1] += 1;
+        }
+        for(int i = 9; i >= 0; i--)
+        {
+            if(progressionCheck[i] == 15)
+            {
+                progression = i + 1;
+            }
+        }
+        if (progression != 0)
+            break;
+            */
         }
 
         StateHasChanged();

@@ -14,14 +14,13 @@ namespace WowIndex.CustomScrapers
         /// Returns a list of players raid achievements from the Shadowlands Expansion
         /// </summary>
         /// <returns></returns>
-        public static async Task<List<Models.RaidAchievement>> ScrapePlayerShadowlandsRaidAchievements(string region, string realm, string name)
+        public static List<Models.RaidAchievement> ScrapePlayerShadowlandsRaidAchievements(string region, string realm, string name)
         {
             HtmlAgilityPack.HtmlWeb web = new HtmlAgilityPack.HtmlWeb();
             HtmlAgilityPack.HtmlDocument doc = web.Load($"https://worldofwarcraft.com/en-gb/character/{region}/{realm}/{name}/achievements/dungeons-raids/shadowlands-raid");
 
-            var playerData = doc.DocumentNode.Descendants().Where(n => n.Name == "script").ToList()[9].InnerHtml;
+            string playerData = doc.DocumentNode.Descendants().Where(n => n.Name == "script").ToList()[9].InnerHtml;
 
-            // initial clean up
             string cleanedJsonData = playerData.Remove(0, 35);
             cleanedJsonData = cleanedJsonData.Remove(cleanedJsonData.Length - 2, 2);
             JObject obj = JObject.Parse(cleanedJsonData);
