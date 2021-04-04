@@ -1,10 +1,113 @@
 ﻿@page "/limitData"
+@using Newtonsoft.Json.Linq
+
+<MudContainer>
+    <MudText Class="my-6" Typo="Typo.h4">&lt;LIMIT&gt;Maxibabe - Castle Nathria Achievements</MudText>
+    <MudGrid Class="mt-8">
+        @foreach (var item in model)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">@item.Name</MudText>
+                        </CardHeaderContent>
+                        @*<CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Default" />
+                            </CardHeaderActions>*@
+                    </MudCardHeader>
+                    <MudCardContent>
+                        @if (item.Time.ToString() != "1/1/0001 12:00:00 AM")
+                        {
+                            <MudChip Size="Size.Small" Icon="@Icons.Material.Outlined.CheckCircleOutline" Color="Color.Success">Completed</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip Size="Size.Small" Icon="@Icons.Material.Outlined.HighlightOff" Color="Color.Error">Incomplete</MudChip>
+                        }
+                        <MudText Class="mt-5" Typo="Typo.body2">@item.Description</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        @if (item.Time.ToString() != "1/1/0001 12:00:00 AM")
+                        {
+                            <MudButton Variant="Variant.Text" Color="Color.Primary">@item.Time.ToString()</MudButton>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+</MudContainer>
 
 
 @code {
+    List<WowIndex.Models.RaidAchievement> model = new List<WowIndex.Models.RaidAchievement>();
+
+    public string FullPage { get; set; }
+
+    public List<string> items = new List<string>();
 
     protected override async Task OnInitializedAsync()
     {
+        Scrapper();
+    }
 
+    private void Scrapper()
+    {
+        HtmlAgilityPack.HtmlWeb web = new HtmlAgilityPack.HtmlWeb();
+        HtmlAgilityPack.HtmlDocument doc = web.Load("https://worldofwarcraft.com/en-gb/character/us/illidan/maxibabe/achievements/dungeons-raids/shadowlands-raid");
+
+        var scriptsInSource = doc.DocumentNode.Descendants().Where(n => n.Name == "script").ToList();
+
+        // get player data
+        var playerData = scriptsInSource[9].InnerHtml;
+
+        // initial clean up
+        var cleanedJsonData = playerData.Remove(0, 35);
+        cleanedJsonData = cleanedJsonData.Remove(cleanedJsonData.Length - 2, 2);
+        JObject obj = JObject.Parse(cleanedJsonData);
+
+        // drill 1
+        var achievementCategory = obj.SelectToken("achievementCategory");
+
+        // drill 2
+        var subcategories = achievementCategory.SelectToken("subcategories");
+
+        // drill 3 (shadowlands raid achivemnts)
+        var ShadowlandsRaid = subcategories.SelectToken("shadowlands-raid");
+
+        // throw it in a poco object
+        var jsonObject = JsonConvert.DeserializeObject<WowIndex.Models.POCO.ShadowlandsRaidPOCO.ShadowlandsRaidPOCO>(ShadowlandsRaid.ToString());
+
+        // chuck it into our model
+        foreach (var item in jsonObject.achievements)
+        {
+            var steps = new List<WowIndex.Models.POCO.ShadowlandsRaidPOCO.Step>();
+
+            // get progress steps for this achievement
+            foreach (WowIndex.Models.POCO.ShadowlandsRaidPOCO.Step step in item.progressSteps)
+            {
+                steps.Add(new WowIndex.Models.POCO.ShadowlandsRaidPOCO.Step
+                {
+                    completed = step.completed,
+                    description = step.description
+                });
+            }
+
+            var stepsTotal = steps.Count();
+            var stepsCompleted = steps.Where(x => x.completed == true).Count();
+
+            // build model
+            model.Add(new WowIndex.Models.RaidAchievement
+            {
+                Name = item.name,
+                Description = item.description,
+                StepsTotal = stepsTotal,
+                StepsCompleted = stepsCompleted,
+                Time = item.time
+            });
+        }
+
+        StateHasChanged();
     }
 }
