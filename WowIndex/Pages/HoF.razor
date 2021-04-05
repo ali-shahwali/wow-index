@@ -6,10 +6,6 @@
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
 }
 
-<MudItem xs="12">
-    <MudText Class="my-5 mx-5" Typo="Typo.h5" GutterBottom="true">Global Raid Leaderboards</MudText>
-</MudItem>
-
 <MudTabs Centered="false" Elevation="4" AlwaysShowScrollButtons="true" Rounded="false" Color="@Color.Dark">
     <MudTabPanel Style="min-width: 250px;" OnClick="@(e => ChangeRaid("castle-nathria"))" Text="Castle Nathria" BadgeData='"LIVE"' />
     <MudTabPanel OnClick="@(e => ChangeRaid("nyalotha-the-waking-city"))" Text="Ny'alotha" />

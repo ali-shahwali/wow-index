@@ -28,3 +28,7 @@
 .searchField > .mud-input.mud-input-filled {
     border-radius: 4px !important;
 }
+
+.searchField > .mud-input > input.mud-input-root.mud-input-root-filled, div.mud-input-slot.mud-input-root.mud-input-root-filled {
+    padding: 12px 12px 10px;
+}

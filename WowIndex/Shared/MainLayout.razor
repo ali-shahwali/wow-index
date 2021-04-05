@@ -9,7 +9,7 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(e => DrawerToggle())" />
         <MudAppBarSpacer />
         <MudItem xs="12" sm="6" md="4">
-            <MudAutocomplete T="Models.Guild" ValueChanged="Search" DisableUnderLine="true" Margin="Margin.Dense" Variant="Variant.Filled" Required="true" Class="searchField" Label="Guild search" SearchFunc="@Search2">
+            <MudAutocomplete ResetValueOnEmptyText="true" T="Models.Guild" ValueChanged="Search" DisableUnderLine="true" Variant="Variant.Filled" Required="true" Class="searchField" Placeholder="Guild search" SearchFunc="@Search2">
                 <ItemTemplate Context="result">
                     <MudText>
                         @result.Region.ToUpper()
@@ -18,6 +18,7 @@
                         @result.Name @result.Realm
                     </MudText>
                 </ItemTemplate>
+                    
             </MudAutocomplete>
         </MudItem>
         <MudAppBarSpacer />
@@ -68,6 +69,9 @@
 
             <MudNavLink Href="/about" Icon="@Icons.Outlined.Info">About</MudNavLink>
             <MudNavLink Href="/contact" Icon="@Icons.Outlined.AlternateEmail">Contact</MudNavLink>
+
+            @{ var link = $"/us/illidan/complexity-limit/"; }
+            <MudNavLink Href="@link" Icon="@Icons.Outlined.AlternateEmail">Scuffed</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
@@ -109,13 +113,12 @@
     // method to handle user guild search
     private async Task Search(Models.Guild g)
     {
-        string[] searchSplit = model.Search.Split('-');
-        string searchRegion = searchSplit[0].Split()[0];
-        string searchQuery = searchSplit[1].Split()[1];
-        string searchQueryRealm = searchSplit[2];
+        string searchRegion = g.Region;
+        string searchQuery = g.NameSlug;
+        string searchQueryRealm = g.RealmSlug;
 
         // try to find guild in db
-        var guild = _context.Guilds.Where(x => x.Region == searchRegion && x.Name == searchQuery).FirstOrDefault();
+        var guild = _context.Guilds.Where(x => x.Region == searchRegion && x.NameSlug == searchQuery).FirstOrDefault();
 
         if (guild != null)
         {
@@ -190,7 +193,7 @@
             DrawerBackground = "#000000",
             DrawerText = "#b3b3b3",
             DrawerIcon = "rgba(255,255,255, 0.50)",
-            AppbarBackground = "#232940",
+            AppbarBackground = "#27272f",
             AppbarText = "rgba(255,255,255, 0.70)",
             TextPrimary = "#FFFFFF",
             TextSecondary = "rgba(255,255,255, 0.50)",

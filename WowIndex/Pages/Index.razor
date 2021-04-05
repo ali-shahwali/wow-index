@@ -3,8 +3,6 @@
 @using Microsoft.Extensions.Configuration
 @inject WowIndex.Data.ApplicationDbContext _context
 
-<h3>Raid Progression</h3>
-
 <MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardCastleNathria>>>(ServerReload))" RowsPerPage="100" Dense="true" Height="calc(100vh - 236px)" FixedHeader="true" @ref="table" Hover="true">
     <HeaderContent>
         <MudTh></MudTh>
@@ -14,12 +12,25 @@
         <MudTh>Progress</MudTh>
     </HeaderContent>
     <RowTemplate>
+        @{
+            var guild = Guilds.Where(x => x.GuildId == context.GuildId).FirstOrDefault();
+        }
         <MudTd DataLabel="Rank">
             <b style="color: #0070DD"></b>
         </MudTd>
         <MudTd DataLabel="Guild">
             <MudButton Disabled="true" Color="Color.Info">
-                @context.GuildId
+                @guild.Name
+            </MudButton>
+        </MudTd>
+        <MudTd DataLabel="Guild">
+            <MudButton Disabled="true" Color="Color.Info">
+                @guild.Realm
+            </MudButton>
+        </MudTd>
+        <MudTd DataLabel="Guild">
+            <MudButton Disabled="true" Color="Color.Info">
+                @context.Progress
             </MudButton>
         </MudTd>
     </RowTemplate>
@@ -31,12 +42,20 @@
 @code {
     public MudTable<LeaderboardCastleNathria> table;
 
+    public List<Models.Guild> Guilds = new List<Models.Guild>();
+
     private async Task<TableData<LeaderboardCastleNathria>> ServerReload(TableState state)
     {
         // bind records from database
-        var records = await _context.LeaderboardCastleNathria.ToListAsync();
+        var leaderboard = await _context.LeaderboardCastleNathria.ToListAsync();
+
+        foreach (var item in leaderboard)
+        {
+            var guild = _context.Guilds.Where(x => x.Id == item.GuildId).FirstOrDefault();
+            Guilds.Add(guild);
+        }
 
         StateHasChanged();
-        return new TableData<LeaderboardCastleNathria>() { Items = records };
+        return new TableData<LeaderboardCastleNathria>() { Items = leaderboard };
     }
 }
