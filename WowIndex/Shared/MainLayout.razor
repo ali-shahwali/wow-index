@@ -6,28 +6,19 @@
 
 <MudLayout>
     <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(e => DrawerToggle())" />
         <MudAppBarSpacer />
         <MudItem xs="12" sm="6" md="4">
-            <EditForm Model="@model" OnValidSubmit="Search">
-                <MudGrid>
-                    <MudItem xs="2">
-                        <MudSelect DisableUnderLine="true" @bind-Value="@model.searchRegion" Class="searchSelect" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
-                            <MudSelectItem Value="@("eu")">EU</MudSelectItem>
-                            <MudSelectItem Value="@("us")">US</MudSelectItem>
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField Required="true" Spellcheck="false" Class="searchField" @bind-Value="@model.SearchGuild" Label="Guild name" Variant="Variant.Filled" Margin="Margin.Dense" DisableUnderLine="true"></MudTextField>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField Required="true" Spellcheck="false" Class="searchField" @bind-Value="@model.SearchGuildRealm" Label="Realm" Variant="Variant.Filled" Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Search" AdornmentColor="Color.Primary" DisableUnderLine="true"></MudTextField>
-                    </MudItem>
-                    <MudItem xs="2">
-                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Search</MudButton>
-                    </MudItem>
-                </MudGrid>
-            </EditForm>
+            <MudAutocomplete T="Models.Guild" ValueChanged="Search" DisableUnderLine="true" Margin="Margin.Dense" Variant="Variant.Filled" Required="true" Class="searchField" Label="Guild search" SearchFunc="@Search2">
+                <ItemTemplate Context="result">
+                    <MudText>
+                        @result.Region.ToUpper()
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        @result.Name @result.Realm
+                    </MudText>
+                </ItemTemplate>
+            </MudAutocomplete>
         </MudItem>
         <MudAppBarSpacer />
         @if (isLoggedIn)
@@ -88,6 +79,8 @@
 
     Models.Index.MainLayoutModel model = new Models.Index.MainLayoutModel();
 
+    List<Models.Guild> guilds = new List<Models.Guild>();
+
     public string region = "";
 
     public string ProfilePic { get; set; } = "img/profile-icon.svg";
@@ -103,17 +96,26 @@
         _drawerOpen = !_drawerOpen;
     }
 
-    // method to handle user guild search
-    private async Task Search(EditContext context)
+    private async Task<IEnumerable<Models.Guild>> Search2(string value)
     {
-        string searchRegion = model.searchRegion;
-        string searchQuery = model.SearchGuild;
-        string searchQueryRealm = model.SearchGuildRealm;
+
+        // if text is null or empty, don't return values (drop-down will not open)
+        if (string.IsNullOrEmpty(value))
+            return new List<Models.Guild>();
+
+        return guilds.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).ToList();
+    }
+
+    // method to handle user guild search
+    private async Task Search(Models.Guild g)
+    {
+        string[] searchSplit = model.Search.Split('-');
+        string searchRegion = searchSplit[0].Split()[0];
+        string searchQuery = searchSplit[1].Split()[1];
+        string searchQueryRealm = searchSplit[2];
 
         // try to find guild in db
-        var guild = _context.Guilds.Where(x =>
-        x.Region == searchRegion &&
-        x.Name == searchQuery).FirstOrDefault();
+        var guild = _context.Guilds.Where(x => x.Region == searchRegion && x.Name == searchQuery).FirstOrDefault();
 
         if (guild != null)
         {
@@ -224,6 +226,8 @@
             BattleTagName = profile.BattleTag.Split('#')[0];
             BattleTagId = "#" + profile.BattleTag.Split('#')[1];
         }
+
+        guilds = await _context.Guilds.ToListAsync();
     }
 
     private async Task OpenProfilePage()
