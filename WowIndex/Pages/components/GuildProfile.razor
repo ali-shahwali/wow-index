@@ -1,6 +1,7 @@
-﻿@page "/limitData"
+﻿@page "/{region}/{realm}/{guildSlug}/"
 @using WowIndex.CustomScrapers
 @using System.Net.Http.Headers
+@using System.Net
 <MudContainer>
 
     @if (RequestTime.ToString() != "00:00:00")
@@ -51,6 +52,15 @@
 
 
 @code {
+    [Parameter]
+    public string region { get; set; }
+
+    [Parameter]
+    public string realm { get; set; }
+
+    [Parameter]
+    public string guildSlug { get; set; }
+
     List<WowIndex.Models.RaidAchievement> model = new List<WowIndex.Models.RaidAchievement>();
 
     public TimeSpan RequestTime { get; set; }
@@ -61,13 +71,15 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var startTime = DateTime.Now;
+        DateTime startTime = DateTime.Now;
+        var handler = new HttpClientHandler()
+        {
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+        };
+        HttpClient client = new HttpClient(handler);
+        client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
+        client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
 
-        string region = "us";
-        string realm = "illidan";
-        string guildSlug = "complexity-limit";
-
-        HttpClient client = new HttpClient();
         client.BaseAddress = new Uri($"https://{region}.api.blizzard.com/");
 
         var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
@@ -79,17 +91,15 @@
         Models.POCO.GuildRosterPOCO roster = JsonConvert.DeserializeObject<Models.POCO.GuildRosterPOCO>(rosterString);
         Models.POCO.Member[] rosterMembers = roster.members.OrderBy(x => x.rank).ToArray();
 
-        //var allCharacters = new List<Models.POCO.CharacterAchievementPOCO.Achievement[]>();
+        List<Models.POCO.CharacterAchievementPOCO.Achievement[]> allCharacters = new List<Models.POCO.CharacterAchievementPOCO.Achievement[]>();
         int[] progressionTally = new int[10];
         int progression = 0;
-        client.DefaultRequestHeaders.Range = new RangeHeaderValue(0, 100);
-
         foreach (Models.POCO.Member item in rosterMembers)
         {
             if (item.character.level == 60)
             {
 
-                var apiResponse = await client.GetAsync($"profile/wow/character/{realm}/{item.character.name.ToLower()}/achievements?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}", HttpCompletionOption.ResponseHeadersRead);
+                var apiResponse = await client.GetAsync($"profile/wow/character/{realm}/{item.character.name.ToLower()}/achievements?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}");
                 var apiResponseString = apiResponse.Content.ReadAsStringAsync().Result;
 
                 Models.POCO.CharacterAchievementPOCO.CharacterAchievement characterAchievements = JsonConvert.DeserializeObject<Models.POCO.CharacterAchievementPOCO.CharacterAchievement>(apiResponseString);
@@ -98,6 +108,7 @@
                 if (validAchievements.Length > 0)
                 {
                     progressionTally[validAchievements.Length - 1]++;
+                    allCharacters.Add(validAchievements);
                 }
             }
 
@@ -115,8 +126,7 @@
 
         RequestTime = DateTime.Now - startTime;
 
-        // this takes about 45 seconds on avg for limit guild...
-            StateHasChanged();
+        StateHasChanged();
     }
 }
 

@@ -19,10 +19,10 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="4">
-                        <MudTextField Spellcheck="false" Class="searchField" @bind-Value="@model.SearchGuild" Label="Guild name" Variant="Variant.Filled" Margin="Margin.Dense" DisableUnderLine="true"></MudTextField>
+                        <MudTextField Required="true" Spellcheck="false" Class="searchField" @bind-Value="@model.SearchGuild" Label="Guild name" Variant="Variant.Filled" Margin="Margin.Dense" DisableUnderLine="true"></MudTextField>
                     </MudItem>
                     <MudItem xs="4">
-                        <MudTextField Spellcheck="false" Class="searchField" @bind-Value="@model.SearchGuildRealm" Label="Realm" Variant="Variant.Filled" Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Search" AdornmentColor="Color.Primary" DisableUnderLine="true"></MudTextField>
+                        <MudTextField Required="true" Spellcheck="false" Class="searchField" @bind-Value="@model.SearchGuildRealm" Label="Realm" Variant="Variant.Filled" Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Search" AdornmentColor="Color.Primary" DisableUnderLine="true"></MudTextField>
                     </MudItem>
                     <MudItem xs="2">
                         <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Search</MudButton>
@@ -89,8 +89,7 @@
 
     Models.Index.MainLayoutModel model = new Models.Index.MainLayoutModel();
 
-    [Parameter]
-    public string region { get; set; }
+    public string region = "";
 
     public string ProfilePic { get; set; } = "img/profile-icon.svg";
     public string BattleTagName = "";
@@ -116,9 +115,9 @@
     // method to handle user guild search
     private async Task Search(EditContext context)
     {
-        var searchRegion = model.searchRegion;
-        var searchQuery = model.SearchGuild;
-        var searchQueryRealm = model.SearchGuildRealm;
+        string searchRegion = model.searchRegion;
+        string searchQuery = model.SearchGuild;
+        string searchQueryRealm = model.SearchGuildRealm;
 
         // try to find guild in db
         var guild = _context.Guilds.Where(x =>
@@ -131,52 +130,48 @@
             // check the age of this guild record
             // send the user to this guilds page (update can be handled there)
             string region = guild.Region;
-            string realmSlug = guild.RealmSlug;
-            string guildNameSlug = guild.NameSlug;
+            string realm = guild.RealmSlug;
+            string guildSlug = guild.NameSlug;
 
             // naviagte to guilds page
-            NavigationManager.NavigateTo($"/guild/{region}/{realmSlug}/{guildNameSlug}/");
+            NavigationManager.NavigateTo($"/{region}/{realm}/{guildSlug}/");
         }
         else // if guild is null
         {
             // get search values
-            var searchNameSlug = "";
-            var searchRealmSlug = "";
-            if (searchQuery != null && searchQueryRealm != null)
-            {
-                searchNameSlug = searchQuery.Replace(" ", "-").ToLower();
-                searchRealmSlug = searchQueryRealm.Replace(" ", "-").ToLower();
-            }
+            string searchNameSlug = searchQuery.Replace(" ", "-").ToLower();
+            string searchRealmSlug = searchQueryRealm.Replace(" ", "-").ToLower();
 
             // check api for guild
             var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
-            var request = await apiConnection().GetAsync($"data/wow/guild/{searchRealmSlug}/{searchNameSlug}?namespace=profile-eu&locale=en_US&access_token={accessToken.token}");
+            var request = await apiConnection().GetAsync($"data/wow/guild/{searchRealmSlug}/{searchNameSlug}?namespace=profile-{searchRegion}&locale=en_US&access_token={accessToken.token}");
 
             if (request.IsSuccessStatusCode)
             {
                 // build guild poco
                 string result = request.Content.ReadAsStringAsync().Result;
-                var GuildObject = JsonConvert.DeserializeObject<WowIndex.Models.POCO.Index.LeaderboardEntriesPOCO>(result);
+                var guildObject = JsonConvert.DeserializeObject<WowIndex.Models.POCO.GuildPOCO.Guild>(result);
 
                 var newGuild = new WowIndex.Models.Guild()
                 {
-                    GuildId = 0,
+                    GuildId = guildObject.id,
                     RecordCreationDate = DateTime.Now,
-                    Name = "",
-                    NameSlug = "",
-                    Region = "",
-                    Realm = "",
-                    RealmSlug = "",
-                    RealmId = 0,
-                    FactionType = "",
-                    FactionName = "",
+                    Name = guildObject.name,
+                    NameSlug = searchNameSlug,
+                    Region = searchRegion,
+                    Realm = guildObject.realm.name,
+                    RealmSlug = searchRealmSlug,
+                    RealmId = guildObject.realm.id,
+                    FactionType = guildObject.faction.type,
+                    FactionName = guildObject.faction.name,
                 };
 
                 // Add new guild to the db
                 _context.Guilds.Add(newGuild);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
 
                 // redirect user to guild page
+                NavigationManager.NavigateTo($"/{newGuild.Region.ToLower()}/{newGuild.RealmSlug}/{newGuild.NameSlug}/");
             }
             else
             {
