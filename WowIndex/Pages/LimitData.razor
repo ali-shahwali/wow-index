@@ -3,6 +3,15 @@
 @using System.Net.Http.Headers
 <MudContainer>
 
+    @if (RequestTime.ToString() != "00:00:00")
+    {
+        <h1>@RequestTime.ToString()</h1>
+    }
+    else
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+
     <MudText Class="my-6" Typo="Typo.h4">&lt;LIMIT&gt;Maxibabe - Castle Nathria Achievements</MudText>
     <MudGrid Class="mt-8">
         @foreach (var item in model)
@@ -42,7 +51,9 @@
 
 
 @code {
-        List<WowIndex.Models.RaidAchievement> model = new List<WowIndex.Models.RaidAchievement>();
+    List<WowIndex.Models.RaidAchievement> model = new List<WowIndex.Models.RaidAchievement>();
+
+    public TimeSpan RequestTime { get; set; }
 
     public string FullPage { get; set; }
 
@@ -50,6 +61,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var startTime = DateTime.Now;
+
         string region = "us";
         string realm = "illidan";
         string guildSlug = "complexity-limit";
@@ -66,46 +79,44 @@
         Models.POCO.GuildRosterPOCO roster = JsonConvert.DeserializeObject<Models.POCO.GuildRosterPOCO>(rosterString);
         Models.POCO.Member[] rosterMembers = roster.members.OrderBy(x => x.rank).ToArray();
 
-        List<Models.POCO.CharacterAchievementPOCO.Achievement[]> allCharacters = new List<Models.POCO.CharacterAchievementPOCO.Achievement[]>();
-        int[] progressionCheck = new int[10];
+        //var allCharacters = new List<Models.POCO.CharacterAchievementPOCO.Achievement[]>();
+        int[] progressionTally = new int[10];
         int progression = 0;
         client.DefaultRequestHeaders.Range = new RangeHeaderValue(0, 100);
-        byte[] bytes;
+
         foreach (Models.POCO.Member item in rosterMembers)
         {
             if (item.character.level == 60)
             {
 
-                var characterResponse = await client.GetAsync($"profile/wow/character/{realm}/{item.character.name.ToLower()}/achievements?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}", HttpCompletionOption.ResponseHeadersRead);
-                using (var stream = await response.Content.ReadAsStreamAsync())
+                var apiResponse = await client.GetAsync($"profile/wow/character/{realm}/{item.character.name.ToLower()}/achievements?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}", HttpCompletionOption.ResponseHeadersRead);
+                var apiResponseString = apiResponse.Content.ReadAsStringAsync().Result;
+
+                Models.POCO.CharacterAchievementPOCO.CharacterAchievement characterAchievements = JsonConvert.DeserializeObject<Models.POCO.CharacterAchievementPOCO.CharacterAchievement>(apiResponseString);
+                Models.POCO.CharacterAchievementPOCO.Achievement[] validAchievements = characterAchievements.achievements.Where(x => x.id >= 14356 && x.id <= 14365).ToArray();
+
+                if (validAchievements.Length > 0)
                 {
-                    bytes = new byte[100];
-                    var bytesread = stream.Read(bytes, 0, bytes.Length);
-                    stream.Close();
+                    progressionTally[validAchievements.Length - 1]++;
                 }
-                string r = System.Text.Encoding.UTF8.GetString(bytes);
             }
-            /*
-            Models.POCO.CharacterAchievementPOCO.CharacterAchievement characterAchievements = JsonConvert.DeserializeObject<Models.POCO.CharacterAchievementPOCO.CharacterAchievement>(characterString);
-            Models.POCO.CharacterAchievementPOCO.Achievement[] character = characterAchievements.achievements.Where(x => x.id >= 14356 && x.id <= 14365).ToArray();
-            if (character == null)
-                continue;
 
-            allCharacters.Add(character);
-            progressionCheck[character.Length - 1] += 1;
-        }
-        for(int i = 9; i >= 0; i--)
-        {
-            if(progressionCheck[i] == 15)
+            for (int i = 9; i >= 0; i--)
             {
-                progression = i + 1;
+                if (progressionTally[i] >= 15)
+                {
+                    progression = i + 1;
+                }
             }
-        }
-        if (progression != 0)
-            break;
-            */
+
+            if (progression != 0)
+                break;
         }
 
-        StateHasChanged();
+        RequestTime = DateTime.Now - startTime;
+
+        // this takes about 45 seconds on avg for limit guild...
+            StateHasChanged();
     }
 }
+
