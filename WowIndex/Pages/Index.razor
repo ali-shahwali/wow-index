@@ -1,25 +1,11 @@
 ﻿@page "/"
-@using Models.Index
+@using WowIndex.Models.RaidingLeaderboards
+@using Microsoft.Extensions.Configuration
+@inject WowIndex.Data.ApplicationDbContext _context
 
-@if (table == null || isLoading)
-{
-    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
-}
+<h3>Raid Progression</h3>
 
-<MudItem xs="12">
-    <MudText Class="my-5 mx-5" Typo="Typo.h5" GutterBottom="true">Global Raid Leaderboards</MudText>
-</MudItem>
-
-<MudTabs Centered="false" Elevation="4" AlwaysShowScrollButtons="true" Rounded="false" Color="@Color.Dark">
-    <MudTabPanel Style="min-width: 250px;" OnClick="@(e => ChangeRaid("castle-nathria"))" Text="Castle Nathria" BadgeData='"LIVE"' />
-    <MudTabPanel OnClick="@(e => ChangeRaid("nyalotha-the-waking-city"))" Text="Ny'alotha" />
-    <MudTabPanel OnClick="@(e => ChangeRaid("the-eternal-palace"))" Text="The Eternal Palace" />
-    <MudTabPanel OnClick="@(e => ChangeRaid("crucible-of-storms"))" Text="Crucible of Storms" />
-    <MudTabPanel OnClick="@(e => ChangeRaid("battle-of-dazaralor"))" Text="Battle of Dazar'alor" />
-    <MudTabPanel OnClick="@(e => ChangeRaid("uldir"))" Text="Uldir" />
-</MudTabs>
-
-<MudTable ServerData="@(new Func<TableState, Task<TableData<GuildRecord>>>(ServerReload))" RowsPerPage="100" Dense="true" Height="calc(100vh - 236px)" FixedHeader="true" @ref="table" Hover="true">
+<MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardCastleNathria>>>(ServerReload))" RowsPerPage="100" Dense="true" Height="calc(100vh - 236px)" FixedHeader="true" @ref="table" Hover="true">
     <HeaderContent>
         <MudTh></MudTh>
         <MudTh>Guild</MudTh>
@@ -28,85 +14,14 @@
         <MudTh>Progress</MudTh>
     </HeaderContent>
     <RowTemplate>
-        @if (!isLoading)
-        {
-            <MudTd DataLabel="Rank">
-                @if (context.rank <= 3)
-                {
-                    <b style="color: #FF8000">@context.rank</b>
-                }
-                else if (context.rank > 3 && context.rank <= 10)
-                {
-                    <b style="color: #A335EE">@context.rank</b>
-                }
-                else
-                {
-                    <b style="color: #0070DD">@context.rank</b>
-                }
-            </MudTd>
-            <MudTd DataLabel="Guild">
-                @{
-                    var nameSlug = context.name.Replace(" ", "-").ToLower();
-                    var realmSlug = context.realm.Replace(" ", "-").ToLower();
-                    var armoryLink = $"https://worldofwarcraft.com/en-gb/guild/{context.region}/{realmSlug}/{nameSlug}";
-                }
-                @if (context.faction == "ALLIANCE")
-                {
-                    if (context.region == "cn")
-                    {
-                        <MudButton Disabled="true" Color="Color.Info">
-                            @context.name
-                        </MudButton>
-                    }
-                    else
-                    {
-                        <MudButton Target="_blank" Link="@armoryLink" Color="Color.Info">
-                            @context.name
-                        </MudButton>
-                    }
-                }
-                else
-                {
-                    if (context.region == "cn")
-                    {
-                        <MudButton Disabled="true" Color="Color.Error">
-                            @context.name
-                        </MudButton>
-                    }
-                    else
-                    {
-                        <MudButton Target="_blank" Link="@armoryLink" Color="Color.Error">
-                            @context.name
-                        </MudButton>
-                    }
-                }
-
-            </MudTd>
-            <MudTd DataLabel="Realm"><MudChip Size="Size.Small" Label="true">@context.region.ToUpper()</MudChip> @context.realm</MudTd>
-            <MudTd DataLabel="Progress">
-                @if (context.faction == "ALLIANCE")
-                {
-                    <MudAvatar Image="img/alliance.png" Size="Size.Small" Class="ma-2" />
-                }
-                else
-                {
-                    <MudAvatar Image="img/horde.png" Size="Size.Small" Class="ma-2" />
-                }
-            </MudTd>
-            <MudTd DataLabel="Progress">
-                @if (context.region == "cn")
-                {
-                    var msg = $"Limited Data for this region ({context.region.ToUpper()})";
-                    <MudTooltip Text="@msg">
-                        <MudIcon Icon="@Icons.Material.Outlined.Info" />
-                    </MudTooltip>
-                }
-                else
-                {
-                    <b style="color: forestgreen;">8/8 (M)</b>
-                }
-            </MudTd>
-        }
+        <MudTd DataLabel="Rank">
+            <b style="color: #0070DD"></b>
+        </MudTd>
+        <MudTd DataLabel="Guild">
+            <MudButton Disabled="true" Color="Color.Info">
+                @context.GuildId
+            </MudButton>
+        </MudTd>
     </RowTemplate>
     <PagerContent>
         <MudTablePager DisableRowsPerPage="true" />
@@ -114,119 +29,14 @@
 </MudTable>
 
 @code {
+    public MudTable<LeaderboardCastleNathria> table;
 
-    /*
-
-    Notice: Blizzard API Request Limits
-
-    Long-term Quota - 36,000 requests per hour
-
-    Short-term Throttle - 100 requests per second
-
-    */
-    public MudTable<GuildRecord> table;
-
-    public string raidName = "castle-nathria";
-
-    public List<GuildRecord> records { get; set; }
-
-    public Data.Token accessToken { get; set; }
-
-    public bool isLoading = false;
-    public HttpClient apiConnection()
-    {
-        var APIclient = new HttpClient();
-        APIclient.BaseAddress = new Uri("https://us.api.blizzard.com/");
-
-        return APIclient;
-    }
-
-    private async Task<TableData<GuildRecord>> ServerReload(TableState state)
+    private async Task<TableData<LeaderboardCastleNathria>> ServerReload(TableState state)
     {
         // bind records from database
-        records = _context.Records.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToList();
+        var records = await _context.LeaderboardCastleNathria.ToListAsync();
 
-        DateTime RequestInterval = DateTime.Now.AddMinutes(-Int32.Parse(Configuration["LiveRaidApiRequestInterval"]));
-
-        // if record is older than 10 min then all a new record from the api and update the database
-        if (records.Count == 0 || (raidName.Equals("castle-nathria") && records[0].age < RequestInterval)) // WHAT THE FUCK??
-        {
-            isLoading = true;
-            // Call Blizzard API
-            // Mythic Raid Leaderboard API
-            // Returns the leaderboard for a given raid and faction
-
-            // Check token
-            accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
-
-            var apiResponseAlliance = await apiConnection().GetAsync($"data/wow/leaderboard/hall-of-fame/{raidName}/alliance?namespace=dynamic-us&locale=en_US&access_token={accessToken.token}");
-            var apiResponseHorde = await apiConnection().GetAsync($"data/wow/leaderboard/hall-of-fame/{raidName}/horde?namespace=dynamic-us&locale=en_US&access_token={accessToken.token}");
-
-            if (apiResponseHorde.IsSuccessStatusCode && apiResponseAlliance.IsSuccessStatusCode)
-            {
-                // get json strings
-                string resultHorde = apiResponseHorde.Content.ReadAsStringAsync().Result;
-                string resultAlliance = apiResponseAlliance.Content.ReadAsStringAsync().Result;
-
-                // Convert to data arrays
-                var GuildRankingsListHorde = JsonConvert.DeserializeObject<Models.POCO.Index.LeaderboardEntriesPOCO>(resultHorde);
-                var GuildRankingsListAlliance = JsonConvert.DeserializeObject<Models.POCO.Index.LeaderboardEntriesPOCO>(resultAlliance);
-
-                // combine the two data arrays
-                Models.POCO.Index.GuildRanking[] guildRankingsArray = new Models.POCO.Index.GuildRanking[GuildRankingsListAlliance.entries.Length + GuildRankingsListHorde.entries.Length];
-                int j = 0;
-                for (int i = 0; i < guildRankingsArray.Length; i++)
-                {
-                    if (i < 100)
-                        guildRankingsArray[i] = GuildRankingsListHorde.entries[i];
-                    else
-                    {
-                        guildRankingsArray[i] = GuildRankingsListAlliance.entries[j];
-                        j++;
-                    }
-                }
-
-                // remove old records
-                var rows = from x in _context.Records where x.raidName.Equals(raidName) select x;
-                _context.RemoveRange(rows);
-                _context.SaveChanges();
-
-                // add new records
-                records = new List<GuildRecord>();
-                j = 1;
-                foreach (WowIndex.Models.POCO.Index.GuildRanking guild in guildRankingsArray.OrderBy(x => x.timestamp).ToList())
-                {
-                    records.Add(new GuildRecord()
-                    {
-                        rank = j,
-                        region = guild.region,
-                        realm = guild.guild.realm.name,
-                        name = guild.guild.name,
-                        faction = guild.faction.type,
-                        age = DateTime.Now,
-                        timestamp = guild.timestamp,
-                        raidName = raidName
-                    });
-                    j++;
-                }
-
-                _context.Records.AddRange(records);
-                _context.SaveChanges();
-
-
-                // bind the new records to the view model!
-                records = _context.Records.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToList();
-            }
-        }
-        isLoading = false;
         StateHasChanged();
-        return new TableData<GuildRecord>() { Items = records };
-    }
-
-    public async Task ChangeRaid(string raid)
-    {
-        raidName = raid;
-
-        await table.ReloadServerData();
+        return new TableData<LeaderboardCastleNathria>() { Items = records };
     }
 }

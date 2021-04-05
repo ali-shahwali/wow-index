@@ -13,7 +13,7 @@
         <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
     }
 
-    <MudText Class="my-6" Typo="Typo.h4">&lt;LIMIT&gt;Maxibabe - Castle Nathria Achievements</MudText>
+    <MudText Class="my-6" Typo="Typo.h4">&lt; @Guild.Name &gt;</MudText>
     <MudGrid Class="mt-8">
         @foreach (var item in model)
         {
@@ -61,6 +61,8 @@
     [Parameter]
     public string guildSlug { get; set; }
 
+    public Models.Guild Guild = new Models.Guild();
+
     List<WowIndex.Models.RaidAchievement> model = new List<WowIndex.Models.RaidAchievement>();
 
     public TimeSpan RequestTime { get; set; }
@@ -71,14 +73,17 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Guild = await _context.Guilds.Where(x => x.NameSlug == guildSlug).FirstOrDefaultAsync();
+
         DateTime startTime = DateTime.Now;
-        var handler = new HttpClientHandler()
-        {
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-        };
-        HttpClient client = new HttpClient(handler);
-        client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
-        client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
+        //var handler = new HttpClientHandler()
+        //{
+        //    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+        //};
+
+        HttpClient client = new HttpClient();
+        //client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
+        //client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
 
         client.BaseAddress = new Uri($"https://{region}.api.blizzard.com/");
 
@@ -92,13 +97,13 @@
         Models.POCO.Member[] rosterMembers = roster.members.OrderBy(x => x.rank).ToArray();
 
         List<Models.POCO.CharacterAchievementPOCO.Achievement[]> allCharacters = new List<Models.POCO.CharacterAchievementPOCO.Achievement[]>();
+
         int[] progressionTally = new int[10];
         int progression = 0;
         foreach (Models.POCO.Member item in rosterMembers)
         {
             if (item.character.level == 60)
             {
-
                 var apiResponse = await client.GetAsync($"profile/wow/character/{realm}/{item.character.name.ToLower()}/achievements?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}");
                 var apiResponseString = apiResponse.Content.ReadAsStringAsync().Result;
 
@@ -121,7 +126,39 @@
             }
 
             if (progression != 0)
+            {
+                // get guild from db
+                var guild = await _context.Guilds.Where(x => x.NameSlug == guildSlug).FirstOrDefaultAsync();
+
+                // check if they're already in db leaderboard
+                var leaderboardRecord = await _context.LeaderboardCastleNathria.Where(x => x.GuildId == guild.Id).FirstOrDefaultAsync();
+
+                if (leaderboardRecord != null) // ALREADY ON LEADERBOAD
+                {
+                    //check if progress has increased
+                    if (leaderboardRecord.Progress < progression)
+                    {
+                        // need to update with new progress
+                        var entity = _context.LeaderboardCastleNathria.FirstOrDefault(x => x.GuildId == guild.Id);
+                        entity.Progress = progression;
+                        _context.SaveChanges();
+                    }
+                }
+                else // NOT ON LEADERBOARD CURRENTLY
+                {
+                    // add this guilds progress to leaderboard
+                    _context.LeaderboardCastleNathria.Add(new Models.RaidingLeaderboards.LeaderboardCastleNathria
+                    {
+                        GuildId = guild.Id,
+                        Progress = progression,
+                        RecordCreationDate = DateTime.Now
+                    });
+
+                    await _context.SaveChangesAsync();
+                }
+
                 break;
+            }
         }
 
         RequestTime = DateTime.Now - startTime;

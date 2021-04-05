@@ -8,7 +8,6 @@
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudAppBarSpacer />
-        <MudButton Link="/limitData">Web Scrape Demo</MudButton>
         <MudItem xs="12" sm="6" md="4">
             <EditForm Model="@model" OnValidSubmit="Search">
                 <MudGrid>
@@ -73,9 +72,9 @@
             <MudText Typo="Typo.h6" Class="px-4 mt-1" Style="color: #FF8000; user-select: none">wowindex.io</MudText>
             <MudText Typo="Typo.body2" Class="px-4 mud-text-secondary">Warcraft rankings</MudText>
             <MudDivider Class="my-2" />
-            @*<MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3">Leaderboards</MudText>*@
-            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Outlined.EmojiEvents">Hall of fame</MudNavLink>
-            <MudNavLink Href="/progress" Match="NavLinkMatch.All" Icon="@Icons.Filled.Stream">Live Raid Progression</MudNavLink>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Filled.Stream">Live Raid Progression</MudNavLink>
+            <MudNavLink Href="/HoF" Match="NavLinkMatch.All" Icon="@Icons.Outlined.EmojiEvents">Hall of fame</MudNavLink>
+
             <MudNavLink Href="/about" Icon="@Icons.Outlined.Info">About</MudNavLink>
             <MudNavLink Href="/contact" Icon="@Icons.Outlined.AlternateEmail">Contact</MudNavLink>
         </MudNavMenu>
@@ -104,14 +103,6 @@
         _drawerOpen = !_drawerOpen;
     }
 
-    public HttpClient apiConnection()
-    {
-        var APIclient = new HttpClient();
-        APIclient.BaseAddress = new Uri("https://us.api.blizzard.com/");
-
-        return APIclient;
-    }
-
     // method to handle user guild search
     private async Task Search(EditContext context)
     {
@@ -138,13 +129,16 @@
         }
         else // if guild is null
         {
+            var client = new HttpClient();
+            client.BaseAddress = new Uri($"https://{searchRegion}.api.blizzard.com/");
+
             // get search values
             string searchNameSlug = searchQuery.Replace(" ", "-").ToLower();
             string searchRealmSlug = searchQueryRealm.Replace(" ", "-").ToLower();
 
             // check api for guild
             var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
-            var request = await apiConnection().GetAsync($"data/wow/guild/{searchRealmSlug}/{searchNameSlug}?namespace=profile-{searchRegion}&locale=en_US&access_token={accessToken.token}");
+            var request = await client.GetAsync($"data/wow/guild/{searchRealmSlug}/{searchNameSlug}?namespace=profile-{searchRegion}&locale=en_US&access_token={accessToken.token}");
 
             if (request.IsSuccessStatusCode)
             {
