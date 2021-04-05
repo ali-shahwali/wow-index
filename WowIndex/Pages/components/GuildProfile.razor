@@ -73,7 +73,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Guild = await _context.Guilds.Where(x => x.NameSlug == guildSlug).FirstOrDefaultAsync();
+        Guild = await _context.Guilds.Where(x => x.NameSlug == guildSlug && x.Region == region && x.RealmSlug == realm).FirstOrDefaultAsync();
 
         DateTime startTime = DateTime.Now;
         //var handler = new HttpClientHandler()

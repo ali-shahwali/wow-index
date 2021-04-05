@@ -9,18 +9,33 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(e => DrawerToggle())" />
         <MudAppBarSpacer />
         <MudItem xs="12" sm="6" md="4">
-            <MudAutocomplete ResetValueOnEmptyText="true" T="Models.Guild" ValueChanged="Search" DisableUnderLine="true" Variant="Variant.Filled" Required="true" Class="searchField" Placeholder="Guild search" SearchFunc="@Search2">
-                <ItemTemplate Context="result">
-                    <MudText>
-                        @result.Region.ToUpper()
-                    </MudText>
-                    <MudText Typo="Typo.body2">
-                        @result.Name @result.Realm
-                    </MudText>
-                </ItemTemplate>
-                    
-            </MudAutocomplete>
-        </MudItem>
+            <MudGrid>
+                <MudItem xs="10">
+                    <MudAutocomplete ResetValueOnEmptyText="true" T="Models.Guild" ValueChanged="Search" DisableUnderLine="true" Variant="Variant.Filled" Required="true" Class="searchField" Placeholder="Guild search" SearchFunc="@Search2">
+                        <ItemTemplate Context="result">
+                            @if (result.Region.Equals("No records found"))
+                            {
+                                <MudButton FullWidth="true" OnClick="@(e => ToggleAddBox())" StartIcon="@Icons.Material.Filled.Add">
+                                    @result.Region.ToUpper()
+                                </MudButton>
+                                <MudText Typo="Typo.body2">
+                                    @result.Name @result.Realm
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudText>
+                                    @result.Region.ToUpper()
+                                </MudText>
+                                <MudText Typo="Typo.body2">
+                                    @result.Name @result.Realm
+                                </MudText>
+                            }
+                        </ItemTemplate>
+                    </MudAutocomplete>
+                </MudItem>
+            </MudGrid>
+        </MudItem>  
         <MudAppBarSpacer />
         @if (isLoggedIn)
         {
@@ -66,12 +81,8 @@
             <MudDivider Class="my-2" />
             <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Filled.Stream">Live Raid Progression</MudNavLink>
             <MudNavLink Href="/HoF" Match="NavLinkMatch.All" Icon="@Icons.Outlined.EmojiEvents">Hall of fame</MudNavLink>
-
             <MudNavLink Href="/about" Icon="@Icons.Outlined.Info">About</MudNavLink>
             <MudNavLink Href="/contact" Icon="@Icons.Outlined.AlternateEmail">Contact</MudNavLink>
-
-            @{ var link = $"/us/illidan/complexity-limit/"; }
-            <MudNavLink Href="@link" Icon="@Icons.Outlined.AlternateEmail">Scuffed</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
@@ -79,7 +90,36 @@
     </MudMainContent>
 </MudLayout>
 
+<MudMessageBox @ref="mbox" Title="Add guild" CancelText="Cancel">
+    <MessageContent>
+        <EditForm Model="@model" OnValidSubmit="AddGuild">
+            <MudGrid>
+                <MudItem xs="2">
+                    <MudSelect DisableUnderLine="true" @bind-Value="@model.searchRegion" Class="searchSelect" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("eu")">EU</MudSelectItem>
+                        <MudSelectItem Value="@("us")">US</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudTextField Required="true" Spellcheck="false" Class="searchField" @bind-Value="@model.searchGuild" Label="Guild name" Variant="Variant.Filled" Margin="Margin.Dense" DisableUnderLine="true"></MudTextField>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudTextField Required="true" Spellcheck="false" Class="searchField" @bind-Value="@model.searchRealm" Label="Realm" Variant="Variant.Filled" Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Search" AdornmentColor="Color.Primary" DisableUnderLine="true"></MudTextField>
+                </MudItem>
+                <MudItem xs="2">
+                    <MudIconButton Icon="@Icons.Material.Filled.Add" ButtonType="ButtonType.Submit" Color="Color.Primary" />
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </MessageContent>
+    <YesButton></YesButton>
+</MudMessageBox>
+
 @code {
+
+    private string state = "Message box hasn't been opened yet";
+
+    private MudMessageBox mbox { get; set; }
 
     Models.Index.MainLayoutModel model = new Models.Index.MainLayoutModel();
 
@@ -95,6 +135,13 @@
     bool isLoggedIn = true;
     bool _drawerOpen = true;
 
+    private async void ToggleAddBox()
+    {
+        bool? result = await mbox.Show();
+        state = result == null ? "Cancelled" : "Deleted!";
+        StateHasChanged();
+    }
+
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
@@ -102,44 +149,38 @@
 
     private async Task<IEnumerable<Models.Guild>> Search2(string value)
     {
-
-        // if text is null or empty, don't return values (drop-down will not open)
         if (string.IsNullOrEmpty(value))
             return new List<Models.Guild>();
 
-        return guilds.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).ToList();
+        var result = guilds.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).ToList();
+        if (result.Count > 0)
+            return result;
+        else
+        {
+            result.Add(new Models.Guild { Region = "No records found", Realm = "", Name = ""});
+            return result;
+        }
     }
 
-    // method to handle user guild search
-    private async Task Search(Models.Guild g)
+    private async Task AddGuild(EditContext context)
     {
-        string searchRegion = g.Region;
-        string searchQuery = g.NameSlug;
-        string searchQueryRealm = g.RealmSlug;
+        string searchRegion = model.searchRegion;
+        string searchNameSlug = model.searchGuild.Replace(" ", "-").ToLower();
+        string searchRealmSlug = model.searchRealm.Replace(" ", "-").ToLower();
 
-        // try to find guild in db
-        var guild = _context.Guilds.Where(x => x.Region == searchRegion && x.NameSlug == searchQuery).FirstOrDefault();
+        var guild = _context.Guilds.Where(x => x.Region == searchRegion && x.NameSlug == searchNameSlug && x.RealmSlug == searchRealmSlug).FirstOrDefault();
 
-        if (guild != null)
+        if(guild != null)
         {
-            // We found the guild in our database!
-            // check the age of this guild record
-            // send the user to this guilds page (update can be handled there)
-            string region = guild.Region;
-            string realm = guild.RealmSlug;
-            string guildSlug = guild.NameSlug;
-
-            // naviagte to guilds page
-            NavigationManager.NavigateTo($"/{region}/{realm}/{guildSlug}/");
+            Search(guild);
         }
-        else // if guild is null
+        else
         {
-            var client = new HttpClient();
+            HttpClient client = new HttpClient();
             client.BaseAddress = new Uri($"https://{searchRegion}.api.blizzard.com/");
 
             // get search values
-            string searchNameSlug = searchQuery.Replace(" ", "-").ToLower();
-            string searchRealmSlug = searchQueryRealm.Replace(" ", "-").ToLower();
+
 
             // check api for guild
             var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
@@ -178,6 +219,13 @@
                 Snackbar.Add("Guild not found, Please check region & spelling.", Severity.Normal);
             }
         }
+    }
+
+    // method to handle user guild search
+    private void Search(Models.Guild g)
+    {
+        // naviagte to guilds page
+        NavigationManager.NavigateTo($"/{g.Region}/{g.RealmSlug}/{g.NameSlug}/");
     }
 
 
@@ -245,5 +293,4 @@
             NavigationManager.NavigateTo("/profile");
         }
     }
-
 }

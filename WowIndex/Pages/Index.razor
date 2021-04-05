@@ -3,7 +3,7 @@
 @using Microsoft.Extensions.Configuration
 @inject WowIndex.Data.ApplicationDbContext _context
 
-<MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardCastleNathria>>>(ServerReload))" RowsPerPage="100" Dense="true" Height="calc(100vh - 236px)" FixedHeader="true" @ref="table" Hover="true">
+@*<MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardCastleNathria>>>(ServerReload))" RowsPerPage="100" Dense="true" Height="calc(100vh - 236px)" FixedHeader="true" @ref="table" Hover="true">
     <HeaderContent>
         <MudTh></MudTh>
         <MudTh>Guild</MudTh>
@@ -37,7 +37,7 @@
     <PagerContent>
         <MudTablePager DisableRowsPerPage="true" />
     </PagerContent>
-</MudTable>
+</MudTable>*@
 
 @code {
     public MudTable<LeaderboardCastleNathria> table;

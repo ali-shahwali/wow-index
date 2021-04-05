@@ -7,6 +7,10 @@ namespace WowIndex.Models.Index
 {
     public class MainLayoutModel
     {
-        public string Search { get; set; }
+        public string searchRegion { get; set; } = "eu";
+
+        public string searchGuild { get; set; }
+
+        public string searchRealm { get; set; }
     }
 }
