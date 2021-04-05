@@ -3,41 +3,33 @@
 @using Microsoft.Extensions.Configuration
 @inject WowIndex.Data.ApplicationDbContext _context
 
-@*<MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardCastleNathria>>>(ServerReload))" RowsPerPage="100" Dense="true" Height="calc(100vh - 236px)" FixedHeader="true" @ref="table" Hover="true">
+<MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardCastleNathria>>>(ServerReload))" RowsPerPage="20" Dense="true" Height="calc(100vh - 128px)" FixedHeader="true" @ref="table" Hover="true">
     <HeaderContent>
-        <MudTh></MudTh>
         <MudTh>Guild</MudTh>
         <MudTh>Realm</MudTh>
-        <MudTh></MudTh>
         <MudTh>Progress</MudTh>
     </HeaderContent>
     <RowTemplate>
         @{
-            var guild = Guilds.Where(x => x.GuildId == context.GuildId).FirstOrDefault();
+            var guild = Guilds.Where(x => x.Id == context.GuildId).FirstOrDefault();
         }
-        <MudTd DataLabel="Rank">
-            <b style="color: #0070DD"></b>
-        </MudTd>
         <MudTd DataLabel="Guild">
-            <MudButton Disabled="true" Color="Color.Info">
+            @{ var link = $"/{guild.Region}/{guild.RealmSlug}/{guild.NameSlug}/"; }
+            <MudButton Link="@link" Color="Color.Info">
                 @guild.Name
             </MudButton>
         </MudTd>
         <MudTd DataLabel="Guild">
-            <MudButton Disabled="true" Color="Color.Info">
-                @guild.Realm
-            </MudButton>
+            @guild.Realm
         </MudTd>
         <MudTd DataLabel="Guild">
-            <MudButton Disabled="true" Color="Color.Info">
-                @context.Progress
-            </MudButton>
+            @context.Progress
         </MudTd>
     </RowTemplate>
     <PagerContent>
         <MudTablePager DisableRowsPerPage="true" />
     </PagerContent>
-</MudTable>*@
+</MudTable>
 
 @code {
     public MudTable<LeaderboardCastleNathria> table;

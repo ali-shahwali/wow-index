@@ -4,7 +4,7 @@
 @using System.Net
 <MudContainer>
 
-    @if (RequestTime.ToString() != "00:00:00")
+    @if (isLoading != true)
     {
         <h1>@RequestTime.ToString()</h1>
     }
@@ -61,6 +61,8 @@
     [Parameter]
     public string guildSlug { get; set; }
 
+    public bool isLoading { get; set; }
+
     public Models.Guild Guild = new Models.Guild();
 
     List<WowIndex.Models.RaidAchievement> model = new List<WowIndex.Models.RaidAchievement>();
@@ -71,7 +73,12 @@
 
     public List<string> items = new List<string>();
 
-    protected override async Task OnInitializedAsync()
+    //protected override async Task OnParametersSetAsync()
+    //{
+    //    StateHasChanged();
+    //}
+
+    protected override async Task OnParametersSetAsync()
     {
         Guild = await _context.Guilds.Where(x => x.NameSlug == guildSlug && x.Region == region && x.RealmSlug == realm).FirstOrDefaultAsync();
 
@@ -80,6 +87,10 @@
         //{
         //    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
         //};
+
+        isLoading = true;
+
+        StateHasChanged();
 
         HttpClient client = new HttpClient();
         //client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
@@ -162,6 +173,8 @@
         }
 
         RequestTime = DateTime.Now - startTime;
+
+        isLoading = false;
 
         StateHasChanged();
     }

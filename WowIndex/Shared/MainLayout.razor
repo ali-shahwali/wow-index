@@ -9,33 +9,29 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(e => DrawerToggle())" />
         <MudAppBarSpacer />
         <MudItem xs="12" sm="6" md="4">
-            <MudGrid>
-                <MudItem xs="10">
-                    <MudAutocomplete ResetValueOnEmptyText="true" T="Models.Guild" ValueChanged="Search" DisableUnderLine="true" Variant="Variant.Filled" Required="true" Class="searchField" Placeholder="Guild search" SearchFunc="@Search2">
-                        <ItemTemplate Context="result">
-                            @if (result.Region.Equals("No records found"))
-                            {
-                                <MudButton FullWidth="true" OnClick="@(e => ToggleAddBox())" StartIcon="@Icons.Material.Filled.Add">
-                                    @result.Region.ToUpper()
-                                </MudButton>
-                                <MudText Typo="Typo.body2">
-                                    @result.Name @result.Realm
-                                </MudText>
-                            }
-                            else
-                            {
-                                <MudText>
-                                    @result.Region.ToUpper()
-                                </MudText>
-                                <MudText Typo="Typo.body2">
-                                    @result.Name @result.Realm
-                                </MudText>
-                            }
-                        </ItemTemplate>
-                    </MudAutocomplete>
-                </MudItem>
-            </MudGrid>
-        </MudItem>  
+            <MudAutocomplete CoerceText="true" Text="" Spellcheck="false" ResetValueOnEmptyText="false" T="Models.Guild" ValueChanged="Search" DisableUnderLine="true" Variant="Variant.Filled" Required="true" Class="searchField" Placeholder="Guild search" SearchFunc="@Search2">
+                <ItemTemplate Context="result">
+                    @if (result.Region.Equals("No records found"))
+                    {
+                        <MudButton FullWidth="true" OnClick="@(e => ToggleAddBox())" StartIcon="@Icons.Material.Filled.Add">
+                            @result.Region.ToUpper()
+                        </MudButton>
+                        <MudText Typo="Typo.body2">
+                            @result.Name @result.Realm
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudText>
+                            @result.Region.ToUpper()
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            @result.Name @result.Realm
+                        </MudText>
+                    }
+                </ItemTemplate>
+            </MudAutocomplete>
+        </MudItem>
         <MudAppBarSpacer />
         @if (isLoggedIn)
         {
@@ -86,7 +82,9 @@
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
-        @Body
+        <MudContainer Class="mt-16">
+            @Body
+        </MudContainer>
     </MudMainContent>
 </MudLayout>
 
@@ -152,12 +150,12 @@
         if (string.IsNullOrEmpty(value))
             return new List<Models.Guild>();
 
-        var result = guilds.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).ToList();
+        var result = guilds.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).Take(10).ToList();
         if (result.Count > 0)
             return result;
         else
         {
-            result.Add(new Models.Guild { Region = "No records found", Realm = "", Name = ""});
+            result.Add(new Models.Guild { Region = "No records found", Realm = "", Name = "" });
             return result;
         }
     }
@@ -170,7 +168,7 @@
 
         var guild = _context.Guilds.Where(x => x.Region == searchRegion && x.NameSlug == searchNameSlug && x.RealmSlug == searchRealmSlug).FirstOrDefault();
 
-        if(guild != null)
+        if (guild != null)
         {
             Search(guild);
         }
@@ -235,15 +233,15 @@
         {
             Primary = "#FF8000",
             Black = "#27272f",
-            Background = "#141414",
+            Background = "#32333d",
             BackgroundGrey = "#27272f",
-            Surface = "#1F1F1F",
-            DrawerBackground = "#000000",
-            DrawerText = "#b3b3b3",
+            Surface = "#373740",
+            DrawerBackground = "#27272f",
+            DrawerText = "rgba(255,255,255, 0.50)",
             DrawerIcon = "rgba(255,255,255, 0.50)",
             AppbarBackground = "#27272f",
             AppbarText = "rgba(255,255,255, 0.70)",
-            TextPrimary = "#FFFFFF",
+            TextPrimary = "rgba(255,255,255, 0.70)",
             TextSecondary = "rgba(255,255,255, 0.50)",
             ActionDefault = "#adadb1",
             ActionDisabled = "rgba(255,255,255, 0.26)",
