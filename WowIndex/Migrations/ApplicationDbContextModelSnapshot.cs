@@ -355,14 +355,14 @@ namespace WowIndex.Migrations
                     b.Property<DateTime>("Boss9KillTime")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime>("ExpirationDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("GuildId")
                         .HasColumnType("int");
 
                     b.Property<int>("Progress")
                         .HasColumnType("int");
-
-                    b.Property<DateTime>("RecordCreationDate")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 

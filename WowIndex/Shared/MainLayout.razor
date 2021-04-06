@@ -209,7 +209,7 @@
                 await _context.SaveChangesAsync();
 
                 // redirect user to guild page
-                NavigationManager.NavigateTo($"/{newGuild.Region.ToLower()}/{newGuild.RealmSlug}/{newGuild.NameSlug}/");
+                NavigationManager.NavigateTo($"/guild/{newGuild.Region.ToLower()}/{newGuild.RealmSlug}/{newGuild.NameSlug}/");
             }
             else
             {
@@ -223,7 +223,7 @@
     private void Search(Models.Guild g)
     {
         // naviagte to guilds page
-        NavigationManager.NavigateTo($"/{g.Region}/{g.RealmSlug}/{g.NameSlug}/");
+        NavigationManager.NavigateTo($"/guild/{g.Region}/{g.RealmSlug}/{g.NameSlug}/");
     }
 
 

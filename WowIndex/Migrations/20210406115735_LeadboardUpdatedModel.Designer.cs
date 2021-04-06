@@ -10,8 +10,8 @@ using WowIndex.Data;
 namespace WowIndex.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210331171059_ProfileModel")]
-    partial class ProfileModel
+    [Migration("20210406115735_LeadboardUpdatedModel")]
+    partial class LeadboardUpdatedModel
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -221,6 +221,66 @@ namespace WowIndex.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
+            modelBuilder.Entity("WowIndex.Data.Token", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTime>("ExpirationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("token")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tokens");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.Guild", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("FactionName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FactionType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("GuildId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameSlug")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Realm")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RealmId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RealmSlug")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("RecordCreationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Region")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Guilds");
+                });
+
             modelBuilder.Entity("WowIndex.Models.Index.GuildRecord", b =>
                 {
                     b.Property<int>("Id")
@@ -258,6 +318,57 @@ namespace WowIndex.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Records");
+                });
+
+            modelBuilder.Entity("WowIndex.Models.RaidingLeaderboards.LeaderboardCastleNathria", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTime>("Boss10KillTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Boss1KillTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Boss2KillTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Boss3KillTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Boss4KillTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Boss5KillTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Boss6KillTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Boss7KillTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Boss8KillTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Boss9KillTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpirationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("GuildId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Progress")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LeaderboardCastleNathria");
                 });
 
             modelBuilder.Entity("WowIndex.Models.UserProfile.Character", b =>
@@ -316,6 +427,9 @@ namespace WowIndex.Migrations
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("AspEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BattleTag")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProfileUri")

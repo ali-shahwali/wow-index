@@ -14,7 +14,7 @@
             var guild = Guilds.Where(x => x.Id == context.GuildId).FirstOrDefault();
         }
         <MudTd DataLabel="Guild">
-            @{ var link = $"/{guild.Region}/{guild.RealmSlug}/{guild.NameSlug}/"; }
+            @{ var link = $"/guild/{guild.Region}/{guild.RealmSlug}/{guild.NameSlug}/"; }
             <MudButton Link="@link" Color="Color.Info">
                 @guild.Name
             </MudButton>
