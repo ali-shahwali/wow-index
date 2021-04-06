@@ -11,21 +11,39 @@ else
     <MudButton Disabled="!isOutdated" OnClick="Update">Update</MudButton>
     <MudContainer>
         <MudText Typo="Typo.h3" Align="Align.Center" GutterBottom="true">@Guild.Name</MudText>
+        @if (rank <= 3)
+        {
+            <MudText Color="Color.Primary" Typo="Typo.h4" Align="Align.Center">World ranking:  @rank</MudText>
+        }
+        else
+        {
+            <MudText Color="Color.Info" Typo="Typo.h4" Align="Align.Center">World ranking:  @rank</MudText>
+        }
         <MudGrid Spacing="6" Class="mt-16">
             <MudItem xs="7">
                 <MudText Typo="Typo.h5" GutterBottom="true">Castle Nathria Overview</MudText>
-
-                <MudTable Items="@BossStatsList" Hover="true" Breakpoint="Breakpoint.Sm">
-                    <HeaderContent>
-                        <MudTh>Name</MudTh>
-                        <MudTh>Killed</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Name">@context.Name</MudTd>
-                        <MudTd DataLabel="Killed">@context.KillTime</MudTd>
-                    </RowTemplate>
-                </MudTable>
-
+                @foreach (var stat in bossStats)
+                {
+                    <MudCard Outlined="true">
+                        <MudCardContent>
+                            <MudText>@stat.Name</MudText>
+                            @if (stat.KillTime != new DateTime())
+                            {
+                                <MudText>Killed @stat.KillTime</MudText>
+                            }
+                        </MudCardContent>
+                        <MudCardActions>
+                            @if (stat.KillTime != new DateTime())
+                            {
+                                <MudButton StartIcon="@Icons.Material.Filled.Done" Variant="Variant.Text" Color="Color.Success">Down</MudButton>
+                            }
+                            else
+                            {
+                                <MudButton StartIcon="@Icons.Material.Filled.Error" Variant="Variant.Text" Color="Color.Error">Not done</MudButton>
+                            }
+                        </MudCardActions>
+                    </MudCard>
+                }
             </MudItem>
             <MudItem xs="5">
                 <MudText Typo="Typo.h5" GutterBottom="true">Cart</MudText>
@@ -83,30 +101,25 @@ else
     // data
     public Models.Guild Guild = new Models.Guild();
     public Models.POCO.Member[] rosterMembers { get; set; }
-
-    private List<Models.BossStats> BossStatsList = new List<Models.BossStats>();
+    public string[] bossNames =
+        {
+        "Sire Denathrius", "Stone Legion Generals",
+        "Sludgefist", "The Council of Blood", "Lady Inerva Darkvein",
+        "Artificer Xy'mox", "Sun King's Salvation", "Hungering Destroyer",
+        "Huntsman Altimor", "Shriekwing"
+        };
+    public List<Models.BossStats> bossStats = new List<Models.BossStats>();
+    public int rank { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
-        Guild = await _context.Guilds.Where(x => x.NameSlug == guildSlug && x.Region == region && x.RealmSlug == realm).FirstOrDefaultAsync();
-
-        var raidProgRecord = await _context.LeaderboardCastleNathria.Where(x => x.GuildId == Guild.Id).FirstOrDefaultAsync();
-
-        var e = 0;
-        while (e <= 10)
-        {
-            BossStatsList.Add(new Models.BossStats
-            {
-                KillTime = raidProgRecord.Boss10KillTime
-            });
-
-            e++;
-        }
+        Guild = _context.Guilds.Where(x => x.NameSlug == guildSlug && x.Region == region && x.RealmSlug == realm).FirstOrDefault();
+        var raidProgRecord = _context.LeaderboardCastleNathria.Where(x => x.GuildId == Guild.Id).FirstOrDefault();
 
         if (raidProgRecord == null)
         {
+            estTimeLeft = 0;
             isLoading = true;
-            StateHasChanged();
             DateTime startTime = DateTime.Now;
             HttpClient client = new HttpClient();
 
@@ -125,7 +138,6 @@ else
             int[] progressionTally = new int[10];
             int iterations = 0;
             int progression = 0;
-            estTimeLeft = 0;
             foreach (Models.POCO.Member item in rosterMembers)
             {
                 var apiResponse = await client.GetAsync($"profile/wow/character/{realm}/{item.character.name.ToLower()}/achievements?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}");
@@ -161,6 +173,7 @@ else
                         raidTeam.Add(character);
 
                     DateTime[] bossKills = GetBossTimes(raidTeam);
+                    bossStats = ToBossStatsList(bossKills, bossNames);
 
                     raidProgRecord = new Models.RaidingLeaderboards.LeaderboardCastleNathria
                     {
@@ -188,13 +201,31 @@ else
                 StateHasChanged();
                 TimeSpan RequestTime = DateTime.Now - startTime;
             }
-            isLoading = false;
         }
-        else if (raidProgRecord.ExpirationDate < DateTime.Now)
+        else
+        {
+            bossStats = ToBossStatsList(new DateTime[]
+            {
+                raidProgRecord.Boss10KillTime,
+                raidProgRecord.Boss9KillTime,
+                raidProgRecord.Boss8KillTime,
+                raidProgRecord.Boss7KillTime,
+                raidProgRecord.Boss6KillTime,
+                raidProgRecord.Boss5KillTime,
+                raidProgRecord.Boss4KillTime,
+                raidProgRecord.Boss3KillTime,
+                raidProgRecord.Boss2KillTime,
+                raidProgRecord.Boss1KillTime,
+            }, bossNames);
+        }
+
+        if (raidProgRecord.ExpirationDate < DateTime.Now)
         {
             isOutdated = true;
         }
 
+        rank = _context.RankedCastleNathriaLeaderboard.Where(x => x.GuildName.Equals(Guild.Name)).FirstOrDefault().Rank;
+        isLoading = false;
         StateHasChanged();
     }
 
@@ -209,6 +240,7 @@ else
             return;
         }
 
+        estTimeLeft = 0;
         isLoading = true;
         DateTime startTime = DateTime.Now;
         HttpClient client = new HttpClient();
@@ -227,7 +259,6 @@ else
         int[] progressionTally = new int[10];
         int iterations = 0;
         int progression = 0;
-        estTimeLeft = rosterMembers.Length;
         foreach (Models.POCO.Member item in rosterMembers)
         {
             var apiResponse = await client.GetAsync($"profile/wow/character/{realm}/{item.character.name.ToLower()}/achievements?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}");
@@ -262,8 +293,9 @@ else
 
                 DateTime[] bossKills = GetBossTimes(raidTeam);
 
+                bossStats = ToBossStatsList(bossKills, bossNames);
                 // add this guilds progress to leaderboard
-                Models.RaidingLeaderboards.LeaderboardCastleNathria leaderboards = new Models.RaidingLeaderboards.LeaderboardCastleNathria
+                Models.RaidingLeaderboards.LeaderboardCastleNathria newLeaderboards = new Models.RaidingLeaderboards.LeaderboardCastleNathria
                 {
                     GuildId = Guild.Id,
                     Progress = progression,
@@ -280,7 +312,7 @@ else
                     Boss10KillTime = bossKills[9],
                 };
 
-                _context.LeaderboardCastleNathria.Add(leaderboards);
+                _context.LeaderboardCastleNathria.Add(newLeaderboards);
                 await _context.SaveChangesAsync();
                 estTimeLeft = rosterMembers.Length;
                 break;
@@ -328,6 +360,20 @@ else
         DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
         dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
         return dtDateTime;
+    }
+
+    private List<Models.BossStats> ToBossStatsList(DateTime[] bossKills, string[] bossNames)
+    {
+        List<Models.BossStats> stats = new List<Models.BossStats>();
+        for(int i = 0; i < 10; i++)
+        {
+            stats.Add(new Models.BossStats
+            {
+                Name = bossNames[i],
+                KillTime = bossKills[i]
+            });
+        }
+        return stats;
     }
 
 }

@@ -166,7 +166,7 @@
         string searchNameSlug = model.searchGuild.Replace(" ", "-").ToLower();
         string searchRealmSlug = model.searchRealm.Replace(" ", "-").ToLower();
 
-        var guild = _context.Guilds.Where(x => x.Region == searchRegion && x.NameSlug == searchNameSlug && x.RealmSlug == searchRealmSlug).FirstOrDefault();
+        var guild = await _context.Guilds.Where(x => x.Region == searchRegion && x.NameSlug == searchNameSlug && x.RealmSlug == searchRealmSlug).FirstOrDefaultAsync();
 
         if (guild != null)
         {

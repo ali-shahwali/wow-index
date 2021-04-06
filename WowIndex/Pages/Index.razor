@@ -40,6 +40,10 @@
 
     private async Task<TableData<LeaderboardEntry>> ServerReload(TableState state)
     {
+        var rows = from x in _context.RankedCastleNathriaLeaderboard select x;
+        _context.RankedCastleNathriaLeaderboard.RemoveRange(rows);
+        _context.SaveChanges();
+
         // bind records from database
 
         var leaderboard = await _context.LeaderboardCastleNathria.ToListAsync();
@@ -60,7 +64,7 @@
         int i = 1;
         foreach (var item in results)
         {
-            var guild = _context.Guilds.Where(x => x.Id == item.GuildId).FirstOrDefault();
+            var guild = await _context.Guilds.Where(x => x.Id == item.GuildId).FirstOrDefaultAsync();
             DateTime killTime = new DateTime();
             if (item.Boss10KillTime != new DateTime())
                 killTime = item.Boss10KillTime;
@@ -83,7 +87,7 @@
             else if (item.Boss1KillTime != new DateTime())
                 killTime = item.Boss1KillTime;
 
-            leaderboardEntries.Add(new LeaderboardEntry
+            LeaderboardEntry entry = new LeaderboardEntry
             {
                 Rank = i,
                 LatestProgressionTime = killTime,
@@ -94,10 +98,12 @@
                 Progression = item.Progress,
                 GuildSlug = guild.NameSlug,
                 RealmSlug = guild.RealmSlug
-            });
+            };
+            leaderboardEntries.Add(entry);
+            _context.RankedCastleNathriaLeaderboard.Add(entry);
             i++;
         }
-
+        await _context.SaveChangesAsync();
 
         StateHasChanged();
         return new TableData<LeaderboardEntry>() { Items = leaderboardEntries };
