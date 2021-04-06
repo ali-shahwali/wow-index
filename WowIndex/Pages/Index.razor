@@ -3,13 +3,17 @@
 @using Microsoft.Extensions.Configuration
 @inject WowIndex.Data.ApplicationDbContext _context
 
-<MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardCastleNathria>>>(ServerReload))" RowsPerPage="20" Dense="true" Height="calc(100vh - 128px)" FixedHeader="true" @ref="table" Hover="true">
+<MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardCastleNathria>>>(ServerReload))" RowsPerPage="20" Dense="true" FixedHeader="true" @ref="table" Hover="true">
     <HeaderContent>
+        <MudTh></MudTh>
         <MudTh>Guild</MudTh>
         <MudTh>Realm</MudTh>
         <MudTh>Progress</MudTh>
     </HeaderContent>
     <RowTemplate>
+        <MudTd DataLabel="Rank">
+
+        </MudTd>
         @{
             var guild = Guilds.Where(x => x.Id == context.GuildId).FirstOrDefault();
         }
@@ -23,7 +27,9 @@
             @guild.Realm
         </MudTd>
         <MudTd DataLabel="Guild">
-            @context.Progress
+            <MudChip Label="true" Size="Size.Small" Variant="Variant.Outlined">@context.Progress / 10</MudChip>
+            <MudText Typo="Typo.caption">@context.Boss10KillTime</MudText>
+
         </MudTd>
     </RowTemplate>
     <PagerContent>
@@ -39,7 +45,28 @@
     private async Task<TableData<LeaderboardCastleNathria>> ServerReload(TableState state)
     {
         // bind records from database
+        DateTime y = new DateTime();
+
         var leaderboard = await _context.LeaderboardCastleNathria.ToListAsync();
+
+
+        var prog10 = new List<LeaderboardCastleNathria>();
+        var prog9 = new List<LeaderboardCastleNathria>();
+        var prog8 = new List<LeaderboardCastleNathria>();
+        var prog7 = new List<LeaderboardCastleNathria>();
+        var prog6 = new List<LeaderboardCastleNathria>();
+        var prog5 = new List<LeaderboardCastleNathria>();
+        var prog4 = new List<LeaderboardCastleNathria>();
+        var prog3 = new List<LeaderboardCastleNathria>();
+        var prog2 = new List<LeaderboardCastleNathria>();
+        var prog1 = new List<LeaderboardCastleNathria>();
+        foreach (var record in leaderboard)
+        {
+            if (record.Boss10KillTime != new DateTime())
+            {
+                prog10.Add(record);
+            }
+        }
 
         foreach (var item in leaderboard)
         {
