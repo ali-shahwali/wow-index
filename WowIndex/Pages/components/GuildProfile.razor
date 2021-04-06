@@ -9,7 +9,7 @@
 }
 else
 {
-    <MudButton Disabled="isOutdated" OnClick="Update">Update</MudButton>
+    <MudButton Disabled="!isOutdated" OnClick="Update">Update</MudButton>
     <MudContainer>
         <MudText>@Guild.Name</MudText>
     </MudContainer>
@@ -229,7 +229,6 @@ else
         DateTime[] bossKills = new DateTime[10];
 
         DateTime[] earliestKill = new DateTime[10];
-        DateTime x = new DateTime();
 
         int j = 0;
         foreach (var member in raidTeam)
@@ -241,7 +240,7 @@ else
                 str = str.Substring(0, str.Length - 3);
                 DateTime killTime = UnixTimeStampToDateTime(Convert.ToInt64(str)).ToUniversalTime();
 
-                if(killTime < earliestKill[j] || earliestKill[j] == x)
+                if(killTime < earliestKill[j] || earliestKill[j] == new DateTime())
                 {
                     earliestKill[j] = killTime;
                     bossKills[j] = killTime;

@@ -3,7 +3,7 @@
 @using Microsoft.Extensions.Configuration
 @inject WowIndex.Data.ApplicationDbContext _context
 
-<MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardCastleNathria>>>(ServerReload))" RowsPerPage="20" Dense="true" FixedHeader="true" @ref="table" Hover="true">
+<MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardEntry>>>(ServerReload))" RowsPerPage="20" Dense="true" FixedHeader="true" @ref="table" Hover="true">
     <HeaderContent>
         <MudTh></MudTh>
         <MudTh>Guild</MudTh>
@@ -12,24 +12,22 @@
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Rank">
-
+            @context.Rank
         </MudTd>
-        @{
-            var guild = Guilds.Where(x => x.Id == context.GuildId).FirstOrDefault();
-        }
         <MudTd DataLabel="Guild">
-            @{ var link = $"/guild/{guild.Region}/{guild.RealmSlug}/{guild.NameSlug}/"; }
+            @{ var link = $"/guild/{context.Region.ToLower()}/{context.RealmSlug}/{context.GuildSlug}/"; }
             <MudButton Link="@link" Color="Color.Info">
-                @guild.Name
+                @context.GuildName
             </MudButton>
         </MudTd>
         <MudTd DataLabel="Guild">
-            @guild.Realm
+            @context.Realm
         </MudTd>
         <MudTd DataLabel="Guild">
-            <MudChip Label="true" Size="Size.Small" Variant="Variant.Outlined">@context.Progress / 10</MudChip>
-            <MudText Typo="Typo.caption">@context.Boss10KillTime</MudText>
-
+            <MudChip Label="true" Size="Size.Small" Variant="Variant.Outlined">@context.Progression / 10</MudChip>
+            <MudText Typo="Typo.caption">
+                @context.LatestProgressionTime
+            </MudText>
         </MudTd>
     </RowTemplate>
     <PagerContent>
@@ -38,43 +36,70 @@
 </MudTable>
 
 @code {
-    public MudTable<LeaderboardCastleNathria> table;
+    public MudTable<LeaderboardEntry> table;
 
-    public List<Models.Guild> Guilds = new List<Models.Guild>();
-
-    private async Task<TableData<LeaderboardCastleNathria>> ServerReload(TableState state)
+    private async Task<TableData<LeaderboardEntry>> ServerReload(TableState state)
     {
         // bind records from database
-        DateTime y = new DateTime();
 
         var leaderboard = await _context.LeaderboardCastleNathria.ToListAsync();
+        List<LeaderboardCastleNathria> results = new List<LeaderboardCastleNathria>();
 
+        results.AddRange(leaderboard.Where(x => x.Progress == 10).OrderBy(x => x.Boss10KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 9).OrderBy(x => x.Boss9KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 8).OrderBy(x => x.Boss8KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 7).OrderBy(x => x.Boss7KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 6).OrderBy(x => x.Boss6KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 5).OrderBy(x => x.Boss5KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 4).OrderBy(x => x.Boss4KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 3).OrderBy(x => x.Boss3KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 2).OrderBy(x => x.Boss2KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 1).OrderBy(x => x.Boss1KillTime));
 
-        var prog10 = new List<LeaderboardCastleNathria>();
-        var prog9 = new List<LeaderboardCastleNathria>();
-        var prog8 = new List<LeaderboardCastleNathria>();
-        var prog7 = new List<LeaderboardCastleNathria>();
-        var prog6 = new List<LeaderboardCastleNathria>();
-        var prog5 = new List<LeaderboardCastleNathria>();
-        var prog4 = new List<LeaderboardCastleNathria>();
-        var prog3 = new List<LeaderboardCastleNathria>();
-        var prog2 = new List<LeaderboardCastleNathria>();
-        var prog1 = new List<LeaderboardCastleNathria>();
-        foreach (var record in leaderboard)
-        {
-            if (record.Boss10KillTime != new DateTime())
-            {
-                prog10.Add(record);
-            }
-        }
-
-        foreach (var item in leaderboard)
+        List<LeaderboardEntry> leaderboardEntries = new List<LeaderboardEntry>();
+        int i = 1;
+        foreach (var item in results)
         {
             var guild = _context.Guilds.Where(x => x.Id == item.GuildId).FirstOrDefault();
-            Guilds.Add(guild);
+            DateTime killTime = new DateTime();
+            if (item.Boss10KillTime != new DateTime())
+                killTime = item.Boss10KillTime;
+            else if (item.Boss9KillTime != new DateTime())
+                killTime = item.Boss9KillTime;
+            else if (item.Boss8KillTime != new DateTime())
+                killTime = item.Boss8KillTime;
+            else if (item.Boss7KillTime != new DateTime())
+                killTime = item.Boss7KillTime;
+            else if (item.Boss6KillTime != new DateTime())
+                killTime = item.Boss6KillTime;
+            else if (item.Boss5KillTime != new DateTime())
+                killTime = item.Boss5KillTime;
+            else if (item.Boss4KillTime != new DateTime())
+                killTime = item.Boss4KillTime;
+            else if (item.Boss3KillTime != new DateTime())
+                killTime = item.Boss3KillTime;
+            else if (item.Boss2KillTime != new DateTime())
+                killTime = item.Boss2KillTime;
+            else if (item.Boss1KillTime != new DateTime())
+                killTime = item.Boss1KillTime;
+
+            leaderboardEntries.Add(new LeaderboardEntry
+            {
+                Rank = i,
+                LatestProgressionTime = killTime,
+                GuildName = guild.Name,
+                Faction = guild.FactionName,
+                Realm = guild.Realm,
+                Region = guild.Region,
+                Progression = item.Progress,
+                GuildSlug = guild.NameSlug,
+                RealmSlug = guild.RealmSlug
+            });
+            i++;
         }
 
+
         StateHasChanged();
-        return new TableData<LeaderboardCastleNathria>() { Items = leaderboard };
+        return new TableData<LeaderboardEntry>() { Items = leaderboardEntries };
     }
 }

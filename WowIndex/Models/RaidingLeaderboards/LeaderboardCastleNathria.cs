@@ -11,7 +11,6 @@ namespace WowIndex.Models.RaidingLeaderboards
         public int Progress { get; set; }
 
         public DateTime ExpirationDate { get; set; }
-
         public DateTime Boss1KillTime { get; set; }
         public DateTime Boss2KillTime { get; set; }
         public DateTime Boss3KillTime { get; set; }
