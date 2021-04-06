@@ -1,5 +1,4 @@
 ﻿@page "/guild/{region}/{realm}/{guildSlug}/"
-@using WowIndex.CustomScrapers
 
 @if (isLoading)
 {
@@ -11,7 +10,62 @@ else
 {
     <MudButton Disabled="!isOutdated" OnClick="Update">Update</MudButton>
     <MudContainer>
-        <MudText>@Guild.Name</MudText>
+        <MudText Typo="Typo.h3" Align="Align.Center" GutterBottom="true">@Guild.Name</MudText>
+        <MudGrid Spacing="6" Class="mt-16">
+            <MudItem xs="7">
+                <MudText Typo="Typo.h5" GutterBottom="true">Castle Nathria Overview</MudText>
+
+                <MudTable Items="@BossStatsList" Hover="true" Breakpoint="Breakpoint.Sm">
+                    <HeaderContent>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Killed</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Name">@context.Name</MudTd>
+                        <MudTd DataLabel="Killed">@context.KillTime</MudTd>
+                    </RowTemplate>
+                </MudTable>
+
+            </MudItem>
+            <MudItem xs="5">
+                <MudText Typo="Typo.h5" GutterBottom="true">Cart</MudText>
+                <MudPaper Class="d-flex flex-column" Style="height:100%;" Outlined="true">
+                    <MudList Clickable="true">
+                        <MudListItem Icon="@Icons.Material.Filled.ContentCut">
+                            <div class="d-flex">
+                                <MudText>Scissor - Big</MudText>
+                                <MudText Inline="true" Class="ml-auto">$5</MudText>
+                            </div>
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.AirplanemodeActive">
+                            <div class="d-flex">
+                                <MudText>Model Airplane</MudText>
+                                <MudText Class="ml-auto">$20</MudText>
+                            </div>
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Create">
+                            <div class="d-flex">
+                                <MudText>Plastic Glue</MudText>
+                                <MudText Class="ml-auto">$12</MudText>
+                            </div>
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.ColorLens">
+                            <div class="d-flex">
+                                <MudText>Color set - Modern planes</MudText>
+                                <MudText Class="ml-auto">$16</MudText>
+                            </div>
+                        </MudListItem>
+                    </MudList>
+                    <div class="mt-auto">
+                        <MudDivider />
+                        <div class="d-flex pa-4">
+                            <MudText>Total:</MudText>
+                            <MudText Class="ml-auto"><b>$53</b></MudText>
+                        </div>
+                    </div>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
     </MudContainer>
 }
 
@@ -30,15 +84,29 @@ else
     public Models.Guild Guild = new Models.Guild();
     public Models.POCO.Member[] rosterMembers { get; set; }
 
+    private List<Models.BossStats> BossStatsList = new List<Models.BossStats>();
+
     protected override async Task OnParametersSetAsync()
     {
         Guild = await _context.Guilds.Where(x => x.NameSlug == guildSlug && x.Region == region && x.RealmSlug == realm).FirstOrDefaultAsync();
-        StateHasChanged();
 
-        var leaderboards = await _context.LeaderboardCastleNathria.Where(x => x.GuildId == Guild.Id).FirstOrDefaultAsync();
-        if (leaderboards == null)
+        var raidProgRecord = await _context.LeaderboardCastleNathria.Where(x => x.GuildId == Guild.Id).FirstOrDefaultAsync();
+
+        var e = 0;
+        while (e <= 10)
+        {
+            BossStatsList.Add(new Models.BossStats
+            {
+                KillTime = raidProgRecord.Boss10KillTime
+            });
+
+            e++;
+        }
+
+        if (raidProgRecord == null)
         {
             isLoading = true;
+            StateHasChanged();
             DateTime startTime = DateTime.Now;
             HttpClient client = new HttpClient();
 
@@ -94,7 +162,7 @@ else
 
                     DateTime[] bossKills = GetBossTimes(raidTeam);
 
-                    leaderboards = new Models.RaidingLeaderboards.LeaderboardCastleNathria
+                    raidProgRecord = new Models.RaidingLeaderboards.LeaderboardCastleNathria
                     {
                         GuildId = Guild.Id,
                         Progress = progression,
@@ -111,7 +179,7 @@ else
                         Boss10KillTime = bossKills[9],
                     };
 
-                    _context.LeaderboardCastleNathria.Add(leaderboards);
+                    _context.LeaderboardCastleNathria.Add(raidProgRecord);
                     await _context.SaveChangesAsync();
                     estTimeLeft = rosterMembers.Length;
                     break;
@@ -122,7 +190,7 @@ else
             }
             isLoading = false;
         }
-        else if (leaderboards.ExpirationDate < DateTime.Now)
+        else if (raidProgRecord.ExpirationDate < DateTime.Now)
         {
             isOutdated = true;
         }
