@@ -66,26 +66,15 @@
         {
             var guild = await _context.Guilds.Where(x => x.Id == item.GuildId).FirstOrDefaultAsync();
             DateTime killTime = new DateTime();
-            if (item.Boss10KillTime != new DateTime())
-                killTime = item.Boss10KillTime;
-            else if (item.Boss9KillTime != new DateTime())
-                killTime = item.Boss9KillTime;
-            else if (item.Boss8KillTime != new DateTime())
-                killTime = item.Boss8KillTime;
-            else if (item.Boss7KillTime != new DateTime())
-                killTime = item.Boss7KillTime;
-            else if (item.Boss6KillTime != new DateTime())
-                killTime = item.Boss6KillTime;
-            else if (item.Boss5KillTime != new DateTime())
-                killTime = item.Boss5KillTime;
-            else if (item.Boss4KillTime != new DateTime())
-                killTime = item.Boss4KillTime;
-            else if (item.Boss3KillTime != new DateTime())
-                killTime = item.Boss3KillTime;
-            else if (item.Boss2KillTime != new DateTime())
-                killTime = item.Boss2KillTime;
-            else if (item.Boss1KillTime != new DateTime())
-                killTime = item.Boss1KillTime;
+            DateTime[] bossTimes = Helpers.CastleNathriaKillTime.GetKillTimes(item);
+            foreach (var time in bossTimes)
+            {
+                if (time != new DateTime())
+                {
+                    killTime = time;
+                    break;
+                }
+            }
 
             LeaderboardEntry entry = new LeaderboardEntry
             {
