@@ -48,14 +48,15 @@
 @code {
     public MudTable<LeaderboardEntry> table;
 
+    public List<LeaderboardEntry> leaderboardEntries = new List<LeaderboardEntry>();
+
     private async Task<TableData<LeaderboardEntry>> ServerReload(TableState state)
     {
-        var rows = await _context.RankedCastleNathriaLeaderboard.ToListAsync();
-        List<LeaderboardEntry> leaderboardEntries = new List<LeaderboardEntry>();
+        var RaidRanks = _context.RankedCastleNathriaLeaderboard.ToList();
 
-        if (rows.Count == 0 || (rows.FirstOrDefault().ExpirationTime > DateTime.Now))
+        if (RaidRanks.Count == 0 || (RaidRanks.FirstOrDefault().ExpirationTime > DateTime.Now))
         {
-            _context.RankedCastleNathriaLeaderboard.RemoveRange(rows);
+            _context.RankedCastleNathriaLeaderboard.RemoveRange(RaidRanks);
             await _context.SaveChangesAsync();
 
             // bind records from database
@@ -111,10 +112,9 @@
         }
         else
         {
-            leaderboardEntries = rows;
+            leaderboardEntries = RaidRanks;
         }
 
-        StateHasChanged();
         return new TableData<LeaderboardEntry>() { Items = leaderboardEntries };
     }
 }

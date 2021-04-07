@@ -11,7 +11,7 @@
                 @if (!isEditMode)
                 {
                 <MudItem Style="max-width: 400px" xs="6">
-                    <MudAutocomplete CoerceText="true" Text="" Spellcheck="false" ResetValueOnEmptyText="false" T="Models.Guild" ValueChanged="Search" DisableUnderLine="true" Variant="Variant.Filled" Required="true" Class="searchField" Placeholder="Guild search" SearchFunc="@Search2">
+                    <MudAutocomplete CoerceText="true" Text="" Spellcheck="false" ResetValueOnEmptyText="false" T="Models.Guild" ValueChanged="Search" DisableUnderLine="true" Variant="Variant.Filled" Required="true" Class="searchField" Placeholder="Guild search" SearchFunc="@GuildSearch">
                         <ItemTemplate Context="result">
                             @if (result.Region.Equals("No records found"))
                             {
@@ -120,6 +120,8 @@
 </MudLayout>
 
 @code {
+    [CascadingParameter]
+    protected Task<AuthenticationState> AuthStat { get; set; }
 
     private string state = "Message box hasn't been opened yet";
 
@@ -142,6 +144,59 @@
     bool _drawerOpen = true;
     bool isEditMode = false;
 
+    MudTheme darkTheme = new MudTheme()
+    {
+        Palette = new Palette()
+        {
+            Primary = "#FF8000",
+            Secondary = "#A970FF",
+            LinesInputs = "#27272f",
+            Black = "#27272f",
+            Background = "#32333d",
+            BackgroundGrey = "#27272f",
+            Surface = "#373740",
+            DrawerBackground = "#27272f",
+            DrawerText = "rgba(255,255,255, 0.50)",
+            DrawerIcon = "rgba(255,255,255, 0.50)",
+            AppbarBackground = "#27272f",
+            AppbarText = "rgba(255,255,255, 0.70)",
+            TextPrimary = "rgba(255,255,255, 0.70)",
+            TextSecondary = "rgba(255,255,255, 0.50)",
+            TableLines = "#27272f",
+            Divider = "#27272f",
+            ActionDefault = "#adadb1",
+            ActionDisabled = "rgba(255,255,255, 0.26)",
+            ActionDisabledBackground = "rgba(255,255,255, 0.12)",
+        }
+    };
+
+    protected async override Task OnInitializedAsync()
+    {
+        guilds = _context.Guilds.ToList();
+
+        base.OnInitialized();
+        var user = (await AuthStat).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            isLoggedIn = false;
+        }
+
+        var character = await _context.Characters.Where(x => user.Identity.Name.Equals(x.Email)).FirstOrDefaultAsync();
+        var profile = await _context.Profiles.Where(x => user.Identity.Name.Equals(x.AspEmail)).FirstOrDefaultAsync();
+        if (character == null)
+        {
+            hasProfile = false;
+        }
+        else
+        {
+            region = character.Region;
+            ProfilePic = character.avatar_url;
+            BattleTagName = profile.BattleTag.Split('#')[0];
+            BattleTagId = "#" + profile.BattleTag.Split('#')[1];
+        }
+    }
+
     private async void ToggleAddBox(bool b)
     {
         isEditMode = !b;
@@ -153,7 +208,7 @@
         _drawerOpen = !_drawerOpen;
     }
 
-    private async Task<IEnumerable<Models.Guild>> Search2(string value)
+    private async Task<IEnumerable<Models.Guild>> GuildSearch(string value)
     {
         if (string.IsNullOrEmpty(value))
             return new List<Models.Guild>();
@@ -224,68 +279,10 @@
         }
     }
 
-    // method to handle user guild search
     private void Search(Models.Guild g)
     {
         // naviagte to guilds page
         NavigationManager.NavigateTo($"/guild/{g.Region}/{g.RealmSlug}/{g.NameSlug}/");
-    }
-
-
-    MudTheme darkTheme = new MudTheme()
-    {
-        Palette = new Palette()
-        {
-            Primary = "#FF8000",
-            Secondary = "#A970FF",
-            LinesInputs = "#27272f",
-            Black = "#27272f",
-            Background = "#32333d",
-            BackgroundGrey = "#27272f",
-            Surface = "#373740",
-            DrawerBackground = "#27272f",
-            DrawerText = "rgba(255,255,255, 0.50)",
-            DrawerIcon = "rgba(255,255,255, 0.50)",
-            AppbarBackground = "#27272f",
-            AppbarText = "rgba(255,255,255, 0.70)",
-            TextPrimary = "rgba(255,255,255, 0.70)",
-            TextSecondary = "rgba(255,255,255, 0.50)",
-            TableLines = "#27272f",
-            Divider = "#27272f",
-            ActionDefault = "#adadb1",
-            ActionDisabled = "rgba(255,255,255, 0.26)",
-            ActionDisabledBackground = "rgba(255,255,255, 0.12)",
-        }
-    };
-
-    [CascadingParameter]
-    protected Task<AuthenticationState> AuthStat { get; set; }
-
-    protected async override Task OnInitializedAsync()
-    {
-        base.OnInitialized();
-        var user = (await AuthStat).User;
-
-        if (!user.Identity.IsAuthenticated)
-        {
-            isLoggedIn = false;
-        }
-
-        var character = await _context.Characters.Where(x => user.Identity.Name.Equals(x.Email)).FirstOrDefaultAsync();
-        var profile = await _context.Profiles.Where(x => user.Identity.Name.Equals(x.AspEmail)).FirstOrDefaultAsync();
-        if (character == null)
-        {
-            hasProfile = false;
-        }
-        else
-        {
-            region = character.Region;
-            ProfilePic = character.avatar_url;
-            BattleTagName = profile.BattleTag.Split('#')[0];
-            BattleTagId = "#" + profile.BattleTag.Split('#')[1];
-        }
-
-        guilds = await _context.Guilds.ToListAsync();
     }
 
     private async Task OpenProfilePage()
