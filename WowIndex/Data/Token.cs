@@ -11,6 +11,8 @@ namespace WowIndex.Data
 
         public string token { get; set; }
 
+        public int RequestsThisHour { get; set; }
+
         public DateTime ExpirationDate { get; set; }
     }
 }

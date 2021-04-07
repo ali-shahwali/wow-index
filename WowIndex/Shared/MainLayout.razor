@@ -7,69 +7,100 @@
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(e => DrawerToggle())" />
-        <MudAppBarSpacer />
-        <MudItem xs="12" sm="6" md="4">
-            <MudAutocomplete CoerceText="true" Text="" Spellcheck="false" ResetValueOnEmptyText="false" T="Models.Guild" ValueChanged="Search" DisableUnderLine="true" Variant="Variant.Filled" Required="true" Class="searchField" Placeholder="Guild search" SearchFunc="@Search2">
-                <ItemTemplate Context="result">
-                    @if (result.Region.Equals("No records found"))
-                    {
-                        <MudButton FullWidth="true" OnClick="@(e => ToggleAddBox())" StartIcon="@Icons.Material.Filled.Add">
-                            @result.Region.ToUpper()
-                        </MudButton>
-                        <MudText Typo="Typo.body2">
-                            @result.Name @result.Realm
-                        </MudText>
-                    }
-                    else
-                    {
-                        <MudText>
-                            @result.Region.ToUpper()
-                        </MudText>
-                        <MudText Typo="Typo.body2">
-                            @result.Name @result.Realm
-                        </MudText>
-                    }
-                </ItemTemplate>
-            </MudAutocomplete>
-        </MudItem>
-        <MudAppBarSpacer />
-        @if (isLoggedIn)
-        {
+            <MudAppBarSpacer />
+                @if (!isEditMode)
+                {
+                <MudItem Style="max-width: 400px" xs="6">
+                    <MudAutocomplete CoerceText="true" Text="" Spellcheck="false" ResetValueOnEmptyText="false" T="Models.Guild" ValueChanged="Search" DisableUnderLine="true" Variant="Variant.Filled" Required="true" Class="searchField" Placeholder="Guild search" SearchFunc="@Search2">
+                        <ItemTemplate Context="result">
+                            @if (result.Region.Equals("No records found"))
+                            {
+                                <MudButton Class="mx-n5 mt-n3 mb-n3 py-5" Style="width: calc(100% + 40px);" FullWidth="true" OnClick="@(e => ToggleAddBox(false))" StartIcon="@Icons.Material.Filled.Add">
+                                    @result.Region.ToUpper()
+                                </MudButton>
+                                <MudText Typo="Typo.body2">
+                                    @result.Name @result.Realm
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudText>
+                                    @result.Region.ToUpper()
+                                </MudText>
+                                <MudText Typo="Typo.body2">
+                                    @result.Name @result.Realm
+                                </MudText>
+                            }
+                        </ItemTemplate>
+                    </MudAutocomplete>
+                </MudItem>
 
-            if (!hasProfile)
-            {
-                <MudButton Link="/setupProfile" Variant="Variant.Outlined" Color="Color.Warning">Get started!</MudButton>
-            }
-            <MudText><span style="color: #FF8000">@BattleTagName</span>@BattleTagId</MudText>
-            <MudMenu Class="ml-5 p-5" Direction="Direction.Right" OffsetY="true">
-                <ActivatorContent>
-                    <MudAvatar Image="@ProfilePic" Color="Color.Transparent">
-
-                    </MudAvatar>
-                </ActivatorContent>
-                <ChildContent>
-                    @if (hasProfile)
+                }
+                else
+                {
+                <MudItem Style="max-width: 700px" xs="12">
+                    <EditForm Model="@model" OnValidSubmit="AddGuild">
+                        <MudGrid>
+                            <MudItem xs="1">
+                                <MudIconButton OnClick="@(e => ToggleAddBox(true))" Icon="@Icons.Material.Filled.ArrowBack" />
+                            </MudItem>
+                            <MudItem xs="2">
+                                <MudSelect DisableUnderLine="true" @bind-Value="@model.searchRegion" Class="searchSelect" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("eu")">EU</MudSelectItem>
+                                    <MudSelectItem Value="@("us")">US</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField Immediate="true" Spellcheck="false" Class="searchField" @bind-Value="@model.searchGuild" Placeholder="Guild name" Variant="Variant.Filled" Margin="Margin.Dense" DisableUnderLine="true" />
+                            </MudItem>
+                            <MudItem xs="3">
+                                <MudTextField Immediate="true" Spellcheck="false" Class="searchField" @bind-Value="@model.searchRealm" Placeholder="Realm" Variant="Variant.Filled" Margin="Margin.Dense" DisableUnderLine="true" />
+                            </MudItem>
+                            <MudItem xs="2">
+                                @{ bool check = model.searchGuild == "" || model.searchGuild == null || model.searchRealm == "" || model.searchRealm == null;}
+                                <MudButton Disabled="check" Class="mt-1" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </EditForm>
+                </MudItem>
+                }
+            <MudAppBarSpacer />
+                @if (isLoggedIn)
+                {
+                    if (!hasProfile)
                     {
-                        <MudMenuItem>
-                            <MudButton OnClick="OpenProfilePage" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AccountCircle">Profile</MudButton>
-                        </MudMenuItem>
+                        <MudButton Link="/setupProfile" Variant="Variant.Outlined" Color="Color.Warning">Get started!</MudButton>
                     }
-                    <form style="width: 250px" method="post" action="Identity/Account/LogOut">
-                        <button type="submit">
-                            <MudMenuItem>
-                                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Logout">Logout</MudButton>
-                            </MudMenuItem>
-                        </button>
-                    </form>
-                </ChildContent>
-            </MudMenu>
-        }
-        else
-        {
-            <MudButton Class="mr-5" StartIcon="@Icons.Material.Filled.Login" Link="/Identity/Account/Login" Color="Color.Primary">Login</MudButton>
-            <MudButton StartIcon="@Icons.Material.Filled.PersonAdd" Link="/Identity/Account/Register" Color="Color.Success">Register</MudButton>
-        }
-    </MudAppBar>
+                    <MudText><span style="color: #FF8000">@BattleTagName</span>@BattleTagId</MudText>
+                    <MudMenu Class="ml-5 p-5" Direction="Direction.Right" OffsetY="true">
+                        <ActivatorContent>
+                            <MudAvatar Image="@ProfilePic" Color="Color.Transparent">
+
+                            </MudAvatar>
+                        </ActivatorContent>
+                        <ChildContent>
+                            @if (hasProfile)
+                            {
+                                <MudMenuItem>
+                                    <MudButton OnClick="OpenProfilePage" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AccountCircle">Profile</MudButton>
+                                </MudMenuItem>
+                            }
+                            <form style="width: 250px" method="post" action="Identity/Account/LogOut">
+                                <button type="submit">
+                                    <MudMenuItem>
+                                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Logout">Logout</MudButton>
+                                    </MudMenuItem>
+                                </button>
+                            </form>
+                        </ChildContent>
+                    </MudMenu>
+                }
+                else
+                {
+                    <MudButton Class="mr-5" StartIcon="@Icons.Material.Filled.Login" Link="/Identity/Account/Login" Color="Color.Primary">Login</MudButton>
+                    <MudButton StartIcon="@Icons.Material.Filled.PersonAdd" Link="/Identity/Account/Register" Color="Color.Success">Register</MudButton>
+                }
+        </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
         <MudNavMenu Class="mud-width-full">
             <MudText Typo="Typo.h6" Class="px-4 mt-1" Style="color: #FF8000; user-select: none">wowindex.io</MudText>
@@ -87,32 +118,6 @@
         </MudContainer>
     </MudMainContent>
 </MudLayout>
-
-<MudMessageBox @ref="mbox" Title="Add a guild">
-    <MessageContent>
-        <EditForm Model="@model" OnValidSubmit="AddGuild">
-            <MudGrid>
-                <MudItem xs="2">
-                    <MudSelect DisableUnderLine="true" @bind-Value="@model.searchRegion" Class="searchSelect" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
-                        <MudSelectItem Value="@("eu")">EU</MudSelectItem>
-                        <MudSelectItem Value="@("us")">US</MudSelectItem>
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="4">
-                    <MudTextField Required="true" Spellcheck="false" Class="searchField" @bind-Value="@model.searchGuild" Placeholder="Guild name" Variant="Variant.Filled" Margin="Margin.Dense" DisableUnderLine="true"></MudTextField>
-                </MudItem>
-                <MudItem xs="4">
-                    <MudTextField Required="true" Spellcheck="false" Class="searchField" @bind-Value="@model.searchRealm" Placeholder="Realm" Variant="Variant.Filled" Margin="Margin.Dense" DisableUnderLine="true"></MudTextField>
-                </MudItem>
-                <MudItem xs="2">
-                    <MudButton Disabled="@(!context.Validate())" Class="mt-1" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
-                </MudItem>
-            </MudGrid>
-        </EditForm>
-    </MessageContent>
-    <YesButton></YesButton>
-    <NoButton></NoButton>
-</MudMessageBox>
 
 @code {
 
@@ -135,11 +140,11 @@
     bool hasProfile = true;
     bool isLoggedIn = true;
     bool _drawerOpen = true;
+    bool isEditMode = false;
 
-    private async void ToggleAddBox()
+    private async void ToggleAddBox(bool b)
     {
-        bool? result = await mbox.Show();
-        state = result == null ? "Cancelled" : "Deleted!";
+        isEditMode = !b;
         StateHasChanged();
     }
 
@@ -148,18 +153,12 @@
         _drawerOpen = !_drawerOpen;
     }
 
-    public async Task searchValueUpdate(string e)
-    {
-        searchValue = e;
-        StateHasChanged();
-    }
-
     private async Task<IEnumerable<Models.Guild>> Search2(string value)
     {
         if (string.IsNullOrEmpty(value))
             return new List<Models.Guild>();
 
-        var result = guilds.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).Take(10).ToList();
+        var result = guilds.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).Take(100).ToList();
         if (result.Count > 0)
             return result;
         else
@@ -185,9 +184,6 @@
         {
             HttpClient client = new HttpClient();
             client.BaseAddress = new Uri($"https://{searchRegion}.api.blizzard.com/");
-
-            // get search values
-
 
             // check api for guild
             var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
@@ -258,7 +254,7 @@
             Divider = "#27272f",
             ActionDefault = "#adadb1",
             ActionDisabled = "rgba(255,255,255, 0.26)",
-            ActionDisabledBackground = "rgba(255,255,255, 0.12)"
+            ActionDisabledBackground = "rgba(255,255,255, 0.12)",
         }
     };
 
@@ -275,7 +271,7 @@
             isLoggedIn = false;
         }
 
-        var character = _context.Characters.Where(x => user.Identity.Name.Equals(x.Email)).FirstOrDefault();
+        var character = await _context.Characters.Where(x => user.Identity.Name.Equals(x.Email)).FirstOrDefaultAsync();
         var profile = await _context.Profiles.Where(x => user.Identity.Name.Equals(x.AspEmail)).FirstOrDefaultAsync();
         if (character == null)
         {

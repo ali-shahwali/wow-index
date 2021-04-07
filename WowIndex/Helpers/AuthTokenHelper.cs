@@ -58,6 +58,7 @@ namespace WowIndex.Helpers
             {
                 token = AccessToken,
                 ExpirationDate = DateTime.Now.AddSeconds(86399),
+                RequestsThisHour = 0
             };
 
             // this is so dumb but i need this if statment here or it will enter twice...

@@ -51,60 +51,68 @@
     private async Task<TableData<LeaderboardEntry>> ServerReload(TableState state)
     {
         var rows = await _context.RankedCastleNathriaLeaderboard.ToListAsync();
-        _context.RankedCastleNathriaLeaderboard.RemoveRange(rows);
-        await _context.SaveChangesAsync();
-
-        // bind records from database
-
-        var leaderboard = await _context.KillTimeCastleNathria.ToListAsync();
-        List<KillTimeCastleNathria> results = new List<KillTimeCastleNathria>();
-
-        results.AddRange(leaderboard.Where(x => x.Progress == 10).OrderBy(x => x.Boss10KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 9).OrderBy(x => x.Boss9KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 8).OrderBy(x => x.Boss8KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 7).OrderBy(x => x.Boss7KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 6).OrderBy(x => x.Boss6KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 5).OrderBy(x => x.Boss5KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 4).OrderBy(x => x.Boss4KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 3).OrderBy(x => x.Boss3KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 2).OrderBy(x => x.Boss2KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 1).OrderBy(x => x.Boss1KillTime));
-
         List<LeaderboardEntry> leaderboardEntries = new List<LeaderboardEntry>();
-        int i = 1;
-        var guilds = _context.Guilds.ToList();
-        foreach (var item in results)
+
+        if (rows.Count == 0 || (rows.FirstOrDefault().ExpirationTime > DateTime.Now))
         {
-            var guild = guilds.Where(x => x.Id == item.GuildId).FirstOrDefault();
-            DateTime killTime = new DateTime();
-            DateTime[] bossTimes = Helpers.CastleNathriaKillTime.GetKillTimes(item);
-            foreach (var time in bossTimes)
+            _context.RankedCastleNathriaLeaderboard.RemoveRange(rows);
+            await _context.SaveChangesAsync();
+
+            // bind records from database
+
+            var leaderboard = await _context.KillTimeCastleNathria.ToListAsync();
+            List<KillTimeCastleNathria> results = new List<KillTimeCastleNathria>();
+
+            results.AddRange(leaderboard.Where(x => x.Progress == 10).OrderBy(x => x.Boss10KillTime));
+            results.AddRange(leaderboard.Where(x => x.Progress == 9).OrderBy(x => x.Boss9KillTime));
+            results.AddRange(leaderboard.Where(x => x.Progress == 8).OrderBy(x => x.Boss8KillTime));
+            results.AddRange(leaderboard.Where(x => x.Progress == 7).OrderBy(x => x.Boss7KillTime));
+            results.AddRange(leaderboard.Where(x => x.Progress == 6).OrderBy(x => x.Boss6KillTime));
+            results.AddRange(leaderboard.Where(x => x.Progress == 5).OrderBy(x => x.Boss5KillTime));
+            results.AddRange(leaderboard.Where(x => x.Progress == 4).OrderBy(x => x.Boss4KillTime));
+            results.AddRange(leaderboard.Where(x => x.Progress == 3).OrderBy(x => x.Boss3KillTime));
+            results.AddRange(leaderboard.Where(x => x.Progress == 2).OrderBy(x => x.Boss2KillTime));
+            results.AddRange(leaderboard.Where(x => x.Progress == 1).OrderBy(x => x.Boss1KillTime));
+
+            int i = 1;
+            var guilds = _context.Guilds.ToList();
+            foreach (var item in results)
             {
-                if (time != new DateTime())
+                var guild = guilds.Where(x => x.Id == item.GuildId).FirstOrDefault();
+                DateTime killTime = new DateTime();
+                DateTime[] bossTimes = Helpers.CastleNathriaKillTime.GetKillTimes(item);
+                foreach (var time in bossTimes)
                 {
-                    killTime = time;
-                    break;
+                    if (time != new DateTime())
+                    {
+                        killTime = time;
+                        break;
+                    }
                 }
+
+                LeaderboardEntry entry = new LeaderboardEntry
+                {
+                    Rank = i,
+                    LatestProgressionTime = killTime,
+                    GuildName = guild.Name,
+                    Faction = guild.FactionName,
+                    Realm = guild.Realm,
+                    Region = guild.Region,
+                    Progression = item.Progress,
+                    GuildSlug = guild.NameSlug,
+                    RealmSlug = guild.RealmSlug
+                };
+
+                leaderboardEntries.Add(entry);
+                _context.RankedCastleNathriaLeaderboard.Add(entry);
+                i++;
             }
-
-            LeaderboardEntry entry = new LeaderboardEntry
-            {
-                Rank = i,
-                LatestProgressionTime = killTime,
-                GuildName = guild.Name,
-                Faction = guild.FactionName,
-                Realm = guild.Realm,
-                Region = guild.Region,
-                Progression = item.Progress,
-                GuildSlug = guild.NameSlug,
-                RealmSlug = guild.RealmSlug
-            };
-
-            leaderboardEntries.Add(entry);
-            _context.RankedCastleNathriaLeaderboard.Add(entry);
-            i++;
+            await _context.SaveChangesAsync();
         }
-        await _context.SaveChangesAsync();
+        else
+        {
+            leaderboardEntries = rows;
+        }
 
         StateHasChanged();
         return new TableData<LeaderboardEntry>() { Items = leaderboardEntries };

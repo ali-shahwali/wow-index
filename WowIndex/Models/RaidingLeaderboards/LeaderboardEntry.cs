@@ -16,6 +16,7 @@ namespace WowIndex.Models.RaidingLeaderboards
         public string RealmSlug { get; set; }
         public string Region { get; set; }
         public DateTime LatestProgressionTime { get; set; }
+        public DateTime ExpirationTime { get; set; } = DateTime.Now.AddMinutes(15);
         public int Progression { get; set; }
 
     }

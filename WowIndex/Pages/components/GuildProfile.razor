@@ -60,7 +60,7 @@ else
                     <RowTemplate>
                         <MudTd DataLabel="Character">
                             @{ string link = $"https://worldofwarcraft.com/en-us/character/{context.Region.ToLower()}/{context.RealmSlug}/{context.CharacterName}";}
-                            <MudButton StartIcon="@Icons.Material.Filled.OpenInNew" Target="_blank" Link="@link" Variant="Variant.Text" Color="Color.Secondary">@context.CharacterName</MudButton>
+                            <MudButton StartIcon="@Icons.Material.Filled.OpenInNew" Target="_blank" Link="@link" Variant="Variant.Text" Style="@context.class_color">@context.CharacterName</MudButton>
                         </MudTd>
                     </RowTemplate>
                     <PagerContent>
@@ -159,7 +159,10 @@ else
                 GuildId = Guild.Id,
                 Region = Guild.Region,
                 MemberRank = member.rank,
-                RealmSlug = member.character.realm.slug
+                RealmSlug = member.character.realm.slug,
+                playable_class = Helpers.WowClassHelper.GetClassById(member.character.playable_class.id),
+                class_color = Helpers.WowClassHelper.GetClassColour(member.character.playable_class.id)
+
             });
         }
         List<Models.POCO.CharacterAchievementPOCO.Achievement[]> allCharacters = new List<Models.POCO.CharacterAchievementPOCO.Achievement[]>();
@@ -174,6 +177,8 @@ else
             {
                 var apiResponse = await client.GetAsync($"profile/wow/character/{realm}/{item.character.name.ToLower()}/achievements?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}");
                 var apiResponseString = apiResponse.Content.ReadAsStringAsync().Result;
+                accessToken.RequestsThisHour++;
+                _context.Update(accessToken);
 
                 Models.POCO.CharacterAchievementPOCO.CharacterAchievement characterAchievements = JsonConvert.DeserializeObject<Models.POCO.CharacterAchievementPOCO.CharacterAchievement>(apiResponseString);
                 Models.POCO.CharacterAchievementPOCO.Achievement[] validAchievements = characterAchievements.achievements.Where(x => x.id >= 14356 && x.id <= 14365).ToArray();

@@ -13,5 +13,7 @@ namespace WowIndex.Models
         public string RealmSlug { get; set; }
         public int MemberRank { get; set; }
         public string Region { get; set; }
+        public string playable_class { get; set; }
+        public string class_color { get; set; }
     }
 }
