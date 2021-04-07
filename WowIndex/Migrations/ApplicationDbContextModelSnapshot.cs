@@ -279,6 +279,33 @@ namespace WowIndex.Migrations
                     b.ToTable("Guilds");
                 });
 
+            modelBuilder.Entity("WowIndex.Models.GuildRoster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("CharacterName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("GuildId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MemberRank")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RealmSlug")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Region")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GuildRoster");
+                });
+
             modelBuilder.Entity("WowIndex.Models.Index.GuildRecord", b =>
                 {
                     b.Property<int>("Id")
@@ -318,7 +345,7 @@ namespace WowIndex.Migrations
                     b.ToTable("Records");
                 });
 
-            modelBuilder.Entity("WowIndex.Models.RaidingLeaderboards.LeaderboardCastleNathria", b =>
+            modelBuilder.Entity("WowIndex.Models.RaidingLeaderboards.KillTimeCastleNathria", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -366,7 +393,7 @@ namespace WowIndex.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("LeaderboardCastleNathria");
+                    b.ToTable("KillTimeCastleNathria");
                 });
 
             modelBuilder.Entity("WowIndex.Models.RaidingLeaderboards.LeaderboardEntry", b =>

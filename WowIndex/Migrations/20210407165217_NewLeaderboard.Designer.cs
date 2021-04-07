@@ -10,8 +10,8 @@ using WowIndex.Data;
 namespace WowIndex.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210406214823_LeaderboardRankingsModel")]
-    partial class LeaderboardRankingsModel
+    [Migration("20210407165217_NewLeaderboard")]
+    partial class NewLeaderboard
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -320,7 +320,7 @@ namespace WowIndex.Migrations
                     b.ToTable("Records");
                 });
 
-            modelBuilder.Entity("WowIndex.Models.RaidingLeaderboards.LeaderboardCastleNathria", b =>
+            modelBuilder.Entity("WowIndex.Models.RaidingLeaderboards.KillTimeCastleNathria", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -368,7 +368,7 @@ namespace WowIndex.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("LeaderboardCastleNathria");
+                    b.ToTable("KillTimeCastleNathria");
                 });
 
             modelBuilder.Entity("WowIndex.Models.RaidingLeaderboards.LeaderboardEntry", b =>
@@ -407,7 +407,7 @@ namespace WowIndex.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CastleNathriaLeaderboards");
+                    b.ToTable("RankedCastleNathriaLeaderboard");
                 });
 
             modelBuilder.Entity("WowIndex.Models.UserProfile.Character", b =>

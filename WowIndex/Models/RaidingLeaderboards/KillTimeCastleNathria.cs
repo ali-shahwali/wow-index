@@ -2,7 +2,7 @@
 
 namespace WowIndex.Models.RaidingLeaderboards
 {
-    public class LeaderboardCastleNathria
+    public class KillTimeCastleNathria
     {
         public int Id { get; set; }
 

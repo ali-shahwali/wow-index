@@ -1,7 +1,6 @@
 ﻿@page "/"
 @using WowIndex.Models.RaidingLeaderboards
 @using Microsoft.Extensions.Configuration
-@inject WowIndex.Data.ApplicationDbContext _context
 
 <MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardEntry>>>(ServerReload))" RowsPerPage="20" Dense="true" FixedHeader="true" @ref="table" Hover="true">
     <HeaderContent>
@@ -12,7 +11,18 @@
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Rank">
-            @context.Rank
+            @if (context.Rank <= 3)
+            {
+                <MudText Color="@Color.Primary">@context.Rank</MudText>
+            }
+            else if (context.Rank <= 10)
+            {
+                <MudText Style="color: blueviolet">@context.Rank</MudText>
+            }
+            else
+            {
+                <MudText Color="Color.Info">@context.Rank</MudText>
+            }
         </MudTd>
         <MudTd DataLabel="Guild">
             @{ var link = $"/guild/{context.Region.ToLower()}/{context.RealmSlug}/{context.GuildSlug}/"; }
@@ -40,14 +50,14 @@
 
     private async Task<TableData<LeaderboardEntry>> ServerReload(TableState state)
     {
-        var rows = from x in _context.RankedCastleNathriaLeaderboard select x;
+        var rows = await _context.RankedCastleNathriaLeaderboard.ToListAsync();
         _context.RankedCastleNathriaLeaderboard.RemoveRange(rows);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
 
         // bind records from database
 
-        var leaderboard = await _context.LeaderboardCastleNathria.ToListAsync();
-        List<LeaderboardCastleNathria> results = new List<LeaderboardCastleNathria>();
+        var leaderboard = await _context.KillTimeCastleNathria.ToListAsync();
+        List<KillTimeCastleNathria> results = new List<KillTimeCastleNathria>();
 
         results.AddRange(leaderboard.Where(x => x.Progress == 10).OrderBy(x => x.Boss10KillTime));
         results.AddRange(leaderboard.Where(x => x.Progress == 9).OrderBy(x => x.Boss9KillTime));
@@ -62,9 +72,10 @@
 
         List<LeaderboardEntry> leaderboardEntries = new List<LeaderboardEntry>();
         int i = 1;
+        var guilds = _context.Guilds.ToList();
         foreach (var item in results)
         {
-            var guild = await _context.Guilds.Where(x => x.Id == item.GuildId).FirstOrDefaultAsync();
+            var guild = guilds.Where(x => x.Id == item.GuildId).FirstOrDefault();
             DateTime killTime = new DateTime();
             DateTime[] bossTimes = Helpers.CastleNathriaKillTime.GetKillTimes(item);
             foreach (var time in bossTimes)
@@ -88,6 +99,7 @@
                 GuildSlug = guild.NameSlug,
                 RealmSlug = guild.RealmSlug
             };
+
             leaderboardEntries.Add(entry);
             _context.RankedCastleNathriaLeaderboard.Add(entry);
             i++;

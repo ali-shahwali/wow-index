@@ -7,7 +7,7 @@ namespace WowIndex.Helpers
 {
     public class CastleNathriaKillTime
     {
-        public static DateTime[] GetKillTimes(Models.RaidingLeaderboards.LeaderboardCastleNathria raidProgRecord)
+        public static DateTime[] GetKillTimes(Models.RaidingLeaderboards.KillTimeCastleNathria raidProgRecord)
         {
             return new DateTime[] 
             { 
