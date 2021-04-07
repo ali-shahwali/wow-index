@@ -88,7 +88,7 @@
     </MudMainContent>
 </MudLayout>
 
-<MudMessageBox @ref="mbox" Title="Add guild" CancelText="Cancel">
+<MudMessageBox @ref="mbox" Title="Add a guild">
     <MessageContent>
         <EditForm Model="@model" OnValidSubmit="AddGuild">
             <MudGrid>
@@ -99,18 +99,19 @@
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="4">
-                    <MudTextField Required="true" Spellcheck="false" Class="searchField" @bind-Value="@model.searchGuild" Label="Guild name" Variant="Variant.Filled" Margin="Margin.Dense" DisableUnderLine="true"></MudTextField>
+                    <MudTextField Required="true" Spellcheck="false" Class="searchField" @bind-Value="@model.searchGuild" Placeholder="Guild name" Variant="Variant.Filled" Margin="Margin.Dense" DisableUnderLine="true"></MudTextField>
                 </MudItem>
                 <MudItem xs="4">
-                    <MudTextField Required="true" Spellcheck="false" Class="searchField" @bind-Value="@model.searchRealm" Label="Realm" Variant="Variant.Filled" Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Search" AdornmentColor="Color.Primary" DisableUnderLine="true"></MudTextField>
+                    <MudTextField Required="true" Spellcheck="false" Class="searchField" @bind-Value="@model.searchRealm" Placeholder="Realm" Variant="Variant.Filled" Margin="Margin.Dense" DisableUnderLine="true"></MudTextField>
                 </MudItem>
                 <MudItem xs="2">
-                    <MudIconButton Icon="@Icons.Material.Filled.Add" ButtonType="ButtonType.Submit" Color="Color.Primary" />
+                    <MudButton Disabled="@(!context.Validate())" Class="mt-1" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
                 </MudItem>
             </MudGrid>
         </EditForm>
     </MessageContent>
     <YesButton></YesButton>
+    <NoButton></NoButton>
 </MudMessageBox>
 
 @code {
@@ -124,6 +125,8 @@
     List<Models.Guild> guilds = new List<Models.Guild>();
 
     public string region = "";
+
+    public string searchValue {get; set;}
 
     public string ProfilePic { get; set; } = "img/profile-icon.svg";
     public string BattleTagName = "";
@@ -143,6 +146,12 @@
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
+    }
+
+    public async Task searchValueUpdate(string e)
+    {
+        searchValue = e;
+        StateHasChanged();
     }
 
     private async Task<IEnumerable<Models.Guild>> Search2(string value)
@@ -233,6 +242,7 @@
         {
             Primary = "#FF8000",
             Secondary = "#A970FF",
+            LinesInputs = "#27272f",
             Black = "#27272f",
             Background = "#32333d",
             BackgroundGrey = "#27272f",
