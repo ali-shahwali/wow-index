@@ -107,7 +107,7 @@ else
             await GetData();
         else
         {
-            guildMembers = await _context.GuildRoster.Where(x => x.GuildId == Guild.Id).OrderBy(x => x.MemberRank).ToListAsync();
+            guildMembers = _context.GuildRoster.Where(x => x.GuildId == Guild.Id).OrderBy(x => x.MemberRank).ToList();
 
             bossStats = ToBossStatsList(Helpers.CastleNathriaKillTime.GetKillTimes(raidProgRecord), bossNames);
             if (raidProgRecord.ExpirationDate < DateTime.Now)
@@ -119,7 +119,6 @@ else
             rank = result.Rank.ToString();
 
         isLoading = false;
-        StateHasChanged();
     }
 
     public async Task Update()
@@ -151,9 +150,14 @@ else
 
         Models.POCO.GuildRosterPOCO roster = JsonConvert.DeserializeObject<Models.POCO.GuildRosterPOCO>(rosterString);
         rosterMembers = roster.members.Where(x => x.character.level == 60).OrderBy(x => x.rank).ToArray();
+
+        var oldGuildRoster = await _context.GuildRoster.ToListAsync();
+        _context.GuildRoster.RemoveRange(oldGuildRoster);
+        await _context.SaveChangesAsync();
+
         foreach (var member in rosterMembers)
         {
-            await _context.AddAsync(new Models.GuildRoster
+            await _context.GuildRoster.AddAsync(new Models.GuildRoster
             {
                 CharacterName = member.character.name,
                 GuildId = Guild.Id,
@@ -165,8 +169,8 @@ else
 
             });
         }
-        List<Models.POCO.CharacterAchievementPOCO.Achievement[]> allCharacters = new List<Models.POCO.CharacterAchievementPOCO.Achievement[]>();
 
+        List<Models.POCO.CharacterAchievementPOCO.Achievement[]> allCharacters = new List<Models.POCO.CharacterAchievementPOCO.Achievement[]>();
         int[] progressionTally = new int[10];
         int iterations = 0;
         int progression = 0;
@@ -245,7 +249,6 @@ else
         isLoading = false;
         await _context.SaveChangesAsync();
         guildMembers = await _context.GuildRoster.Where(x => x.GuildId == Guild.Id).OrderBy(x => x.MemberRank).ToListAsync();
-        StateHasChanged();
     }
 
     private DateTime[] GetBossTimes(List<Models.POCO.CharacterAchievementPOCO.Achievement[]> raidTeam)

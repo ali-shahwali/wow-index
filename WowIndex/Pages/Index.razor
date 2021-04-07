@@ -54,7 +54,7 @@
     {
         var RaidRanks = _context.RankedCastleNathriaLeaderboard.ToList();
 
-        if (RaidRanks.Count == 0 || (RaidRanks.FirstOrDefault().ExpirationTime > DateTime.Now))
+        if (RaidRanks.Count == 0 || (RaidRanks.FirstOrDefault().ExpirationTime < DateTime.Now))
         {
             _context.RankedCastleNathriaLeaderboard.RemoveRange(RaidRanks);
             await _context.SaveChangesAsync();
