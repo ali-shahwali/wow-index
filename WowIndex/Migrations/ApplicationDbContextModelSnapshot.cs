@@ -240,7 +240,7 @@ namespace WowIndex.Migrations
                     b.ToTable("Tokens");
                 });
 
-            modelBuilder.Entity("WowIndex.Models.Guild", b =>
+            modelBuilder.Entity("WowIndex.Models.GuildObjects.Guild", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -282,7 +282,7 @@ namespace WowIndex.Migrations
                     b.ToTable("Guilds");
                 });
 
-            modelBuilder.Entity("WowIndex.Models.GuildRoster", b =>
+            modelBuilder.Entity("WowIndex.Models.GuildObjects.GuildRoster", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -315,7 +315,7 @@ namespace WowIndex.Migrations
                     b.ToTable("GuildRoster");
                 });
 
-            modelBuilder.Entity("WowIndex.Models.Index.GuildRecord", b =>
+            modelBuilder.Entity("WowIndex.Models.RaidingLeaderboards.HallOfFameRecord", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -330,9 +330,6 @@ namespace WowIndex.Migrations
 
                     b.Property<string>("name")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("progress")
-                        .HasColumnType("int");
 
                     b.Property<string>("raidName")
                         .HasColumnType("nvarchar(max)");
@@ -351,7 +348,7 @@ namespace WowIndex.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Records");
+                    b.ToTable("HoFRecords");
                 });
 
             modelBuilder.Entity("WowIndex.Models.RaidingLeaderboards.KillTimeCastleNathria", b =>

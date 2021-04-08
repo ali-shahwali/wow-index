@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace WowIndex.Helpers
 {
-    public class CastleNathriaKillTime
+    public class CastleNathriaKillTimeHelper
     {
         public static DateTime[] GetKillTimes(Models.RaidingLeaderboards.KillTimeCastleNathria raidProgRecord)
         {

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace WowIndex.Models.Index
+namespace WowIndex.Models.RaidingLeaderboards
 {
-    public class GuildRecord
+    public class HallOfFameRecord
     {
         public int Id { get; set; }
 
@@ -20,8 +20,6 @@ namespace WowIndex.Models.Index
         public string faction { get; set; }
 
         public long rank { get; set; }
-
-        public int progress { get; set; }
 
         public long timestamp { get; set; }
 

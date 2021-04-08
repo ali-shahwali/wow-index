@@ -10,8 +10,8 @@ using WowIndex.Data;
 namespace WowIndex.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210407214817_ClassColorModel2")]
-    partial class ClassColorModel2
+    [Migration("20210408105956_StreamlinedModel")]
+    partial class StreamlinedModel
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -242,7 +242,7 @@ namespace WowIndex.Migrations
                     b.ToTable("Tokens");
                 });
 
-            modelBuilder.Entity("WowIndex.Models.Guild", b =>
+            modelBuilder.Entity("WowIndex.Models.GuildObjects.Guild", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -284,7 +284,7 @@ namespace WowIndex.Migrations
                     b.ToTable("Guilds");
                 });
 
-            modelBuilder.Entity("WowIndex.Models.GuildRoster", b =>
+            modelBuilder.Entity("WowIndex.Models.GuildObjects.GuildRoster", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -317,7 +317,7 @@ namespace WowIndex.Migrations
                     b.ToTable("GuildRoster");
                 });
 
-            modelBuilder.Entity("WowIndex.Models.Index.GuildRecord", b =>
+            modelBuilder.Entity("WowIndex.Models.RaidingLeaderboards.HallOfFameRecord", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -332,9 +332,6 @@ namespace WowIndex.Migrations
 
                     b.Property<string>("name")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("progress")
-                        .HasColumnType("int");
 
                     b.Property<string>("raidName")
                         .HasColumnType("nvarchar(max)");
@@ -353,7 +350,7 @@ namespace WowIndex.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Records");
+                    b.ToTable("HoFRecords");
                 });
 
             modelBuilder.Entity("WowIndex.Models.RaidingLeaderboards.KillTimeCastleNathria", b =>
@@ -413,6 +410,9 @@ namespace WowIndex.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTime>("ExpirationTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Faction")
                         .HasColumnType("nvarchar(max)");

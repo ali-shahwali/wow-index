@@ -1,8 +1,11 @@
 ﻿@page "/guild/{region}/{realm}/{guildSlug}/"
+@using Models.GuildObjects
+@using Models.RaidingLeaderboards
+@using Models.POCO.CharacterAchievementPOCO
 
 @if (isLoading)
 {
-    <MudProgressLinear Buffer="true" Color="Color.Primary" Value="@estTimeLeft" Min="0" Max="rosterMembers.Length" Class="my-7" />
+    <MudProgressLinear Buffer="true" Color="Color.Primary" Value="@estTimeLeft" Min="0" Max="@estGuildRoster" Class="my-7" />
     <MudText Typo="Typo.h2">This page is being added...</MudText>
     <MudText Typo="Typo.h4">Check back within the minute!</MudText>
 }
@@ -53,7 +56,7 @@ else
             </MudItem>
             <MudItem xs="4">
                 <MudText Typo="Typo.h5" GutterBottom="true">Guild roster</MudText>
-                <MudTable Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Items="guildMembers" Filter="new Func<Models.GuildRoster,bool>(FilterFunc)">
+                <MudTable Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Items="guildMembers" Filter="new Func<GuildRoster,bool>(FilterFunc)">
                     <ToolBarContent>
                         <MudTextField Spellcheck="false" @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                     </ToolBarContent>
@@ -82,11 +85,11 @@ else
     public bool isLoading { get; set; }
     public bool isOutdated { get; set; }
     public int estTimeLeft { get; set; }
+    public int estGuildRoster { get; set; } = 100;
 
     // data
-    public Models.Guild Guild = new Models.Guild();
-    public Models.POCO.Member[] rosterMembers { get; set; }
-    public List<Models.GuildRoster> guildMembers { get; set; } = new List<Models.GuildRoster>();
+    public Guild Guild = new Guild();
+    public List<GuildRoster> guildMembers { get; set; } = new List<GuildRoster>();
     public string[] bossNames =
         {
         "Sire Denathrius", "Stone Legion Generals",
@@ -94,12 +97,13 @@ else
         "Artificer Xy'mox", "Sun King's Salvation", "Hungering Destroyer",
         "Huntsman Altimor", "Shriekwing"
         };
-    public List<Models.BossStats> bossStats = new List<Models.BossStats>();
+    public List<BossStats> bossStats = new List<BossStats>();
     public string rank { get; set; }
     public string searchString = "";
 
     protected override async Task OnParametersSetAsync()
     {
+        isLoading = true;
         Guild = _context.Guilds.Where(x => x.NameSlug == guildSlug && x.Region == region && x.RealmSlug == realm).FirstOrDefault();
         var raidProgRecord = _context.KillTimeCastleNathria.Where(x => x.GuildId == Guild.Id).FirstOrDefault();
 
@@ -109,7 +113,7 @@ else
         {
             guildMembers = _context.GuildRoster.Where(x => x.GuildId == Guild.Id).OrderBy(x => x.MemberRank).ToList();
 
-            bossStats = ToBossStatsList(Helpers.CastleNathriaKillTime.GetKillTimes(raidProgRecord), bossNames);
+            bossStats = ToBossStatsList(Helpers.CastleNathriaKillTimeHelper.GetKillTimes(raidProgRecord), bossNames);
             if (raidProgRecord.ExpirationDate < DateTime.Now)
                 isOutdated = true;
         }
@@ -119,6 +123,7 @@ else
             rank = result.Rank.ToString();
 
         isLoading = false;
+        StateHasChanged();
     }
 
     public async Task Update()
@@ -139,17 +144,16 @@ else
     public async Task GetData()
     {
         estTimeLeft = 0;
-        DateTime startTime = DateTime.Now;
-        HttpClient client = new HttpClient();
 
+        HttpClient client = new HttpClient();
         client.BaseAddress = new Uri($"https://{region}.api.blizzard.com/");
         var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
         var response = await client.GetAsync($"data/wow/guild/{realm}/{guildSlug}/roster?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}");
-
         string rosterString = await response.Content.ReadAsStringAsync();
 
-        Models.POCO.GuildRosterPOCO roster = JsonConvert.DeserializeObject<Models.POCO.GuildRosterPOCO>(rosterString);
-        rosterMembers = roster.members.Where(x => x.character.level == 60).OrderBy(x => x.rank).ToArray();
+        Models.POCO.Member[] rosterMembers = JsonConvert.DeserializeObject<Models.POCO.GuildRosterPOCO>(rosterString)
+            .members.Where(x => x.character.level == 60).OrderBy(x => x.rank).ToArray();
+        estGuildRoster = rosterMembers.Length;
 
         var oldGuildRoster = await _context.GuildRoster.ToListAsync();
         _context.GuildRoster.RemoveRange(oldGuildRoster);
@@ -157,7 +161,7 @@ else
 
         foreach (var member in rosterMembers)
         {
-            await _context.GuildRoster.AddAsync(new Models.GuildRoster
+            await _context.GuildRoster.AddAsync(new GuildRoster
             {
                 CharacterName = member.character.name,
                 GuildId = Guild.Id,
@@ -170,12 +174,10 @@ else
             });
         }
 
-        List<Models.POCO.CharacterAchievementPOCO.Achievement[]> allCharacters = new List<Models.POCO.CharacterAchievementPOCO.Achievement[]>();
+        List<Achievement[]> allCharacters = new List<Achievement[]>();
         int[] progressionTally = new int[10];
-        int iterations = 0;
-        int progression = 0;
-        isLoading = true;
-        if(rosterMembers.Length > 20)
+        int iterations = 0, progression = 0;
+        if (rosterMembers.Length > 20)
         {
             foreach (Models.POCO.Member item in rosterMembers)
             {
@@ -184,8 +186,8 @@ else
                 accessToken.RequestsThisHour++;
                 _context.Update(accessToken);
 
-                Models.POCO.CharacterAchievementPOCO.CharacterAchievement characterAchievements = JsonConvert.DeserializeObject<Models.POCO.CharacterAchievementPOCO.CharacterAchievement>(apiResponseString);
-                Models.POCO.CharacterAchievementPOCO.Achievement[] validAchievements = characterAchievements.achievements.Where(x => x.id >= 14356 && x.id <= 14365).ToArray();
+                CharacterAchievement characterAchievements = JsonConvert.DeserializeObject<CharacterAchievement>(apiResponseString);
+                Achievement[] validAchievements = characterAchievements.achievements.Where(x => x.id >= 14356 && x.id <= 14365).ToArray();
 
                 if (validAchievements.Length > 0)
                 {
@@ -200,22 +202,20 @@ else
                     for (int i = 9; i >= 0; i--)
                     {
                         if (progressionTally[i] >= 15)
-                        {
                             progression = i + 1;
-                        }
                     }
                 }
                 if (progression != 0)
                 {
-                    List<Models.POCO.CharacterAchievementPOCO.Achievement[]> raidTeam = new List<Models.POCO.CharacterAchievementPOCO.Achievement[]>();
+                    List<Achievement[]> raidTeam = new List<Achievement[]>();
                     foreach (var character in allCharacters.Where(x => x.Length == progression))
                         raidTeam.Add(character);
 
                     DateTime[] bossKills = GetBossTimes(raidTeam);
-
                     bossStats = ToBossStatsList(bossKills, bossNames);
+
                     // add this guilds progress to leaderboard
-                    Models.RaidingLeaderboards.KillTimeCastleNathria newLeaderboards = new Models.RaidingLeaderboards.KillTimeCastleNathria
+                    KillTimeCastleNathria newLeaderboards = new KillTimeCastleNathria
                     {
                         GuildId = Guild.Id,
                         Progress = progression,
@@ -238,20 +238,16 @@ else
                 }
 
                 StateHasChanged();
-                TimeSpan RequestTime = DateTime.Now - startTime;
             }
         }
         else
-        {
             NavigationManager.NavigateTo("/invalidGuildMessage");
-        }
 
-        isLoading = false;
         await _context.SaveChangesAsync();
         guildMembers = await _context.GuildRoster.Where(x => x.GuildId == Guild.Id).OrderBy(x => x.MemberRank).ToListAsync();
     }
 
-    private DateTime[] GetBossTimes(List<Models.POCO.CharacterAchievementPOCO.Achievement[]> raidTeam)
+    private DateTime[] GetBossTimes(List<Achievement[]> raidTeam)
     {
         DateTime[] bossKills = new DateTime[10];
 
@@ -267,7 +263,7 @@ else
                 str = str.Substring(0, str.Length - 3);
                 DateTime killTime = UnixTimeStampToDateTime(Convert.ToInt64(str)).ToUniversalTime();
 
-                if(killTime < earliestKill[j] || earliestKill[j] == new DateTime())
+                if (killTime < earliestKill[j] || earliestKill[j] == new DateTime())
                 {
                     earliestKill[j] = killTime;
                     bossKills[j] = killTime;
@@ -289,12 +285,12 @@ else
         return dtDateTime;
     }
 
-    private List<Models.BossStats> ToBossStatsList(DateTime[] bossKills, string[] bossNames)
+    private List<BossStats> ToBossStatsList(DateTime[] bossKills, string[] bossNames)
     {
-        List<Models.BossStats> stats = new List<Models.BossStats>();
-        for(int i = 0; i < 10; i++)
+        List<BossStats> stats = new List<BossStats>();
+        for (int i = 0; i < 10; i++)
         {
-            stats.Add(new Models.BossStats
+            stats.Add(new BossStats
             {
                 Name = bossNames[i],
                 KillTime = bossKills[i]
@@ -303,7 +299,7 @@ else
         return stats;
     }
 
-    private bool FilterFunc(Models.GuildRoster element)
+    private bool FilterFunc(GuildRoster element)
     {
         if (string.IsNullOrWhiteSpace(searchString))
             return true;

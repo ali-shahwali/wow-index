@@ -81,7 +81,7 @@
             {
                 var guild = guilds.Where(x => x.Id == item.GuildId).FirstOrDefault();
                 DateTime killTime = new DateTime();
-                DateTime[] bossTimes = Helpers.CastleNathriaKillTime.GetKillTimes(item);
+                DateTime[] bossTimes = Helpers.CastleNathriaKillTimeHelper.GetKillTimes(item);
                 foreach (var time in bossTimes)
                 {
                     if (time != new DateTime())

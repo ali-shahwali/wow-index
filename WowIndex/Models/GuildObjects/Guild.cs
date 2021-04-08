@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WowIndex.Models
+namespace WowIndex.Models.GuildObjects
 {
     public class Guild
     {

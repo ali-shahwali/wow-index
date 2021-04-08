@@ -11,7 +11,7 @@
                 @if (!isEditMode)
                 {
                 <MudItem Style="max-width: 400px" xs="6">
-                    <MudAutocomplete CoerceText="true" Text="" Spellcheck="false" ResetValueOnEmptyText="false" T="Models.Guild" ValueChanged="Search" DisableUnderLine="true" Variant="Variant.Filled" Required="true" Class="searchField" Placeholder="Guild search" SearchFunc="@GuildSearch">
+                    <MudAutocomplete CoerceText="true" Text="" Spellcheck="false" ResetValueOnEmptyText="false" T="Models.GuildObjects.Guild" ValueChanged="Search" DisableUnderLine="true" Variant="Variant.Filled" Required="true" Class="searchField" Placeholder="Guild search" SearchFunc="@GuildSearch">
                         <ItemTemplate Context="result">
                             @if (result.Region.Equals("No records found"))
                             {
@@ -123,21 +123,14 @@
     [CascadingParameter]
     protected Task<AuthenticationState> AuthStat { get; set; }
 
-    private string state = "Message box hasn't been opened yet";
-
-    private MudMessageBox mbox { get; set; }
-
     Models.Index.MainLayoutModel model = new Models.Index.MainLayoutModel();
-
-    List<Models.Guild> guilds = new List<Models.Guild>();
-
-    public string region = "";
-
-    public string searchValue {get; set;}
+    List<Models.GuildObjects.Guild> guilds = new List<Models.GuildObjects.Guild>();
 
     public string ProfilePic { get; set; } = "img/profile-icon.svg";
     public string BattleTagName = "";
     public string BattleTagId = "";
+    public string region = "";
+    public string searchValue { get; set; }
 
     bool hasProfile = true;
     bool isLoggedIn = true;
@@ -178,48 +171,18 @@
         var user = (await AuthStat).User;
 
         if (!user.Identity.IsAuthenticated)
-        {
             isLoggedIn = false;
-        }
 
         var character = await _context.Characters.Where(x => user.Identity.Name.Equals(x.Email)).FirstOrDefaultAsync();
         var profile = await _context.Profiles.Where(x => user.Identity.Name.Equals(x.AspEmail)).FirstOrDefaultAsync();
         if (character == null)
-        {
             hasProfile = false;
-        }
         else
         {
             region = character.Region;
             ProfilePic = character.avatar_url;
             BattleTagName = profile.BattleTag.Split('#')[0];
             BattleTagId = "#" + profile.BattleTag.Split('#')[1];
-        }
-    }
-
-    private async void ToggleAddBox(bool b)
-    {
-        isEditMode = !b;
-        StateHasChanged();
-    }
-
-    void DrawerToggle()
-    {
-        _drawerOpen = !_drawerOpen;
-    }
-
-    private async Task<IEnumerable<Models.Guild>> GuildSearch(string value)
-    {
-        if (string.IsNullOrEmpty(value))
-            return new List<Models.Guild>();
-
-        var result = guilds.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).Take(100).ToList();
-        if (result.Count > 0)
-            return result;
-        else
-        {
-            result.Add(new Models.Guild { Region = "No records found", Realm = "", Name = "" });
-            return result;
         }
     }
 
@@ -232,9 +195,7 @@
         var guild = await _context.Guilds.Where(x => x.Region == searchRegion && x.NameSlug == searchNameSlug && x.RealmSlug == searchRealmSlug).FirstOrDefaultAsync();
 
         if (guild != null)
-        {
             Search(guild);
-        }
         else
         {
             HttpClient client = new HttpClient();
@@ -250,7 +211,7 @@
                 string result = request.Content.ReadAsStringAsync().Result;
                 var guildObject = JsonConvert.DeserializeObject<WowIndex.Models.POCO.GuildPOCO.Guild>(result);
 
-                var newGuild = new WowIndex.Models.Guild()
+                var newGuild = new Models.GuildObjects.Guild()
                 {
                     GuildId = guildObject.id,
                     RecordCreationDate = DateTime.Now,
@@ -272,17 +233,23 @@
                 NavigationManager.NavigateTo($"/guild/{newGuild.Region.ToLower()}/{newGuild.RealmSlug}/{newGuild.NameSlug}/");
             }
             else
-            {
-                // guild does not exist on API
                 Snackbar.Add("Guild not found, Please check region & spelling.", Severity.Normal);
-            }
         }
     }
 
-    private void Search(Models.Guild g)
+    private async Task<IEnumerable<Models.GuildObjects.Guild>> GuildSearch(string value)
     {
-        // naviagte to guilds page
-        NavigationManager.NavigateTo($"/guild/{g.Region}/{g.RealmSlug}/{g.NameSlug}/");
+        if (string.IsNullOrEmpty(value))
+            return new List<Models.GuildObjects.Guild>();
+
+        var result = guilds.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).Take(100).ToList();
+        if (result.Count > 0)
+            return result;
+        else
+        {
+            result.Add(new Models.GuildObjects.Guild { Region = "No records found", Realm = "", Name = "" });
+            return result;
+        }
     }
 
     private async Task OpenProfilePage()
@@ -296,5 +263,22 @@
         {
             NavigationManager.NavigateTo("/profile");
         }
+    }
+
+    private void Search(Models.GuildObjects.Guild g)
+    {
+        // naviagte to guilds page
+        NavigationManager.NavigateTo($"/guild/{g.Region}/{g.RealmSlug}/{g.NameSlug}/");
+    }
+
+    private async void ToggleAddBox(bool b)
+    {
+        isEditMode = !b;
+        StateHasChanged();
+    }
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
     }
 }

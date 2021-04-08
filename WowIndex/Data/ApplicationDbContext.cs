@@ -11,7 +11,7 @@ namespace WowIndex.Data
         }
         
 
-        public DbSet<Models.Index.GuildRecord> Records { get; set; }
+        public DbSet<Models.RaidingLeaderboards.HallOfFameRecord> HoFRecords { get; set; }
 
         public DbSet<Models.UserProfile.Character> Characters { get; set; }
 
@@ -20,14 +20,14 @@ namespace WowIndex.Data
         public DbSet<Token> Tokens { get; set; }
 
         // Store all guilds in a table
-        public DbSet<Models.Guild> Guilds { get; set; }
+        public DbSet<Models.GuildObjects.Guild> Guilds { get; set; }
 
         // To reduce load on requests each raid will have its own table (we dont have to filter one huge table)
         public DbSet<Models.RaidingLeaderboards.KillTimeCastleNathria> KillTimeCastleNathria { get; set; }
 
         public DbSet<Models.RaidingLeaderboards.LeaderboardEntry> RankedCastleNathriaLeaderboard { get; set; }
 
-        public DbSet<Models.GuildRoster> GuildRoster { get; set; }
+        public DbSet<Models.GuildObjects.GuildRoster> GuildRoster { get; set; }
 
     }
 }

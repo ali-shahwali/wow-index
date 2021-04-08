@@ -1,5 +1,5 @@
 ﻿@page "/HoF"
-@using Models.Index
+@using Models.RaidingLeaderboards
 
 @if (table == null || isLoading)
 {
@@ -15,7 +15,7 @@
     <MudTabPanel OnClick="@(e => ChangeRaid("uldir"))" Text="Uldir" />
 </MudTabs>
 
-<MudTable ServerData="@(new Func<TableState, Task<TableData<GuildRecord>>>(ServerReload))" RowsPerPage="100" Dense="true" Height="calc(100vh - 236px)" FixedHeader="true" @ref="table" Hover="true">
+<MudTable ServerData="@(new Func<TableState, Task<TableData<HallOfFameRecord>>>(ServerReload))" RowsPerPage="100" Dense="true" Height="calc(100vh - 236px)" FixedHeader="true" @ref="table" Hover="true">
     <HeaderContent>
         <MudTh></MudTh>
         <MudTh>Guild</MudTh>
@@ -120,11 +120,11 @@
     Short-term Throttle - 100 requests per second
 
     */
-    public MudTable<GuildRecord> table;
+    public MudTable<HallOfFameRecord> table;
 
     public string raidName = "castle-nathria";
 
-    public List<GuildRecord> records { get; set; }
+    public List<HallOfFameRecord> records { get; set; }
 
     public Data.Token accessToken { get; set; }
 
@@ -137,10 +137,10 @@
         return APIclient;
     }
 
-    private async Task<TableData<GuildRecord>> ServerReload(TableState state)
+    private async Task<TableData<HallOfFameRecord>> ServerReload(TableState state)
     {
         // bind records from database
-        records = _context.Records.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToList();
+        records = _context.HoFRecords.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToList();
 
         DateTime RequestInterval = DateTime.Now.AddMinutes(-Int32.Parse(Configuration["LiveRaidApiRequestInterval"]));
 
@@ -183,16 +183,16 @@
                 }
 
                 // remove old records
-                var rows = from x in _context.Records where x.raidName.Equals(raidName) select x;
+                var rows = from x in _context.HoFRecords where x.raidName.Equals(raidName) select x;
                 _context.RemoveRange(rows);
                 _context.SaveChanges();
 
                 // add new records
-                records = new List<GuildRecord>();
+                records = new List<HallOfFameRecord>();
                 j = 1;
                 foreach (WowIndex.Models.POCO.Index.GuildRanking guild in guildRankingsArray.OrderBy(x => x.timestamp).ToList())
                 {
-                    records.Add(new GuildRecord()
+                    records.Add(new HallOfFameRecord()
                     {
                         rank = j,
                         region = guild.region,
@@ -206,17 +206,17 @@
                     j++;
                 }
 
-                _context.Records.AddRange(records);
+                _context.HoFRecords.AddRange(records);
                 _context.SaveChanges();
 
 
                 // bind the new records to the view model!
-                records = _context.Records.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToList();
+                records = _context.HoFRecords.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToList();
             }
         }
         isLoading = false;
         StateHasChanged();
-        return new TableData<GuildRecord>() { Items = records };
+        return new TableData<HallOfFameRecord>() { Items = records };
     }
 
     public async Task ChangeRaid(string raid)

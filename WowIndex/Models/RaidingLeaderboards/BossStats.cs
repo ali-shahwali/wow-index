@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WowIndex.Models
+namespace WowIndex.Models.RaidingLeaderboards
 {
     public class BossStats
     {
