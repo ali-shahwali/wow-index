@@ -42,7 +42,7 @@
                     <EditForm Model="@model" OnValidSubmit="AddGuild">
                         <MudGrid>
                             <MudItem xs="1">
-                                <MudIconButton OnClick="@(e => ToggleAddBox(true))" Icon="@Icons.Material.Filled.ArrowBack" />
+                                <MudIconButton OnClick="@(e => ToggleAddBox(true))" Icon="@Icons.Material.Filled.Search" />
                             </MudItem>
                             <MudItem xs="2">
                                 <MudSelect DisableUnderLine="true" @bind-Value="@model.searchRegion" Class="searchSelect" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
@@ -107,9 +107,12 @@
             <MudText Typo="Typo.body2" Class="px-4 mud-text-secondary">Warcraft rankings</MudText>
             <MudDivider Class="my-2" />
             <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Filled.Stream">Live Raid Progression</MudNavLink>
-            <MudNavLink Href="/HoF" Match="NavLinkMatch.All" Icon="@Icons.Outlined.EmojiEvents">Hall of fame</MudNavLink>
+            <MudNavLink Href="/HoF" Icon="@Icons.Outlined.EmojiEvents">Hall of fame</MudNavLink>
             <MudNavLink Href="/about" Icon="@Icons.Outlined.Info">About</MudNavLink>
             <MudNavLink Href="/contact" Icon="@Icons.Outlined.AlternateEmail">Contact</MudNavLink>
+            <AuthorizeView Roles="Admin">
+                <MudNavLink Icon="@Icons.Material.Filled.AdminPanelSettings" Href="/admin">Admin</MudNavLink>
+            </AuthorizeView>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>

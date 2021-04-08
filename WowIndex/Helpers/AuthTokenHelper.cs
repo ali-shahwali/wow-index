@@ -23,27 +23,13 @@ namespace WowIndex.Helpers
 
         public static async Task<Token> ValidateToken(ApplicationDbContext _context)
         {
-            var TokenInDatabase = _context.Tokens.FirstOrDefault();
+            var TokenInDatabase = _context.Tokens.Where(x => x.ExpirationDate > DateTime.Now).FirstOrDefault();
 
             // NO TOKEN
             if (TokenInDatabase == null)
-            {
                 return await GetNewToken(_context);
-            }
             else
-            {
-                // OUTDATED TOKEN
-                if (TokenInDatabase.ExpirationDate < DateTime.Now)
-                {
-                    _context.Remove(TokenInDatabase);
-                    _context.SaveChanges();
-
-                    return await GetNewToken(_context);
-                }
-
-                // TOKEN IS FINE
                 return TokenInDatabase;
-            }
         }
 
 

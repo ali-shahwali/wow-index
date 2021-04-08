@@ -115,6 +115,6 @@
             leaderboardEntries = RaidRanks;
         }
 
-        return new TableData<LeaderboardEntry>() { Items = leaderboardEntries };
+        return new TableData<LeaderboardEntry>() { Items = leaderboardEntries.OrderBy(x => x.Rank) };
     }
 }

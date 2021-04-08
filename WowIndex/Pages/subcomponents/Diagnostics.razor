@@ -1,0 +1,192 @@
+﻿
+<MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
+    <MudGrid>
+        <MudItem xs="12" sm="12" md="12">
+            <MudTable Items="@diagnostics"  Hover="true" Bordered="true" >
+                <ToolBarContent>
+                    <MudButton OnClick="GetData" StartIcon="@Icons.Material.Filled.AddChart" Color="Color.Success">Get new data</MudButton>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Creation time</MudTh>
+                    <MudTh>Registered guilds</MudTh>
+                    <MudTh>Guilds with progression</MudTh>
+                    <MudTh>Registered profiles</MudTh>
+                    <MudTh>Registered accounts</MudTh>
+                    <MudTh>Average progression time</MudTh>
+                    <MudTh>Most difficult boss</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Creation time">@context.CreationTime.ToShortDateString()</MudTd>
+                    <MudTd DataLabel="Registered guilds">@context.RegisteredGuilds</MudTd>
+                    <MudTd DataLabel="Guilds doing progression">@context.GuildsWithProgression</MudTd>
+                    <MudTd DataLabel="Registered profiles">@context.RegisteredProfiles</MudTd>
+                    <MudTd DataLabel="Registered accounts">@context.RegisteredAccounts</MudTd>
+                    <MudTd DataLabel="Average progression time">@context.AverageProgressionTime</MudTd>
+                    <MudTd DataLabel="Most difficult boss">@context.MostDifficultBoss</MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudPaper Elevation="2" Class="pa-4" Style="height: 120px;">
+                        <MudText>
+                            Average daily requests
+                            <MudText Color="Color.Info">
+                                @averageUsageDaily
+                            </MudText>
+                        </MudText>
+                        <MudText>
+                            Average hourly requests
+                            <MudText Color="@warningColorRequests">
+                                @averageUsageHourly
+                            </MudText>
+                        </MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                        <MudText>
+                            The current access token is
+                            <MudText Color="Color.Info">
+                                "@currentToken.token"
+                            </MudText>
+                        </MudText>
+                        <MudText>
+                            It expires in
+                            <MudText Color="@warningColorToken">
+                                @timeleft.Hours Hours and @timeleft.Minutes Minutes
+                            </MudText>
+                        </MudText>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 100%">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@Series" XAxisLabels="@XAxisLabels" Width="100%" Height="350px"></MudChart>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+
+    private Data.Token currentToken { get; set; } = new Data.Token();
+    private List<Data.SiteDiagnostic> diagnostics = new List<Data.SiteDiagnostic>();
+
+    private TimeSpan timeleft = new TimeSpan();
+    private int averageUsageDaily { get; set; }
+    private int averageUsageHourly { get; set; }
+
+    Color warningColorToken = new Color();
+    Color warningColorRequests = new Color();
+
+    public string[] bossNames =
+        {
+        "Sire Denathrius", "Stone Legion Generals",
+        "Sludgefist", "The Council of Blood", "Lady Inerva Darkvein",
+        "Artificer Xy'mox", "Sun King's Salvation", "Hungering Destroyer",
+        "Huntsman Altimor", "Shriekwing"
+        };
+
+    public string[] XAxisLabels =
+{
+        DateTime.Now.AddDays(-6).ToShortDateString(), DateTime.Now.AddDays(-5).ToShortDateString(),
+        DateTime.Now.AddDays(-4).ToShortDateString(), DateTime.Now.AddDays(-3).ToShortDateString(), DateTime.Now.AddDays(-2).ToShortDateString(),
+        DateTime.Now.AddDays(-1).ToShortDateString(), DateTime.Now.ToShortDateString()
+    };
+
+    public List<ChartSeries> Series = new List<ChartSeries>()
+    {
+        new ChartSeries() { Name = "Token usage", Data = new double[7] }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
+        diagnostics = _context.SiteDiagnostics.ToList();
+
+        timeleft = currentToken.ExpirationDate - DateTime.Now;
+        if ( timeleft < new TimeSpan(1))
+            warningColorToken = Color.Warning;
+        else
+            warningColorToken = Color.Success;
+
+        int j = 6;
+        for(int i = 0; i < 7; i++)
+        {
+            var token = await _context.Tokens.Where(x => x.ExpirationDate.Day == DateTime.Now.AddDays(i * -1).Day).FirstOrDefaultAsync();
+            int usages;
+            if (token == null)
+                usages = 0;
+            else
+                usages = token.RequestsThisHour;
+
+            Series[0].Data[j] = usages;
+            averageUsageDaily += usages;
+            j--;
+        }
+        averageUsageDaily = (int)averageUsageDaily / 7;
+        averageUsageHourly = (int)averageUsageDaily / 24;
+        if (averageUsageHourly > 36000)
+            warningColorRequests = Color.Error;
+        else if (averageUsageHourly > 30000)
+            warningColorRequests = Color.Warning;
+        else
+            warningColorRequests = Color.Info;
+    }
+
+    private async Task GetData()
+    {
+        Data.SiteDiagnostic siteDiagnostic = new Data.SiteDiagnostic();
+        siteDiagnostic.GuildsWithProgression = _context.KillTimeCastleNathria.Where(x => x.Progress > 0).Count();
+        siteDiagnostic.RegisteredGuilds = _context.Guilds.Count();
+        siteDiagnostic.RegisteredProfiles = _context.Profiles.Count();
+        siteDiagnostic.RegisteredAccounts = _context.Users.Count();
+
+        var results = await _context.KillTimeCastleNathria.Where(x => x.Progress == 10).ToListAsync();
+        List<DateTime[]> allKillTimes = new List<DateTime[]>();
+        foreach (var item in results)
+            allKillTimes.Add(Helpers.CastleNathriaKillTimeHelper.GetKillTimes(item));
+
+        double averageClearTime = 0;
+        double[] longestTimeAverage = new double[10];
+        int j = 1;
+        foreach (var clear in allKillTimes)
+        {
+            TimeSpan avg = clear[0] - clear[9];
+            averageClearTime += avg.TotalDays;
+
+            for (int i = 0; i < 9; i++)
+            {
+                TimeSpan time = clear[i] - clear[j];
+                longestTimeAverage[i] += time.TotalDays;
+                j++;
+            }
+            j = 1;
+        }
+
+        double longestTime = 0;
+        int index = 0;
+        for(int i = 0; i < 10; i++)
+        {
+            if (longestTimeAverage[i] > longestTime)
+            {
+                longestTime = longestTimeAverage[i];
+                index = i;
+            }
+
+        }
+
+        siteDiagnostic.AverageProgressionTime = Math.Round(averageClearTime/allKillTimes.Count(), 2);
+        siteDiagnostic.MostDifficultBoss = bossNames[index];
+
+        await _context.SiteDiagnostics.AddAsync(siteDiagnostic);
+        await _context.SaveChangesAsync();
+        StateHasChanged();
+    }
+}

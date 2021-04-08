@@ -219,6 +219,39 @@ namespace WowIndex.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
+            modelBuilder.Entity("WowIndex.Data.SiteDiagnostic", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<double>("AverageProgressionTime")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("GuildsWithProgression")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MostDifficultBoss")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RegisteredAccounts")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RegisteredGuilds")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RegisteredProfiles")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SiteDiagnostics");
+                });
+
             modelBuilder.Entity("WowIndex.Data.Token", b =>
                 {
                     b.Property<int>("Id")
