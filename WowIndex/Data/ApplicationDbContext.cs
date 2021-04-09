@@ -29,5 +29,7 @@ namespace WowIndex.Data
 
         public DbSet<SiteDiagnostic> SiteDiagnostics { get; set; }
 
+        public DbSet<Models.BugReport> BugReports { get; set; }
+
     }
 }

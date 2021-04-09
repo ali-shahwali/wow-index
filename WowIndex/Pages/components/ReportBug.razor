@@ -1,0 +1,76 @@
+﻿@page "/bugReport"
+
+@if (!isLoggedIn)
+{
+    <MudText Typo="Typo.h4">Please log in or register to submit a bug</MudText>
+}
+else if (isSubmitted)
+{
+    <MudText Typo="Typo.h4">Thank you for submitting a bug!</MudText>
+    <MudText Typo="Typo.h5">We will let you know when this bug has been resolved.</MudText>
+}
+else
+{
+    <MudContainer Class="mt-16" MaxWidth="MaxWidth.Medium">
+        <EditForm Model="@bug" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudGrid Spacing="6" Class="mt-16">
+                <MudItem xs="7">
+                    <MudText Typo="Typo.h5" GutterBottom="true">Report a bug</MudText>
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudTextField T="string" Label="Topic" @bind-Value="bug.Topic" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField T="string" Label="Detailed description of the bug" @bind-Value="bug.Description" Required="true" />
+                        </MudItem>
+                        <MudItem Class="d-flex justify-end" xs="6">
+                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Secondary" Class="ml-auto">Send</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </MudContainer>
+}
+
+@code {
+
+    Models.BugReport bug = new Models.BugReport();
+
+    private bool isSubmitted { get; set; } = false;
+    private bool isLoggedIn { get; set; }
+
+    private string userName { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var AuthStat = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = AuthStat.User;
+
+        if (!user.Identity.IsAuthenticated)
+            isLoggedIn = false;
+        else
+        {
+            isLoggedIn = true;
+            userName = user.Identity.Name;
+        }
+    }
+
+    public void OnValidSubmit(EditContext context)
+    {
+        if(_context.BugReports.Where(x => x.User == userName && !x.IsResolved).Count() > 5)
+        {
+            Snackbar.Add("You have submitted too many bugs for now, we will try to resolve the as soon as we can", Severity.Normal);
+            return;
+        }
+
+        bug.User = userName;
+        _context.BugReports.Add(bug);
+        _context.SaveChanges();
+
+        Snackbar.Add("Bug reported!", Severity.Normal);
+        isSubmitted = true;
+        StateHasChanged();
+    }
+}

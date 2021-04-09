@@ -1,0 +1,97 @@
+﻿
+<MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
+    <MudGrid>
+        <MudItem xs="12" sm="12" md="12">
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudPaper Elevation="2" Class="pa-4" Style="height: 120px;">
+                        <MudButton Variant="Variant.Filled" OnClick="ForceRefresh" Color="Color.Info" StartIcon="@Icons.Material.Filled.Refresh">Force refresh leaderboard</MudButton>
+                        <MudText><br />Time until automatic refresh: @lastRefresh.Minutes minutes and @lastRefresh.Seconds seconds</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 100%">
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {        
+    TimeSpan lastRefresh = new TimeSpan();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await _context.RankedCastleNathriaLeaderboard.FirstOrDefaultAsync();
+        lastRefresh = result.ExpirationTime - DateTime.Now;
+    }
+
+    private async Task ForceRefresh()
+    {
+        var RaidRanks = _context.RankedCastleNathriaLeaderboard.ToList();
+        List<Models.RaidingLeaderboards.LeaderboardEntry> leaderboardEntries = new List<Models.RaidingLeaderboards.LeaderboardEntry>();
+
+        _context.RankedCastleNathriaLeaderboard.RemoveRange(RaidRanks);
+        await _context.SaveChangesAsync();
+
+        // bind records from database
+
+        var leaderboard = await _context.KillTimeCastleNathria.ToListAsync();
+        List<Models.RaidingLeaderboards.KillTimeCastleNathria> results = new List<Models.RaidingLeaderboards.KillTimeCastleNathria>();
+
+        results.AddRange(leaderboard.Where(x => x.Progress == 10).OrderBy(x => x.Boss10KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 9).OrderBy(x => x.Boss9KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 8).OrderBy(x => x.Boss8KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 7).OrderBy(x => x.Boss7KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 6).OrderBy(x => x.Boss6KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 5).OrderBy(x => x.Boss5KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 4).OrderBy(x => x.Boss4KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 3).OrderBy(x => x.Boss3KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 2).OrderBy(x => x.Boss2KillTime));
+        results.AddRange(leaderboard.Where(x => x.Progress == 1).OrderBy(x => x.Boss1KillTime));
+
+        int i = 1;
+        var guilds = _context.Guilds.ToList();
+        foreach (var item in results)
+        {
+            var guild = guilds.Where(x => x.Id == item.GuildId).FirstOrDefault();
+            DateTime killTime = new DateTime();
+            DateTime[] bossTimes = Helpers.CastleNathriaKillTimeHelper.GetKillTimes(item);
+            foreach (var time in bossTimes)
+            {
+                if (time != new DateTime())
+                {
+                    killTime = time;
+                    break;
+                }
+            }
+
+            Models.RaidingLeaderboards.LeaderboardEntry entry = new Models.RaidingLeaderboards.LeaderboardEntry
+            {
+                Rank = i,
+                LatestProgressionTime = killTime,
+                GuildName = guild.Name,
+                Faction = guild.FactionName,
+                Realm = guild.Realm,
+                Region = guild.Region,
+                Progression = item.Progress,
+                GuildSlug = guild.NameSlug,
+                RealmSlug = guild.RealmSlug
+            };
+
+            leaderboardEntries.Add(entry);
+            _context.RankedCastleNathriaLeaderboard.Add(entry);
+            i++;
+        }
+        await _context.SaveChangesAsync();
+    }
+
+}

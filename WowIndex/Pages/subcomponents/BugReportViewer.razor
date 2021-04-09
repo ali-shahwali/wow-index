@@ -1,0 +1,35 @@
+﻿
+<MudTable Items="@bugs" Hover="true" Breakpoint="Breakpoint.Sm">
+    <HeaderContent>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        @{ string title = context.CreationTime.ToShortDateString() + " " + context.User;}
+        <MudExpansionPanel Text="@title">
+            @context.Description
+            @if (!context.IsResolved)
+            {
+                <MudIconButton OnClick="@(e => UpdateStatus(context))" Color="Color.Info" Icon="@Icons.Material.Filled.Done"/>
+            }
+            else
+            {
+                <MudIconButton OnClick="@(e => UpdateStatus(context))" Color="Color.Warning" Icon="@Icons.Material.Filled.Redo"/>
+            }
+        </MudExpansionPanel>
+    </RowTemplate>
+</MudTable>
+
+@code {        
+
+    List<Models.BugReport> bugs = new List<Models.BugReport>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        bugs = await _context.BugReports.Where(x => !x.IsResolved).ToListAsync();
+    }
+
+    private async Task UpdateStatus(Models.BugReport bug)
+    {
+
+    }
+}

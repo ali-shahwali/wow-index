@@ -48,6 +48,7 @@
                                 <MudSelect DisableUnderLine="true" @bind-Value="@model.searchRegion" Class="searchSelect" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
                                     <MudSelectItem Value="@("eu")">EU</MudSelectItem>
                                     <MudSelectItem Value="@("us")">US</MudSelectItem>
+                                    <MudSelectItem Value="@("kr")">KR</MudSelectItem>
                                 </MudSelect>
                             </MudItem>
                             <MudItem xs="4">
@@ -109,6 +110,8 @@
             <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Filled.Stream">Live Raid Progression</MudNavLink>
             <MudNavLink Href="/HoF" Icon="@Icons.Outlined.EmojiEvents">Hall of fame</MudNavLink>
             <MudNavLink Href="/about" Icon="@Icons.Outlined.Info">About</MudNavLink>
+            <MudNavLink Href="/FAQ" Icon="@Icons.Outlined.QuestionAnswer">FAQ</MudNavLink>
+            <MudNavLink Href="/bugReport" Icon="@Icons.Outlined.BugReport">Report bug</MudNavLink>
             <MudNavLink Href="/contact" Icon="@Icons.Outlined.AlternateEmail">Contact</MudNavLink>
             <AuthorizeView Roles="Admin">
                 <MudNavLink Icon="@Icons.Material.Filled.AdminPanelSettings" Href="/admin">Admin</MudNavLink>
