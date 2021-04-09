@@ -71,7 +71,7 @@
                 <MudTd DataLabel="Guild">
                     <MudChip Label="true" Size="Size.Small" Variant="Variant.Outlined">@context.Progression / 10</MudChip>
                     <MudText Typo="Typo.caption">
-                        @context.LatestProgressionTime
+                        @context.LatestProgressionTime.ToShortDateString()
                     </MudText>
                 </MudTd>
             </RowTemplate>
