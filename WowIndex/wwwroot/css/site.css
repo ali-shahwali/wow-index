@@ -6,7 +6,15 @@
     padding: 12px 12px 10px;
 }
 
-.mud-paper {
+.index-banner {
     background-image: url("../img/castle_nathria.jpg");
     background-position: center;
+}
+
+.table-btn > .mud-button-label {
+    justify-content: left;
+}
+
+.mud-nav-link.active:not(.mud-nav-link-disabled) {
+    color: white;
 }

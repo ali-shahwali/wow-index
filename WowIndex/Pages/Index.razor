@@ -12,9 +12,9 @@
 
 <MudGrid>
     <MudItem xs="12">
-        <MudCard>
+        <MudCard Class="index-banner">
             <MudCardContent>
-                <MudText Style="color: white" Typo="Typo.h6">Castle Nathria leaderboards</MudText>
+                <MudText Style="color: white" Typo="Typo.h6">Castle Nathria</MudText>
                 @if (diagnostics != null)
                 {
                     <MudText Style="color: cornflowerblue" Typo="Typo.body1">There are currently @diagnostics.GuildsWithFullClear guilds with full clears on record</MudText>
@@ -30,7 +30,8 @@
         </MudCard>
     </MudItem>
     <MudItem xs="8">
-        <MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardEntry>>>(ServerReload))" RowsPerPage="20" Dense="true" FixedHeader="true" @ref="table" Hover="true">
+        <MudText Class="mb-2" Typo="Typo.h6">Mythic World Leaderboard</MudText>
+        <MudTable Outlined="true" ServerData="@(new Func<TableState, Task<TableData<LeaderboardEntry>>>(ServerReload))" RowsPerPage="20" Dense="true" FixedHeader="true" @ref="table" Hover="true">
             <HeaderContent>
                 <MudTh></MudTh>
                 <MudTh>Guild</MudTh>
@@ -56,13 +57,13 @@
                     @{ var link = $"/guild/{context.Region.ToLower()}/{context.RealmSlug}/{context.GuildSlug}/"; }
                     @if (context.Faction == "Horde")
                     {
-                        <MudButton Link="@link" Color="Color.Error">
+                        <MudButton Class="table-btn" Link="@link" Color="Color.Error">
                             @context.GuildName
                         </MudButton>
                     }
                     else
                     {
-                        <MudButton Link="@link" Color="Color.Info">
+                        <MudButton Class="table-btn" Link="@link" Color="Color.Info">
                             @context.GuildName
                         </MudButton>
                     }
@@ -83,7 +84,25 @@
         </MudTable>
     </MudItem>
     <MudItem xs="4">
-
+        <MudText Class="mb-2" Typo="Typo.h6">Recent Activity</MudText>
+        <MudCard Class="mb-2" Outlined="true">
+            <MudCardContent>
+                <MudText>Story of the day</MudText>
+                <MudText Typo="Typo.body2">The quick, brown fox jumps over a lazy dog.</MudText>
+            </MudCardContent>
+        </MudCard>
+        <MudCard Class="mb-2" Outlined="true">
+            <MudCardContent>
+                <MudText>Story of the day</MudText>
+                <MudText Typo="Typo.body2">The quick, brown fox jumps over a lazy dog.</MudText>
+            </MudCardContent>
+        </MudCard>
+        <MudCard Class="mb-2" Outlined="true">
+            <MudCardContent>
+                <MudText>Story of the day</MudText>
+                <MudText Typo="Typo.body2">The quick, brown fox jumps over a lazy dog.</MudText>
+            </MudCardContent>
+        </MudCard>
     </MudItem>
 </MudGrid>
 
@@ -105,7 +124,7 @@
 
     private async Task<TableData<LeaderboardEntry>> ServerReload(TableState state)
     {
-        var RaidRanks = await _context.RankedCastleNathriaLeaderboard.ToListAsync();
+        var RaidRanks = _context.RankedCastleNathriaLeaderboard.ToList();
 
         if (RaidRanks.Count == 0 || (RaidRanks.FirstOrDefault().ExpirationTime < DateTime.Now))
         {

@@ -51,7 +51,7 @@ else
             <MudText Typo="Typo.h5" GutterBottom="true">Castle Nathria Overview</MudText>
             @foreach (var stat in bossStats)
             {
-                <MudCard Outlined="true">
+                <MudCard Class="mb-2" Outlined="true">
                     <MudCardContent>
                         <MudText>@stat.Name</MudText>
                         @if (stat.KillTime != new DateTime())
