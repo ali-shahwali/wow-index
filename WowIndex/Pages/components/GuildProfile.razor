@@ -5,92 +5,106 @@
 
 @if (isLoading)
 {
-    <MudProgressLinear Buffer="true" Color="Color.Primary" Value="@estTimeLeft" Min="0" Max="@estGuildRoster" Class="my-7" />
-    <MudText Typo="Typo.h2">This page is being added...</MudText>
-    <MudText Typo="Typo.h4">Check back within the minute!</MudText>
+    <MudGrid Class="justify-center mt-16">
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Outlined="true" Elevation="25" Class="rounded-lg pb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h5" Align="Align.Center">This page is being added...</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <div class="d-flex justify-center">
+                        <MudText Typo="Typo.h5">Check back within the minute!</MudText>
+                    </div>
+                    <MudProgressLinear Buffer="true" Color="Color.Primary" Value="@estTimeLeft" Min="0" Max="@estGuildRoster" Class="my-7" />
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
 }
 else
 {
-<MudContainer>
-    <MudGrid>
-        <MudItem xs="6">
-            @{string guildArmory = $"https://worldofwarcraft.com/en-us/guild/{Guild.Region.ToLower()}/{Guild.RealmSlug}/{Guild.NameSlug}";}
-            <MudLink Color="Color.Inherit" Target="_blank" Href="@guildArmory" Typo="Typo.h3">@Guild.Name</MudLink>
-            @if (rank == null)
-            {
-                <MudText Typo="Typo.h5" >This guilds rank is still being calculated</MudText>
-                <MudText Typo="Typo.h6" >It should be done soon</MudText>
-
-            }
-            else if (Convert.ToInt32(rank) <= 3)
-            {
-                <MudText Color="Color.Primary" Typo="Typo.h5">World ranking:  @rank</MudText>
-            }
-            else
-            {
-                <MudText Color="Color.Info" Typo="Typo.h5">World ranking:  @rank</MudText>
-            }
-        </MudItem>
-        <MudItem xs="6">
-            @{
-                var tooltipText = "Scan for updated information.";
-                if (!isOutdated)
+    <MudContainer>
+        <MudGrid>
+            <MudItem xs="6">
+                @{string guildArmory = $"https://worldofwarcraft.com/en-us/guild/{Guild.Region.ToLower()}/{Guild.RealmSlug}/{Guild.NameSlug}";}
+                <MudLink Color="Color.Inherit" Target="_blank" Href="@guildArmory" Typo="Typo.h3">@Guild.Name</MudLink>
+                @if (rank == null)
                 {
-                    tooltipText = "This guilds information has been updated recently.";
+                    <MudText Typo="Typo.h5">This guilds rank is still being calculated</MudText>
+                    <MudText Typo="Typo.h6">It should be done soon</MudText>
+
                 }
-            }
-            <MudItem Class="d-flex flex-row-reverse">
-                <MudTooltip Text="@tooltipText">
-                    <MudButton StartIcon="@Icons.Material.Filled.Sync" Variant="Variant.Filled" Disabled="!isOutdated" OnClick="Update">Update this page</MudButton>
-                </MudTooltip>
+                else if (Convert.ToInt32(rank) <= 3)
+                {
+                    <MudText Color="Color.Primary" Typo="Typo.h5">World ranking:  @rank</MudText>
+                }
+                else
+                {
+                    <MudText Color="Color.Info" Typo="Typo.h5">World ranking:  @rank</MudText>
+                }
             </MudItem>
-        </MudItem>
-    </MudGrid>
-    <MudGrid Spacing="6" Class="mt-16">
-        <MudItem xs="8">
-            <MudText Typo="Typo.h5" GutterBottom="true">Castle Nathria Overview</MudText>
-            @foreach (var stat in bossStats)
-            {
-                <MudCard Class="mb-2" Outlined="true">
-                    <MudCardContent>
-                        <MudText>@stat.Name</MudText>
-                        @if (stat.KillTime != new DateTime())
-                        {
-                            <MudText>Killed @stat.KillTime</MudText>
-                        }
-                    </MudCardContent>
-                    <MudCardActions>
-                        @if (stat.KillTime != new DateTime())
-                        {
-                            <MudButton StartIcon="@Icons.Material.Filled.Done" Variant="Variant.Text" Color="Color.Success">Down</MudButton>
-                        }
-                        else
-                        {
-                            <MudButton StartIcon="@Icons.Material.Filled.Error" Variant="Variant.Text" Color="Color.Error">Not done</MudButton>
-                        }
-                    </MudCardActions>
-                </MudCard>
-            }
-        </MudItem>
-        <MudItem xs="4">
-            <MudText Typo="Typo.h5" GutterBottom="true">Guild roster</MudText>
-            <MudTable Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Items="guildMembers" Filter="new Func<GuildRoster,bool>(FilterFunc)">
-                <ToolBarContent>
-                    <MudTextField Spellcheck="false" Immediate="true" @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-                </ToolBarContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Character">
-                        @{ string link = $"https://worldofwarcraft.com/en-us/character/{context.Region.ToLower()}/{context.RealmSlug}/{context.CharacterName}";}
-                        <MudButton StartIcon="@Icons.Material.Filled.OpenInNew" Target="_blank" Link="@link" Variant="Variant.Text" Style="@context.class_color">@context.CharacterName</MudButton>
-                    </MudTd>
-                </RowTemplate>
-                <PagerContent>
-                    <MudTablePager DisableRowsPerPage="true" />
-                </PagerContent>
-            </MudTable>
-        </MudItem>
-    </MudGrid>
-</MudContainer>
+            <MudItem xs="6">
+                @{
+                    var tooltipText = "Scan for updated information.";
+                    if (!isOutdated)
+                    {
+                        tooltipText = "This guilds information has been updated recently.";
+                    }
+                }
+                <MudItem Class="d-flex flex-row-reverse">
+                    <MudTooltip Text="@tooltipText">
+                        <MudButton StartIcon="@Icons.Material.Filled.Sync" Variant="Variant.Filled" Disabled="!isOutdated" OnClick="Update">Update this page</MudButton>
+                    </MudTooltip>
+                </MudItem>
+            </MudItem>
+        </MudGrid>
+        <MudGrid Spacing="6" Class="mt-16">
+            <MudItem xs="8">
+                <MudText Typo="Typo.h5" GutterBottom="true">Castle Nathria Overview</MudText>
+                @foreach (var stat in bossStats)
+                {
+                    <MudCard Class="mb-2" Outlined="true">
+                        <MudCardContent>
+                            <MudText>@stat.Name</MudText>
+                            @if (stat.KillTime != new DateTime())
+                            {
+                                <MudText>Killed @stat.KillTime</MudText>
+                            }
+                        </MudCardContent>
+                        <MudCardActions>
+                            @if (stat.KillTime != new DateTime())
+                            {
+                                <MudButton StartIcon="@Icons.Material.Filled.Done" Variant="Variant.Text" Color="Color.Success">Down</MudButton>
+                            }
+                            else
+                            {
+                                <MudButton StartIcon="@Icons.Material.Filled.Error" Variant="Variant.Text" Color="Color.Error">Not done</MudButton>
+                            }
+                        </MudCardActions>
+                    </MudCard>
+                }
+            </MudItem>
+            <MudItem xs="4">
+                <MudText Typo="Typo.h5" GutterBottom="true">Roster</MudText>
+                <MudTable Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Items="guildMembers" Filter="new Func<GuildRoster,bool>(FilterFunc)">
+                    <ToolBarContent>
+                        <MudTextField Spellcheck="false" Immediate="true" @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                    </ToolBarContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Character">
+                            @{ string link = $"https://worldofwarcraft.com/en-us/character/{context.Region.ToLower()}/{context.RealmSlug}/{context.CharacterName}";}
+                            <MudButton StartIcon="@Icons.Material.Filled.OpenInNew" Target="_blank" Link="@link" Variant="Variant.Text" Style="@context.class_color">@context.CharacterName</MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager DisableRowsPerPage="true" />
+                    </PagerContent>
+                </MudTable>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
 }
 
 @code {
