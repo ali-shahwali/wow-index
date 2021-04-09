@@ -1,35 +1,67 @@
-﻿
-<MudTable Items="@bugs" Hover="true" Breakpoint="Breakpoint.Sm">
-    <HeaderContent>
-        <MudTh></MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        @{ string title = context.CreationTime.ToShortDateString() + " " + context.User;}
-        <MudExpansionPanel Text="@title">
-            @context.Description
-            @if (!context.IsResolved)
-            {
-                <MudIconButton OnClick="@(e => UpdateStatus(context))" Color="Color.Info" Icon="@Icons.Material.Filled.Done"/>
-            }
-            else
-            {
-                <MudIconButton OnClick="@(e => UpdateStatus(context))" Color="Color.Warning" Icon="@Icons.Material.Filled.Redo"/>
-            }
-        </MudExpansionPanel>
-    </RowTemplate>
-</MudTable>
+﻿@if(unresolvedBugs == null || resolvedBugs == null)
+{
+    <MudProgressLinear Indeterminate="true"></MudProgressLinear>
+}
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudTable Items="@unresolvedBugs" Hover="true" Breakpoint="Breakpoint.Sm">
+            <ToolBarContent>
+                <MudText Align="Align.Left" Typo="Typo.h6">Unresolved bugs</MudText>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                @{ string title = context.CreationTime.ToShortDateString() + " " + context.User + " " + context.Topic;}
+                <MudExpansionPanel Text="@title">
+                    @context.Description
+                    @if (!context.IsResolved)
+                    {
+                        <MudIconButton OnClick="@(e => UpdateStatus(context, false))" Color="Color.Info" Icon="@Icons.Material.Filled.Done" />
+                    }
+                    else
+                    {
+                        <MudIconButton OnClick="@(e => UpdateStatus(context, true))" Color="Color.Warning" Icon="@Icons.Material.Filled.Redo" />
+                    }
+                </MudExpansionPanel>
+            </RowTemplate>
+        </MudTable>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTable Items="@resolvedBugs" Hover="true" Breakpoint="Breakpoint.Sm">
+            <ToolBarContent>
+                <MudText Align="Align.Left" Typo="Typo.h6">Resolved bugs</MudText>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                @{ string title = context.CreationTime.ToShortDateString() + " " + context.User + " " + context.Topic;}
+                <MudExpansionPanel Text="@title">
+                    @context.Description
+                </MudExpansionPanel>
+            </RowTemplate>
+        </MudTable>
+    </MudItem>
+</MudGrid>
 
 @code {        
 
-    List<Models.BugReport> bugs = new List<Models.BugReport>();
+    List<Models.BugReport> unresolvedBugs = new List<Models.BugReport>();
+    List<Models.BugReport> resolvedBugs = new List<Models.BugReport>();
 
     protected override async Task OnInitializedAsync()
     {
-        bugs = await _context.BugReports.Where(x => !x.IsResolved).ToListAsync();
+        unresolvedBugs = _context.BugReports.Where(x => !x.IsResolved).OrderBy(x => x.CreationTime).ToList();
+        resolvedBugs = await _context.BugReports.Where(x => x.IsResolved).OrderBy(x => x.CreationTime).ToListAsync();
     }
 
-    private async Task UpdateStatus(Models.BugReport bug)
+    private async Task UpdateStatus(Models.BugReport bug, bool toggle)
     {
-
+        bug.IsResolved = !toggle;
+        _context.BugReports.Update(bug);
+        await _context.SaveChangesAsync();
+        StateHasChanged();
     }
 }

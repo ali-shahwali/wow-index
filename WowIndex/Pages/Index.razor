@@ -2,53 +2,106 @@
 @using WowIndex.Models.RaidingLeaderboards
 @using Microsoft.Extensions.Configuration
 
-<MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardEntry>>>(ServerReload))" RowsPerPage="20" Dense="true" FixedHeader="true" @ref="table" Hover="true">
-    <HeaderContent>
-        <MudTh></MudTh>
-        <MudTh>Guild</MudTh>
-        <MudTh>Realm</MudTh>
-        <MudTh>Progress</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Rank">
-            @if (context.Rank <= 3)
-            {
-                <MudText Color="@Color.Primary">@context.Rank</MudText>
-            }
-            else if (context.Rank <= 10)
-            {
-                <MudText Style="color: blueviolet">@context.Rank</MudText>
-            }
-            else
-            {
-                <MudText Color="Color.Info">@context.Rank</MudText>
-            }
-        </MudTd>
-        <MudTd DataLabel="Guild">
-            @{ var link = $"/guild/{context.Region.ToLower()}/{context.RealmSlug}/{context.GuildSlug}/"; }
-            <MudButton Link="@link" Color="Color.Info">
-                @context.GuildName
-            </MudButton>
-        </MudTd>
-        <MudTd DataLabel="Guild">
-            @context.Realm
-        </MudTd>
-        <MudTd DataLabel="Guild">
-            <MudChip Label="true" Size="Size.Small" Variant="Variant.Outlined">@context.Progression / 10</MudChip>
-            <MudText Typo="Typo.caption">
-                @context.LatestProgressionTime
-            </MudText>
-        </MudTd>
-    </RowTemplate>
-    <PagerContent>
-        <MudTablePager DisableRowsPerPage="true" />
-    </PagerContent>
-</MudTable>
+
+<style>
+    mud-paper {
+        background-image: url("../wwwroot/img/castle_nathria.jpg");
+    }
+</style>
+
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                <MudText Style="color: white" Typo="Typo.h6">Castle Nathria leaderboards</MudText>
+                @if (diagnostics != null)
+                {
+                    <MudText Style="color: cornflowerblue" Typo="Typo.body1">There are currently @diagnostics.GuildsWithFullClear guilds with full clears on record</MudText>
+                    <MudText Style="color: cornflowerblue" Typo="Typo.body1">
+                        It takes on average @diagnostics.AverageProgressionTime days of progression for a full clear
+                        and the most difficult boss appears to be @diagnostics.MostDifficultBoss .
+                    </MudText>
+                }
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="8">
+        <MudTable ServerData="@(new Func<TableState, Task<TableData<LeaderboardEntry>>>(ServerReload))" RowsPerPage="20" Dense="true" FixedHeader="true" @ref="table" Hover="true">
+            <HeaderContent>
+                <MudTh></MudTh>
+                <MudTh>Guild</MudTh>
+                <MudTh>Realm</MudTh>
+                <MudTh>Progress</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Rank">
+                    @if (context.Rank <= 3)
+                    {
+                        <MudText Color="@Color.Primary">@context.Rank</MudText>
+                    }
+                    else if (context.Rank <= 10)
+                    {
+                        <MudText Style="color: blueviolet">@context.Rank</MudText>
+                    }
+                    else
+                    {
+                        <MudText Color="Color.Info">@context.Rank</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Guild">
+                    @{ var link = $"/guild/{context.Region.ToLower()}/{context.RealmSlug}/{context.GuildSlug}/"; }
+                    @if (context.Faction == "Horde")
+                    {
+                        <MudButton Link="@link" Color="Color.Error">
+                            @context.GuildName
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Link="@link" Color="Color.Info">
+                            @context.GuildName
+                        </MudButton>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Guild">
+                    @context.Realm
+                </MudTd>
+                <MudTd DataLabel="Guild">
+                    <MudChip Label="true" Size="Size.Small" Variant="Variant.Outlined">@context.Progression / 10</MudChip>
+                    <MudText Typo="Typo.caption">
+                        @context.LatestProgressionTime
+                    </MudText>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager DisableRowsPerPage="true" />
+            </PagerContent>
+        </MudTable>
+    </MudItem>
+    <MudItem xs="4">
+
+    </MudItem>
+</MudGrid>
+
+
+
 
 @code {
     public MudTable<LeaderboardEntry> table;
 
     public List<LeaderboardEntry> leaderboardEntries = new List<LeaderboardEntry>();
+
+    public Data.SiteDiagnostic diagnostics { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        diagnostics = await _context.SiteDiagnostics.OrderBy(x => x.CreationTime).LastOrDefaultAsync();
+    }
 
     private async Task<TableData<LeaderboardEntry>> ServerReload(TableState state)
     {

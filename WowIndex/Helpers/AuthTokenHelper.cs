@@ -48,11 +48,9 @@ namespace WowIndex.Helpers
             };
 
             // this is so dumb but i need this if statment here or it will enter twice...
-            if (_context.Tokens.FirstOrDefault() == null)
-            {
-                _context.Tokens.Add(newToken);
-                _context.SaveChanges();
-            }
+
+            _context.Tokens.Add(newToken);
+            _context.SaveChanges();
 
             return newToken;
         }

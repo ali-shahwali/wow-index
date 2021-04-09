@@ -59,7 +59,7 @@
         string email = authState.User.Identity.Name;
 
         // get users chars from the database
-        characters = await _context.Characters.Where(x => x.Email.Equals(email)).OrderByDescending(x => x.avatar_url).ToListAsync();
+        characters = _context.Characters.Where(x => x.Email.Equals(email)).OrderByDescending(x => x.avatar_url).ToList();
 
         if (characters[0].ExpirationDate < DateTime.Now)
             isExpired = true;

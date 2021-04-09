@@ -5,16 +5,23 @@
         Our leaderboards calculate the rank of every guild every 15 minutes at the moment.
     </MudExpansionPanel>
     <MudExpansionPanel Text="Why can'I see my character in the guild roster?">
-        This is most likely cause your character isn't level 60, at the moment we only display level 60 characters.
-        If your character is level 60 and still isn't in the roster we strongly advise you report this bug<MudNavLink>here</MudNavLink>   
+        <MudText Typo="Typo.body1">
+            This is most likely cause your character isn't level 60, at the moment we only display level 60 characters.
+            If your character is level 60 and still isn't in the roster we strongly advise you report this bug<MudNavLink Href="/bugReport">here</MudNavLink>
+        </MudText>   
     </MudExpansionPanel>
     <MudExpansionPanel Text="How do you calculate the rank of a guild?">
-        This information is currently not available to the public as we believe it may cause confusion among users.
-        Rest assured that the rankings are exact and precise.
+        <MudText Typo="Typo.body1">
+            This information is currently not available to the public as we believe it may cause confusion among users.
+            Rest assured that the rankings are exact and precise.
+        </MudText>
     </MudExpansionPanel>
-    @*<MudExpansionPanel Text="Panel Four">
-        Panel Four Content
-    </MudExpansionPanel>*@
+    <MudExpansionPanel Text="My guild isn't being added, why?">
+        <MudText Typo="Typo.body1">
+            If your guild has recently changed realm or undergone some sort of drastic change then this is simply on blizzards end and there is nothing we can do to help.
+            If this isn't the case then please submit a bug report <MudNavLink Href="/bugReport">here</MudNavLink> 
+        </MudText> 
+    </MudExpansionPanel>
 </MudExpansionPanels>
 
 @code {

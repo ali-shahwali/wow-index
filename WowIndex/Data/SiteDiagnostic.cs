@@ -16,6 +16,7 @@ namespace WowIndex.Data
         public int RegisteredGuilds { get; set; }
 
         public int GuildsWithProgression { get; set; }
+        public int GuildsWithFullClear { get; set; }
 
         // in days
         public double AverageProgressionTime { get; set; }

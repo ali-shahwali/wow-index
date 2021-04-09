@@ -5,3 +5,8 @@
 .searchField > .mud-input > input.mud-input-root.mud-input-root-filled, div.mud-input-slot.mud-input-root.mud-input-root-filled {
     padding: 12px 12px 10px;
 }
+
+.mud-paper {
+    background-image: url("../img/castle_nathria.jpg");
+    background-position: center;
+}

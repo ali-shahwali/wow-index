@@ -149,6 +149,8 @@
         siteDiagnostic.RegisteredAccounts = _context.Users.Count();
 
         var results = await _context.KillTimeCastleNathria.Where(x => x.Progress == 10).ToListAsync();
+        siteDiagnostic.GuildsWithFullClear = results.Count();
+
         List<DateTime[]> allKillTimes = new List<DateTime[]>();
         foreach (var item in results)
             allKillTimes.Add(Helpers.CastleNathriaKillTimeHelper.GetKillTimes(item));
