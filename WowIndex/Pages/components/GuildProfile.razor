@@ -31,8 +31,19 @@ else
                 <MudText Color="Color.Info" Typo="Typo.h5">World ranking:  @rank</MudText>
             }
         </MudItem>
-        <MudItem Class="align-end" xs="6">
-            <MudButton Class="ml-auto" Disabled="!isOutdated" OnClick="Update">Update</MudButton>
+        <MudItem xs="6">
+            @{
+                var tooltipText = "Scan for updated information.";
+                if (!isOutdated)
+                {
+                    tooltipText = "This guilds information has been updated recently.";
+                }
+            }
+            <MudItem Class="d-flex flex-row-reverse">
+                <MudTooltip Text="@tooltipText">
+                    <MudButton StartIcon="@Icons.Material.Filled.Sync" Disabled="!isOutdated" OnClick="Update">Update this page</MudButton>
+                </MudTooltip>
+            </MudItem>
         </MudItem>
     </MudGrid>
     <MudGrid Spacing="6" Class="mt-16">

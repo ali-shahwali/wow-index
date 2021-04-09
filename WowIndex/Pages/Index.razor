@@ -52,7 +52,7 @@
 
     private async Task<TableData<LeaderboardEntry>> ServerReload(TableState state)
     {
-        var RaidRanks = _context.RankedCastleNathriaLeaderboard.ToList();
+        var RaidRanks = await _context.RankedCastleNathriaLeaderboard.ToListAsync();
 
         if (RaidRanks.Count == 0 || (RaidRanks.FirstOrDefault().ExpirationTime < DateTime.Now))
         {
