@@ -7,12 +7,12 @@
         <MudCard Class="index-banner">
             <MudCardContent>
                 <MudText Style="color: white" Typo="Typo.h6">Castle Nathria</MudText>
-                @if (diagnostics != null)
+                @if (Diagnostics != null)
                 {
-                    <MudText Style="color: cornflowerblue" Typo="Typo.body1">There are currently @diagnostics.GuildsWithFullClear guilds with full clears on record</MudText>
+                    <MudText Style="color: cornflowerblue" Typo="Typo.body1">There are currently @Diagnostics.GuildsWithFullClear guilds with full clears on record</MudText>
                     <MudText Style="color: cornflowerblue" Typo="Typo.body1">
-                        It takes on average @diagnostics.AverageProgressionTime days of progression for a full clear
-                        and the most difficult boss appears to be @diagnostics.MostDifficultBoss .
+                        It takes on average @Diagnostics.AverageProgressionTime days of progression for a full clear
+                        and the most difficult boss appears to be @Diagnostics.MostDifficultBoss .
                     </MudText>
                 }
             </MudCardContent>
@@ -20,7 +20,7 @@
     </MudItem>
     <MudItem xs="8">
         <MudText Class="mb-2" Typo="Typo.h6">Mythic World Leaderboard</MudText>
-        <MudTable Outlined="true" Items="leaderboardEntries" RowsPerPage="20" Dense="true" FixedHeader="true" @ref="table" Hover="true">
+        <MudTable Outlined="true" Items="LeaderboardEntries" RowsPerPage="20" Dense="true" FixedHeader="true" @ref="Table" Hover="true">
             <HeaderContent>
                 <MudTh></MudTh>
                 <MudTh>Guild</MudTh>
@@ -74,7 +74,7 @@
     </MudItem>
     <MudItem xs="4">
         <MudText Class="mb-2" Typo="Typo.h6">Recent Activity</MudText>
-        @foreach (var item in recentClears)
+        @foreach (var item in RecentClears)
         {
             <MudCard Class="mb-2" Outlined="true">
                 <MudCardContent>
@@ -91,48 +91,45 @@
     </MudItem>
 </MudGrid>
 
-
-
-
 @code {
-    public MudTable<LeaderboardEntry> table;
-
-    public List<LeaderboardEntry> leaderboardEntries = new List<LeaderboardEntry>();
-    public List<LeaderboardEntry> recentClears = new List<LeaderboardEntry>();
-
-    public Data.SiteDiagnostic diagnostics { get; set; }
+    public MudTable<LeaderboardEntry> Table;
+    public List<LeaderboardEntry> LeaderboardEntries { get; set; }
+    public List<LeaderboardEntry> RecentClears { get; set; }
+    public Data.SiteDiagnostic Diagnostics { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        diagnostics = _context.SiteDiagnostics.OrderBy(x => x.CreationTime).LastOrDefault();
-        recentClears = _context.RankedCastleNathriaLeaderboard.Where(x => x.Progression == 10).OrderByDescending(x => x.LatestProgressionTime).Take(5).ToList();
+        Diagnostics = _context.SiteDiagnostics.OrderBy(x => x.CreationTime).LastOrDefault();
+        RecentClears = _context.RankedCastleNathriaLeaderboard.Where(x => x.Progression == 10).OrderByDescending(x => x.LatestProgressionTime).Take(5).ToList();
 
-        var RaidRanks = _context.RankedCastleNathriaLeaderboard.ToList();
+        LeaderboardEntries = _context.RankedCastleNathriaLeaderboard.ToList();
 
-        if (RaidRanks.Count == 0 || (RaidRanks.FirstOrDefault().ExpirationTime < DateTime.Now))
+        if (LeaderboardEntries.Count == 0 || (LeaderboardEntries.FirstOrDefault().ExpirationTime < DateTime.Now))
         {
-            _context.RankedCastleNathriaLeaderboard.RemoveRange(RaidRanks);
-            await _context.SaveChangesAsync();
-
-            // bind records from database
+            // delete outdated records
+            if (LeaderboardEntries.Count > 0)
+            {
+                _context.RankedCastleNathriaLeaderboard.RemoveRange(LeaderboardEntries);
+                await _context.SaveChangesAsync();
+            }
 
             var leaderboard = await _context.KillTimeCastleNathria.ToListAsync();
-            List<KillTimeCastleNathria> results = new List<KillTimeCastleNathria>();
+            List<KillTimeCastleNathria> KillTimes = new List<KillTimeCastleNathria>();
 
-            results.AddRange(leaderboard.Where(x => x.Progress == 10).OrderBy(x => x.Boss10KillTime));
-            results.AddRange(leaderboard.Where(x => x.Progress == 9).OrderBy(x => x.Boss9KillTime));
-            results.AddRange(leaderboard.Where(x => x.Progress == 8).OrderBy(x => x.Boss8KillTime));
-            results.AddRange(leaderboard.Where(x => x.Progress == 7).OrderBy(x => x.Boss7KillTime));
-            results.AddRange(leaderboard.Where(x => x.Progress == 6).OrderBy(x => x.Boss6KillTime));
-            results.AddRange(leaderboard.Where(x => x.Progress == 5).OrderBy(x => x.Boss5KillTime));
-            results.AddRange(leaderboard.Where(x => x.Progress == 4).OrderBy(x => x.Boss4KillTime));
-            results.AddRange(leaderboard.Where(x => x.Progress == 3).OrderBy(x => x.Boss3KillTime));
-            results.AddRange(leaderboard.Where(x => x.Progress == 2).OrderBy(x => x.Boss2KillTime));
-            results.AddRange(leaderboard.Where(x => x.Progress == 1).OrderBy(x => x.Boss1KillTime));
+            KillTimes.AddRange(leaderboard.Where(x => x.Progress == 10).OrderBy(x => x.Boss10KillTime));
+            KillTimes.AddRange(leaderboard.Where(x => x.Progress == 9).OrderBy(x => x.Boss9KillTime));
+            KillTimes.AddRange(leaderboard.Where(x => x.Progress == 8).OrderBy(x => x.Boss8KillTime));
+            KillTimes.AddRange(leaderboard.Where(x => x.Progress == 7).OrderBy(x => x.Boss7KillTime));
+            KillTimes.AddRange(leaderboard.Where(x => x.Progress == 6).OrderBy(x => x.Boss6KillTime));
+            KillTimes.AddRange(leaderboard.Where(x => x.Progress == 5).OrderBy(x => x.Boss5KillTime));
+            KillTimes.AddRange(leaderboard.Where(x => x.Progress == 4).OrderBy(x => x.Boss4KillTime));
+            KillTimes.AddRange(leaderboard.Where(x => x.Progress == 3).OrderBy(x => x.Boss3KillTime));
+            KillTimes.AddRange(leaderboard.Where(x => x.Progress == 2).OrderBy(x => x.Boss2KillTime));
+            KillTimes.AddRange(leaderboard.Where(x => x.Progress == 1).OrderBy(x => x.Boss1KillTime));
 
             int i = 1;
             var guilds = _context.Guilds.ToList();
-            foreach (var item in results)
+            foreach (var item in KillTimes)
             {
                 var guild = guilds.Where(x => x.Id == item.GuildId).FirstOrDefault();
                 DateTime killTime = new DateTime();
@@ -159,17 +156,13 @@
                     RealmSlug = guild.RealmSlug
                 };
 
-                leaderboardEntries.Add(entry);
+                LeaderboardEntries.Add(entry);
                 _context.RankedCastleNathriaLeaderboard.Add(entry);
                 i++;
             }
             await _context.SaveChangesAsync();
         }
-        else
-        {
-            leaderboardEntries = RaidRanks;
-        }
 
-        leaderboardEntries.OrderBy(x => x.Rank);
+        LeaderboardEntries.OrderBy(x => x.Rank);
     }
 }
