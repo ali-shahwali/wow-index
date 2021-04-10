@@ -1,14 +1,15 @@
 ﻿@page "/admin"
+@attribute [Authorize(Roles = "Admin")]
 
 <MudTabs Outlined="true">
     <MudTabPanel Text="Diagnostics" Icon="@Icons.Material.Filled.BarChart">
-        <Diagnostics/>
+        <Diagnostics />
     </MudTabPanel>
-    <MudTabPanel Text="Settings" Icon="@Icons.Material.Filled.Build" >
-        <Settings/>
+    <MudTabPanel Text="Settings" Icon="@Icons.Material.Filled.Build">
+        <Settings />
     </MudTabPanel>
-    <MudTabPanel Text="Bug Report" Icon="@Icons.Material.Filled.BugReport" >
-        <BugReportViewer/>
+    <MudTabPanel Text="Bug Report" Icon="@Icons.Material.Filled.BugReport">
+        <BugReportViewer />
     </MudTabPanel>
 </MudTabs>
 

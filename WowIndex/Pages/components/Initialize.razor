@@ -1,0 +1,223 @@
+﻿@page "/admin/initialize/"
+@using Models.GuildObjects
+@using Models.RaidingLeaderboards
+@using Models.POCO.CharacterAchievementPOCO
+@attribute [Authorize(Roles = "Admin")]
+
+@if (isStarted)
+{
+    <MudText Typo="Typo.h5">Adding guilds...</MudText>
+    <MudProgressLinear Buffer="true" Value="timeLeft" Min="0" Max="nrOfGuilds"></MudProgressLinear>
+    <MudText>Adding @currentGuild</MudText>
+}
+else
+{
+    <MudButton OnClick="GetData" Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.NotStarted">Start</MudButton>
+}
+
+
+@code {
+
+    public string[] guilds;
+
+    int timeLeft { get; set; } = 0;
+    int nrOfGuilds { get; set; }
+    string currentGuild { get; set; }
+    bool isStarted { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        guilds = System.IO.File.ReadAllLines("C:/Users/ali_z/source/repos/WowIndex/WowIndex/wwwroot/data/guild_data.txt");
+        timeLeft = 0;
+        nrOfGuilds = guilds.Length;
+    }
+
+    private async Task GetData()
+    {
+        isStarted = true;
+        for (int i = 0; i < guilds.Length; i++)
+        {
+            currentGuild = guilds[i];
+            StateHasChanged();
+            string[] splitGuild = currentGuild.Split(new char[] { '-', ' ' });
+            string region = "", guildName = "", realm = "";
+            bool foundRegion = false;
+            for (int j = 0; j < splitGuild.Length; j++)
+            {
+                if (splitGuild[j] == "EU" || splitGuild[j] == "US" || splitGuild[j] == "KR" || splitGuild[j] == "OC")
+                {
+                    region = splitGuild[j].ToLower();
+                    foundRegion = true;
+                }
+                else if (!foundRegion)
+                    guildName += splitGuild[j] + "-";
+                else
+                    realm += splitGuild[j] + "-";
+
+            }
+            guildName = guildName.Remove(guildName.Length - 1).ToLower();
+            realm = realm.Remove(realm.Length - 1).Replace("'", "").ToLower();
+            var checkGuild = _context.Guilds.Where(x => x.NameSlug == guildName && x.Region == region && x.RealmSlug == realm).FirstOrDefault();
+            if (checkGuild != null)
+                continue;
+
+
+            HttpClient client = new HttpClient();
+            client.BaseAddress = new Uri($"https://{region}.api.blizzard.com/");
+            var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
+            var response = client.GetAsync($"data/wow/guild/{realm}/{guildName}?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}").Result;
+            string guildString = response.Content.ReadAsStringAsync().Result;
+
+            var guildObject = JsonConvert.DeserializeObject<Models.POCO.GuildPOCO.Guild>(guildString);
+
+            var Guild = new Models.GuildObjects.Guild()
+            {
+                GuildId = guildObject.id,
+                RecordCreationDate = DateTime.Now,
+                Name = guildObject.name,
+                NameSlug = guildName,
+                Region = region,
+                Realm = guildObject.realm.name,
+                RealmSlug = realm,
+                RealmId = guildObject.realm.id,
+                FactionType = guildObject.faction.type,
+                FactionName = guildObject.faction.name,
+            };
+            _context.Guilds.Add(Guild);
+            _context.SaveChanges();
+            Guild = _context.Guilds.Where(x => x.NameSlug == guildName && x.Region == region && x.RealmSlug == realm).FirstOrDefault();
+
+            response = client.GetAsync($"data/wow/guild/{realm}/{guildName}/roster?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}").Result;
+            string rosterString = response.Content.ReadAsStringAsync().Result;
+
+            Models.POCO.Member[] rosterMembers = JsonConvert.DeserializeObject<Models.POCO.GuildRosterPOCO>(rosterString)
+                .members.Where(x => x.character.level == 60).OrderBy(x => x.rank).ToArray();
+
+            foreach (var member in rosterMembers)
+            {
+                await _context.GuildRoster.AddAsync(new GuildRoster
+                {
+                    CharacterName = member.character.name,
+                    GuildId = Guild.Id,
+                    Region = Guild.Region,
+                    MemberRank = member.rank,
+                    RealmSlug = member.character.realm.slug,
+                    playable_class = Helpers.WowClassHelper.GetClassById(member.character.playable_class.id),
+                    class_color = Helpers.WowClassHelper.GetClassColour(member.character.playable_class.id)
+
+                });
+            }
+
+            List<Achievement[]> allCharacters = new List<Achievement[]>();
+            int[] progressionTally = new int[10];
+            int iterations = 0, progression = 0, requests = 0;
+            if (rosterMembers.Length > 20)
+            {
+                foreach (Models.POCO.Member item in rosterMembers)
+                {
+                    var apiResponse = client.GetAsync($"profile/wow/character/{realm}/{item.character.name.ToLower()}/achievements?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}").Result;
+                    requests++;
+
+                    if (apiResponse.IsSuccessStatusCode)
+                    {
+                        var apiResponseString = apiResponse.Content.ReadAsStringAsync().Result;
+                        CharacterAchievement characterAchievements = JsonConvert.DeserializeObject<CharacterAchievement>(apiResponseString);
+                        var check = characterAchievements.achievements.Where(x => x.id >= 14356 && x.id <= 14365).FirstOrDefault();
+
+                        if (check == null)
+                            continue;
+
+                        Achievement[] validAchievements = characterAchievements.achievements.Where(x => x.id >= 14356 && x.id <= 14365).ToArray();
+
+                        if (validAchievements.Length > 0)
+                        {
+                            progressionTally[validAchievements.Length - 1]++;
+                            allCharacters.Add(validAchievements);
+                            iterations++;
+                        }
+
+                        if (iterations >= 15)
+                        {
+                            for (int k = 9; k >= 0; k--)
+                            {
+                                if (progressionTally[k] >= 15)
+                                    progression = k + 1;
+                            }
+                        }
+
+                        if (progression != 0)
+                        {
+                            List<Achievement[]> raidTeam = new List<Achievement[]>();
+                            foreach (var character in allCharacters.Where(x => x.Length == progression))
+                                raidTeam.Add(character);
+
+                            DateTime[] bossKills = GetBossTimes(raidTeam);
+
+                            // add this guilds progress to leaderboard
+                            KillTimeCastleNathria newLeaderboards = new KillTimeCastleNathria
+                            {
+                                GuildId = Guild.Id,
+                                Progress = progression,
+                                ExpirationDate = DateTime.Now.AddMinutes(15),
+                                Boss1KillTime = bossKills[0],
+                                Boss2KillTime = bossKills[1],
+                                Boss3KillTime = bossKills[2],
+                                Boss4KillTime = bossKills[3],
+                                Boss5KillTime = bossKills[4],
+                                Boss6KillTime = bossKills[5],
+                                Boss7KillTime = bossKills[6],
+                                Boss8KillTime = bossKills[7],
+                                Boss9KillTime = bossKills[8],
+                                Boss10KillTime = bossKills[9],
+                            };
+
+                            _context.KillTimeCastleNathria.Add(newLeaderboards);
+                            break;
+                        }
+                    }
+                }
+            }
+            timeLeft++;
+            StateHasChanged();
+            _context.SaveChanges();
+        }
+    }
+
+    private DateTime[] GetBossTimes(List<Achievement[]> raidTeam)
+    {
+        DateTime[] bossKills = new DateTime[10];
+
+        DateTime[] earliestKill = new DateTime[10];
+
+        int j = 0;
+        foreach (var member in raidTeam)
+        {
+            foreach (var achievement in member)
+            {
+                // conversion to human datetime
+                string str = achievement.completed_timestamp.ToString();
+                str = str.Substring(0, str.Length - 3);
+                DateTime killTime = UnixTimeStampToDateTime(Convert.ToInt64(str)).ToUniversalTime();
+
+                if (killTime < earliestKill[j] || earliestKill[j] == new DateTime())
+                {
+                    earliestKill[j] = killTime;
+                    bossKills[j] = killTime;
+                }
+
+                j++;
+            }
+            j = 0;
+        }
+
+        return bossKills;
+    }
+
+    public static DateTime UnixTimeStampToDateTime(long unixTimeStamp)
+    {
+        // Unix timestamp is seconds past epoch
+        DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+        dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
+        return dtDateTime;
+    }
+}

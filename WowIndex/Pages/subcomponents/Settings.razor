@@ -13,7 +13,7 @@
                 </MudItem>
                 <MudItem xs="12">
                     <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
-
+                        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="InitializeDatabase">Initialize database</MudButton>
                     </MudPaper>
                 </MudItem>
             </MudGrid>
@@ -31,7 +31,10 @@
     protected override async Task OnInitializedAsync()
     {
         var result = await _context.RankedCastleNathriaLeaderboard.FirstOrDefaultAsync();
-        lastRefresh = result.ExpirationTime - DateTime.Now;
+        if(result != null)
+        {
+            lastRefresh = result.ExpirationTime - DateTime.Now;
+        }
     }
 
     private async Task ForceRefresh()
@@ -92,6 +95,11 @@
             i++;
         }
         await _context.SaveChangesAsync();
+    }
+
+    private void InitializeDatabase()
+    {
+        NavigationManager.NavigateTo("/admin/initialize/");
     }
 
 }
