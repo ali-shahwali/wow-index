@@ -10,6 +10,7 @@
             <MudAppBarSpacer />
                 @if (!isEditMode)
                 {
+                <MudIconButton Color="Color.Success" Icon="@Icons.Material.Filled.Add" OnClick="@(e => ToggleAddBox(false))" />
                 <MudItem Style="max-width: 400px" xs="6">
                     <MudAutocomplete CoerceText="true" Text="" Spellcheck="false" ResetValueOnEmptyText="false" T="Models.GuildObjects.Guild" ValueChanged="Search" DisableUnderLine="true" Variant="Variant.Filled" Required="true" Class="searchField" Placeholder="Guild search" SearchFunc="@GuildSearch">
                         <ItemTemplate Context="result">
@@ -83,13 +84,13 @@
                             @if (hasProfile)
                             {
                                 <MudMenuItem>
-                                    <MudButton OnClick="OpenProfilePage" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AccountCircle">Profile</MudButton>
+                                    <MudButton Class="mx-n4 px-5 mt-n3 mb-n3 py-5" Style="justify-content: left; width: calc(100% + 40px)" FullWidth="true" OnClick="OpenProfilePage" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AccountCircle">Profile</MudButton>
                                 </MudMenuItem>
                             }
-                            <form style="width: 250px" method="post" action="Identity/Account/LogOut">
+                            <form method="post" action="Identity/Account/LogOut">
                                 <button type="submit">
                                     <MudMenuItem>
-                                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Logout">Logout</MudButton>
+                                        <MudButton Class="mx-n4 px-5 mt-n3 mb-n3 py-5" Style="justify-content: left; width: calc(100% + 40px)" FullWidth="true" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Logout">Logout</MudButton>
                                     </MudMenuItem>
                                 </button>
                             </form>
@@ -198,6 +199,7 @@
         string searchRegion = model.searchRegion;
         string searchNameSlug = model.searchGuild.Replace(" ", "-").ToLower();
         string searchRealmSlug = model.searchRealm.Replace(" ", "-").ToLower();
+        searchRealmSlug = searchRealmSlug.Replace("'", "").ToLower();
 
         var guild = await _context.Guilds.Where(x => x.Region == searchRegion && x.NameSlug == searchNameSlug && x.RealmSlug == searchRealmSlug).FirstOrDefaultAsync();
 
@@ -275,10 +277,17 @@
     private void Search(Models.GuildObjects.Guild g)
     {
         // naviagte to guilds page
+        if(g.Region == "No records found")
+        {
+            Snackbar.Add("Please enter a valid guild name or add a new one", Severity.Normal);
+
+            return;
+        }
+
         NavigationManager.NavigateTo($"/guild/{g.Region}/{g.RealmSlug}/{g.NameSlug}/");
     }
 
-    private async void ToggleAddBox(bool b)
+    private void ToggleAddBox(bool b)
     {
         isEditMode = !b;
         StateHasChanged();

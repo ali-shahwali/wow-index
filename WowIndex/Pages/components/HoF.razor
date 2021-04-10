@@ -145,7 +145,7 @@
         DateTime RequestInterval = DateTime.Now.AddMinutes(-Int32.Parse(Configuration["LiveRaidApiRequestInterval"]));
 
         // if record is older than 10 min then all a new record from the api and update the database
-        if (records.Count == 0 || (raidName.Equals("castle-nathria") && records[0].age < RequestInterval)) // WHAT THE FUCK??
+        if (records.Count == 0) // WHAT THE FUCK??
         {
             isLoading = true;
             // Call Blizzard API

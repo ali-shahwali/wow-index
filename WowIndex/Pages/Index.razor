@@ -2,14 +2,6 @@
 @using WowIndex.Models.RaidingLeaderboards
 @using Microsoft.Extensions.Configuration
 
-
-<style>
-    mud-paper {
-        background-image: url("../wwwroot/img/castle_nathria.jpg");
-    }
-</style>
-
-
 <MudGrid>
     <MudItem xs="12">
         <MudCard Class="index-banner">
@@ -28,7 +20,7 @@
     </MudItem>
     <MudItem xs="8">
         <MudText Class="mb-2" Typo="Typo.h6">Mythic World Leaderboard</MudText>
-        <MudTable Outlined="true" ServerData="@(new Func<TableState, Task<TableData<LeaderboardEntry>>>(ServerReload))" RowsPerPage="20" Dense="true" FixedHeader="true" @ref="table" Hover="true">
+        <MudTable Outlined="true" Items="leaderboardEntries" RowsPerPage="20" Dense="true" FixedHeader="true" @ref="table" Hover="true">
             <HeaderContent>
                 <MudTh></MudTh>
                 <MudTh>Guild</MudTh>
@@ -82,24 +74,20 @@
     </MudItem>
     <MudItem xs="4">
         <MudText Class="mb-2" Typo="Typo.h6">Recent Activity</MudText>
-        <MudCard Class="mb-2" Outlined="true">
-            <MudCardContent>
-                <MudText>Story of the day</MudText>
-                <MudText Typo="Typo.body2">The quick, brown fox jumps over a lazy dog.</MudText>
-            </MudCardContent>
-        </MudCard>
-        <MudCard Class="mb-2" Outlined="true">
-            <MudCardContent>
-                <MudText>Story of the day</MudText>
-                <MudText Typo="Typo.body2">The quick, brown fox jumps over a lazy dog.</MudText>
-            </MudCardContent>
-        </MudCard>
-        <MudCard Class="mb-2" Outlined="true">
-            <MudCardContent>
-                <MudText>Story of the day</MudText>
-                <MudText Typo="Typo.body2">The quick, brown fox jumps over a lazy dog.</MudText>
-            </MudCardContent>
-        </MudCard>
+        @foreach (var item in recentClears)
+        {
+            <MudCard Class="mb-2" Outlined="true">
+                <MudCardContent>
+                    @{ 
+                        TimeSpan time = DateTime.Now - item.LatestProgressionTime;
+                        string link = $"/guild/{item.Region}/{item.RealmSlug}/{item.GuildSlug}/";
+                    }
+                    <MudText>Congrats to <a href="@link" style="color: darkmagenta">@item.GuildName</a> for clearing castle nathria</MudText>
+
+                    <MudText Typo="Typo.body2">They cleared it @time.Days days and @time.Hours hours ago</MudText>
+                </MudCardContent>
+            </MudCard>
+        }
     </MudItem>
 </MudGrid>
 
@@ -110,17 +98,15 @@
     public MudTable<LeaderboardEntry> table;
 
     public List<LeaderboardEntry> leaderboardEntries = new List<LeaderboardEntry>();
+    public List<LeaderboardEntry> recentClears = new List<LeaderboardEntry>();
 
     public Data.SiteDiagnostic diagnostics { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
+        diagnostics = _context.SiteDiagnostics.OrderBy(x => x.CreationTime).LastOrDefault();
+        recentClears = _context.RankedCastleNathriaLeaderboard.Where(x => x.Progression == 10).OrderByDescending(x => x.LatestProgressionTime).Take(5).ToList();
 
-        diagnostics = await _context.SiteDiagnostics.OrderBy(x => x.CreationTime).LastOrDefaultAsync();
-    }
-
-    private async Task<TableData<LeaderboardEntry>> ServerReload(TableState state)
-    {
         var RaidRanks = _context.RankedCastleNathriaLeaderboard.ToList();
 
         if (RaidRanks.Count == 0 || (RaidRanks.FirstOrDefault().ExpirationTime < DateTime.Now))
@@ -184,6 +170,6 @@
             leaderboardEntries = RaidRanks;
         }
 
-        return new TableData<LeaderboardEntry>() { Items = leaderboardEntries.OrderBy(x => x.Rank) };
+        leaderboardEntries.OrderBy(x => x.Rank);
     }
 }
