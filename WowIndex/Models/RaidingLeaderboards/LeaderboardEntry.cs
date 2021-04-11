@@ -8,7 +8,8 @@ namespace WowIndex.Models.RaidingLeaderboards
     public class LeaderboardEntry
     {
         public int Id { get; set; }
-        public int Rank { get; set; }
+        public int RankWorld { get; set; }
+        public int RankRealm { get; set; }
         public string GuildName { get; set; }
         public string GuildSlug { get; set; }
         public string Faction { get; set; }

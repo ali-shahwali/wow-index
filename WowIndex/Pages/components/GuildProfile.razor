@@ -30,19 +30,24 @@ else
             <MudItem xs="6">
                 @{string guildArmory = $"https://worldofwarcraft.com/en-us/guild/{Guild.Region.ToLower()}/{Guild.RealmSlug}/{Guild.NameSlug}";}
                 <MudLink Color="Color.Inherit" Target="_blank" Href="@guildArmory" Typo="Typo.h3">@Guild.Name</MudLink>
-                @if (rank == null)
+                @if (RankWorld == null)
                 {
-                    <MudText Typo="Typo.h5">This guilds rank is still being calculated</MudText>
-                    <MudText Typo="Typo.h6">It should be done soon</MudText>
-
+                    <MudDivider></MudDivider>
+                    <MudText Color="Color.Warning" Typo="Typo.caption">This guilds rank is still being calculated. It should be done soon</MudText>
                 }
-                else if (Convert.ToInt32(rank) <= 3)
+                else if (Convert.ToInt32(RankWorld) <= 3)
                 {
-                    <MudText Color="Color.Primary" Typo="Typo.h5">World ranking:  @rank</MudText>
+                    <MudText Color="Color.Primary" Typo="Typo.h5">World ranking:  @RankWorld</MudText>
                 }
                 else
                 {
-                    <MudText Color="Color.Info" Typo="Typo.h5">World ranking:  @rank</MudText>
+                    <MudText Color="Color.Info" Typo="Typo.h5">World ranking:  @RankWorld</MudText>
+                }
+
+                @if (RankRealm != null)
+                {
+                    @* realm rank *@
+                    <MudText Color="Color.Info" Typo="Typo.h5">Realm ranking:  @RankRealm</MudText>
                 }
             </MudItem>
             <MudItem xs="6">
@@ -130,7 +135,8 @@ else
         "Huntsman Altimor", "Shriekwing"
         };
     public List<BossStats> bossStats = new List<BossStats>();
-    public string rank { get; set; }
+    public string RankWorld { get; set; }
+    public string RankRealm { get; set; }
     public string searchString = "";
 
     protected override async Task OnParametersSetAsync()
@@ -150,9 +156,12 @@ else
                 isOutdated = true;
         }
 
-        var result = await _context.RankedCastleNathriaLeaderboard.Where(x => x.GuildName.Equals(Guild.Name)).FirstOrDefaultAsync();
-        if (result != null)
-            rank = result.Rank.ToString();
+        var CurrentGuildPlacement = await _context.RankedCastleNathriaLeaderboard.Where(x => x.GuildName.Equals(Guild.Name)).FirstOrDefaultAsync();
+        if (CurrentGuildPlacement != null)
+        {
+            RankWorld = CurrentGuildPlacement.RankWorld.ToString();
+            RankRealm = Helpers.CalculateRealmRank.RealmRank(Guild, _context).ToString();
+        }
 
         isLoading = false;
         StateHasChanged();

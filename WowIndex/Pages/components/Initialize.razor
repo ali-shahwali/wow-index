@@ -2,6 +2,7 @@
 @using Models.GuildObjects
 @using Models.RaidingLeaderboards
 @using Models.POCO.CharacterAchievementPOCO
+@using System.IO
 @attribute [Authorize(Roles = "Admin")]
 
 @if (currentGuild != null)
@@ -22,7 +23,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        guilds = System.IO.File.ReadAllLines("C:/Users/ali_z/source/repos/WowIndex/WowIndex/wwwroot/data/guild_data.txt");
+        guilds = File.ReadAllLines(Path.Combine(Environment.CurrentDirectory, "wwwroot\\data\\guild_data.txt"));
         nrOfGuilds = guilds.Length;
         await GetData();
     }

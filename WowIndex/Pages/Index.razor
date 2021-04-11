@@ -29,17 +29,17 @@
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Rank">
-                    @if (context.Rank <= 3)
+                    @if (context.RankWorld <= 3)
                     {
-                        <MudText Color="@Color.Primary">@context.Rank</MudText>
+                        <MudText Color="@Color.Primary">@context.RankWorld</MudText>
                     }
-                    else if (context.Rank <= 10)
+                    else if (context.RankWorld <= 10)
                     {
-                        <MudText Style="color: blueviolet">@context.Rank</MudText>
+                        <MudText Style="color: blueviolet">@context.RankWorld</MudText>
                     }
                     else
                     {
-                        <MudText Color="Color.Info">@context.Rank</MudText>
+                        <MudText Color="Color.Info">@context.RankWorld</MudText>
                     }
                 </MudTd>
                 <MudTd DataLabel="Guild">
@@ -139,7 +139,7 @@
             LeaderboardSorted.AddRange(Leaderboard.Where(x => x.Progress == 2).OrderBy(x => x.Boss2KillTime));
             LeaderboardSorted.AddRange(Leaderboard.Where(x => x.Progress == 1).OrderBy(x => x.Boss1KillTime));
 
-            int rank = 1;
+            int rankWorld = 1;
             foreach (var item in LeaderboardSorted)
             {
                 var guild = Guilds.Where(x => x.Id == item.GuildId).FirstOrDefault();
@@ -157,7 +157,8 @@
                 // build entry to display in list on page
                 LeaderboardEntry entry = new LeaderboardEntry
                 {
-                    Rank = rank,
+                    RankWorld = rankWorld,
+                    RankRealm = 0,
                     LatestProgressionTime = killTime,
                     GuildName = guild.Name,
                     Faction = guild.FactionName,
@@ -172,11 +173,12 @@
 
                 // add this new soted list to the db
                 _context.RankedCastleNathriaLeaderboard.Add(entry);
-                rank++;
+                rankWorld++;
             }
+
             await _context.SaveChangesAsync();
         }
 
-        LeaderboardEntries = LeaderboardEntries.OrderBy(x => x.Rank).ToList();
+        LeaderboardEntries = LeaderboardEntries.OrderBy(x => x.RankWorld).ToList();
     }
 }
