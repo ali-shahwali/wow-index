@@ -13,7 +13,7 @@
                 </MudItem>
                 <MudItem xs="12">
                     <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
-                        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="InitializeDatabase">Initialize database</MudButton>
+                        <MudButton Link="/admin/initialize/" Variant="Variant.Filled" Color="Color.Warning" >Initialize database</MudButton>
                     </MudPaper>
                 </MudItem>
             </MudGrid>
@@ -47,25 +47,15 @@
 
         // bind records from database
 
-        var leaderboard = await _context.KillTimeCastleNathria.ToListAsync();
-        List<Models.RaidingLeaderboards.KillTimeCastleNathria> results = new List<Models.RaidingLeaderboards.KillTimeCastleNathria>();
-
-        results.AddRange(leaderboard.Where(x => x.Progress == 10).OrderBy(x => x.Boss10KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 9).OrderBy(x => x.Boss9KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 8).OrderBy(x => x.Boss8KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 7).OrderBy(x => x.Boss7KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 6).OrderBy(x => x.Boss6KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 5).OrderBy(x => x.Boss5KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 4).OrderBy(x => x.Boss4KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 3).OrderBy(x => x.Boss3KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 2).OrderBy(x => x.Boss2KillTime));
-        results.AddRange(leaderboard.Where(x => x.Progress == 1).OrderBy(x => x.Boss1KillTime));
+        var Leaderboard = await _context.KillTimeCastleNathria.ToListAsync();
+        List<Models.RaidingLeaderboards.KillTimeCastleNathria> results = Helpers.RaidDataHelper.SortLeaderboard(Leaderboard);
 
         int i = 1;
-        var guilds = _context.Guilds.ToList();
+        var Guilds = _context.Guilds.ToList();
         foreach (var item in results)
         {
-            var guild = guilds.Where(x => x.Id == item.GuildId).FirstOrDefault();
+            var guild = Guilds.Where(x => x.Id == item.GuildId).FirstOrDefault();
+            int RealmRank = Helpers.CalculateRealmRankHelper.RealmRank(guild, Leaderboard, Guilds);
             DateTime killTime = new DateTime();
             DateTime[] bossTimes = Helpers.CastleNathriaKillTimeHelper.GetKillTimes(item);
             foreach (var time in bossTimes)
@@ -80,6 +70,7 @@
             Models.RaidingLeaderboards.LeaderboardEntry entry = new Models.RaidingLeaderboards.LeaderboardEntry
             {
                 RankWorld = i,
+                RankRealm = RealmRank,
                 LatestProgressionTime = killTime,
                 GuildName = guild.Name,
                 Faction = guild.FactionName,
@@ -95,11 +86,6 @@
             i++;
         }
         await _context.SaveChangesAsync();
-    }
-
-    private void InitializeDatabase()
-    {
-        NavigationManager.NavigateTo("/admin/initialize/");
     }
 
 }

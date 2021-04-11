@@ -5,12 +5,19 @@
 @using System.IO
 @attribute [Authorize(Roles = "Admin")]
 
-@if (currentGuild != null)
+@if (currentGuild != null && !isStopping)
 {
     <MudText Typo="Typo.h5">Adding guilds...</MudText>
     <MudProgressLinear Color="Color.Secondary" Class="my-7" Buffer="true" Value="@timeLeft" Min="0" Max="@nrOfGuilds"></MudProgressLinear>
     <MudText>Adding @currentGuild</MudText>
+    <MudButton StartIcon="@Icons.Material.Filled.Stop" Variant="Variant.Filled" OnClick="Stop">Stop</MudButton>
 }
+else
+{
+    <MudText>Finishing up</MudText>
+    <MudProgressLinear Color="Color.Secondary" Class="my-7" Indeterminate="true"></MudProgressLinear>
+}
+
 
 @code {
 
@@ -19,7 +26,8 @@
     int timeLeft { get; set; } = 0;
     int nrOfGuilds { get; set; }
     string currentGuild { get; set; }
-    bool isStarted { get; set; } = false;
+
+    public bool isStopping { get; set; } = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -30,9 +38,9 @@
 
     private async Task GetData()
     {
-        isStarted = true;
         for (int i = 0; i < guilds.Length; i++)
         {
+
             // parser
             currentGuild = guilds[i];
             timeLeft++;
@@ -42,7 +50,7 @@
             bool foundRegion = false;
             for (int j = 0; j < splitGuild.Length; j++)
             {
-                if (splitGuild[j] == "EU" || splitGuild[j] == "US" || splitGuild[j] == "KR" || splitGuild[j] == "OC" || splitGuild[j] == "TW")
+                if (splitGuild[j] == "EU" || splitGuild[j] == "US" || splitGuild[j] == "KR" || splitGuild[j] == "TW")
                 {
                     region = splitGuild[j].ToLower();
                     foundRegion = true;
@@ -178,8 +186,19 @@
                     }
                 }
             }
-
             _context.SaveChanges();
+            if (isStopping)
+                break;
+
         }
+        Snackbar.Add("All done!", Severity.Normal);
+        NavigationManager.NavigateTo("/admin");
+    }
+
+    private void Stop()
+    {
+        isStopping = true;
+        StateHasChanged();
+        NavigationManager.NavigateTo("/admin/initialize/");
     }
 }

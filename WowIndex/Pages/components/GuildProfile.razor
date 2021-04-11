@@ -151,7 +151,7 @@ else
         {
             guildMembers = _context.GuildRoster.Where(x => x.GuildId == Guild.Id).OrderBy(x => x.MemberRank).ToList();
 
-            bossStats = ToBossStatsList(Helpers.CastleNathriaKillTimeHelper.GetKillTimes(raidProgRecord), bossNames);
+            bossStats = Helpers.RaidDataHelper.ToBossStatsList(Helpers.CastleNathriaKillTimeHelper.GetKillTimes(raidProgRecord), bossNames);
             if (raidProgRecord.ExpirationDate < DateTime.Now)
                 isOutdated = true;
         }
@@ -160,7 +160,7 @@ else
         if (CurrentGuildPlacement != null)
         {
             RankWorld = CurrentGuildPlacement.RankWorld.ToString();
-            RankRealm = Helpers.CalculateRealmRank.RealmRank(Guild, _context).ToString();
+            RankRealm = _context.RankedCastleNathriaLeaderboard.Where(x => x.GuildSlug == guildSlug && x.Region == region && x.RealmSlug == realm).FirstOrDefault().RankRealm.ToString();
         }
 
         isLoading = false;
@@ -260,7 +260,7 @@ else
                             raidTeam.Add(character);
 
                         DateTime[] bossKills = Helpers.RaidDataHelper.GetBossTimes(raidTeam, 10);
-                        bossStats = ToBossStatsList(bossKills, bossNames);
+                        bossStats = Helpers.RaidDataHelper.ToBossStatsList(bossKills, bossNames);
 
                         // add this guilds progress to leaderboard
                         KillTimeCastleNathria newLeaderboards = new KillTimeCastleNathria
@@ -296,20 +296,6 @@ else
         _context.Update(accessToken);
         await _context.SaveChangesAsync();
         guildMembers = await _context.GuildRoster.Where(x => x.GuildId == Guild.Id).OrderBy(x => x.MemberRank).ToListAsync();
-    }
-
-    private List<BossStats> ToBossStatsList(DateTime[] bossKills, string[] bossNames)
-    {
-        List<BossStats> stats = new List<BossStats>();
-        for (int i = 0; i < 10; i++)
-        {
-            stats.Add(new BossStats
-            {
-                Name = bossNames[i],
-                KillTime = bossKills[i]
-            });
-        }
-        return stats;
     }
 
     private bool FilterFunc(GuildRoster element)

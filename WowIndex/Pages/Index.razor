@@ -29,21 +29,30 @@
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Rank">
-                    @if (context.RankWorld <= 3)
-                    {
-                        <MudText Color="@Color.Primary">@context.RankWorld</MudText>
-                    }
-                    else if (context.RankWorld <= 10)
-                    {
-                        <MudText Style="color: blueviolet">@context.RankWorld</MudText>
-                    }
-                    else
-                    {
-                        <MudText Color="Color.Info">@context.RankWorld</MudText>
-                    }
+                    @{ string worldRank = $"World rank: {context.RankWorld}";
+                       string realmRank= $"Realm rank: {context.RankRealm}";}
+                    <MudTooltip Placement="Placement.End">
+                        <ChildContent>
+                            @if (context.RankWorld <= 3)
+                            {
+                                <MudText Color="@Color.Primary">@context.RankWorld</MudText>
+                            }
+                            else if (context.RankWorld <= 10)
+                            {
+                                <MudText Style="color: blueviolet">@context.RankWorld</MudText>
+                            }
+                            else
+                            {
+                                <MudText Color="Color.Info">@context.RankWorld</MudText>
+                            }
+                        </ChildContent>
+                        <TooltipContent>
+                            <MudText Typo="Typo.body2">@realmRank</MudText>
+                        </TooltipContent>
+                    </MudTooltip>
                 </MudTd>
                 <MudTd DataLabel="Guild">
-                    @{ var link = $"/guild/{context.Region.ToLower()}/{context.RealmSlug}/{context.GuildSlug}/"; }
+                    @{string link = $"/guild/{context.Region.ToLower()}/{context.RealmSlug}/{context.GuildSlug}/";}
                     @if (context.Faction == "Horde")
                     {
                         <MudButton Class="table-btn" Link="@link" Color="Color.Error">
@@ -58,7 +67,7 @@
                     }
                 </MudTd>
                 <MudTd DataLabel="Guild">
-                    @context.Realm
+                    @context.Region.ToUpper() - @context.Realm
                 </MudTd>
                 <MudTd DataLabel="Guild">
                     @if (context.Progression == 10)
@@ -95,6 +104,7 @@
                 </MudCardContent>
             </MudCard>
         }
+        <MudChart ChartType="ChartType.Pie" InputData="@data" InputLabels="@labels" Width="300px" Height="300px" />
     </MudItem>
 </MudGrid>
 
@@ -105,6 +115,9 @@
     public List<LeaderboardEntry> RecentClears { get; set; }
     public List<Models.GuildObjects.Guild> Guilds { get; set; }
     public Data.SiteDiagnostic Diagnostics { get; set; }
+
+    string[] labels = { "US", "EU", "KR", "TW" };
+    double[] data = {0,0,0,0 };
 
     // Page load
     protected override async Task OnInitializedAsync()
@@ -125,24 +138,14 @@
             }
 
             // build up a sorted leaderboard
-            var Leaderboard = await _context.KillTimeCastleNathria.ToListAsync();
-            var LeaderboardSorted = new List<KillTimeCastleNathria>();
-
-            LeaderboardSorted.AddRange(Leaderboard.Where(x => x.Progress == 10).OrderBy(x => x.Boss10KillTime));
-            LeaderboardSorted.AddRange(Leaderboard.Where(x => x.Progress == 9).OrderBy(x => x.Boss9KillTime));
-            LeaderboardSorted.AddRange(Leaderboard.Where(x => x.Progress == 8).OrderBy(x => x.Boss8KillTime));
-            LeaderboardSorted.AddRange(Leaderboard.Where(x => x.Progress == 7).OrderBy(x => x.Boss7KillTime));
-            LeaderboardSorted.AddRange(Leaderboard.Where(x => x.Progress == 6).OrderBy(x => x.Boss6KillTime));
-            LeaderboardSorted.AddRange(Leaderboard.Where(x => x.Progress == 5).OrderBy(x => x.Boss5KillTime));
-            LeaderboardSorted.AddRange(Leaderboard.Where(x => x.Progress == 4).OrderBy(x => x.Boss4KillTime));
-            LeaderboardSorted.AddRange(Leaderboard.Where(x => x.Progress == 3).OrderBy(x => x.Boss3KillTime));
-            LeaderboardSorted.AddRange(Leaderboard.Where(x => x.Progress == 2).OrderBy(x => x.Boss2KillTime));
-            LeaderboardSorted.AddRange(Leaderboard.Where(x => x.Progress == 1).OrderBy(x => x.Boss1KillTime));
+            var Leaderboard = _context.KillTimeCastleNathria.ToList();
+            var LeaderboardSorted = Helpers.RaidDataHelper.SortLeaderboard(Leaderboard);
 
             int rankWorld = 1;
             foreach (var item in LeaderboardSorted)
             {
                 var guild = Guilds.Where(x => x.Id == item.GuildId).FirstOrDefault();
+                int RealmRank = Helpers.CalculateRealmRankHelper.RealmRank(guild, Leaderboard, Guilds);
                 DateTime killTime = new DateTime();
                 DateTime[] bossTimes = Helpers.CastleNathriaKillTimeHelper.GetKillTimes(item);
                 foreach (var time in bossTimes)
@@ -158,7 +161,7 @@
                 LeaderboardEntry entry = new LeaderboardEntry
                 {
                     RankWorld = rankWorld,
-                    RankRealm = 0,
+                    RankRealm = RealmRank,
                     LatestProgressionTime = killTime,
                     GuildName = guild.Name,
                     Faction = guild.FactionName,
@@ -178,6 +181,11 @@
 
             await _context.SaveChangesAsync();
         }
+
+        data[0] = _context.RankedCastleNathriaLeaderboard.Where(x => x.Region == "us").Count();
+        data[1] = _context.RankedCastleNathriaLeaderboard.Where(x => x.Region == "eu").Count();
+        data[2] = _context.RankedCastleNathriaLeaderboard.Where(x => x.Region == "kr").Count();
+        data[3] = _context.RankedCastleNathriaLeaderboard.Where(x => x.Region == "tw").Count();
 
         LeaderboardEntries = LeaderboardEntries.OrderBy(x => x.RankWorld).ToList();
     }
