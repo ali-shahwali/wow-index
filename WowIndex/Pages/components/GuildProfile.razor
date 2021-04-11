@@ -30,24 +30,15 @@ else
             <MudItem xs="6">
                 @{string guildArmory = $"https://worldofwarcraft.com/en-us/guild/{Guild.Region.ToLower()}/{Guild.RealmSlug}/{Guild.NameSlug}";}
                 <MudLink Color="Color.Inherit" Target="_blank" Href="@guildArmory" Typo="Typo.h3">@Guild.Name</MudLink>
-                @if (RankWorld == null)
+                @if (RankWorld == null && RankRealm != null)
                 {
                     <MudDivider></MudDivider>
                     <MudText Color="Color.Warning" Typo="Typo.caption">This guilds rank is still being calculated. It should be done soon</MudText>
                 }
-                else if (Convert.ToInt32(RankWorld) <= 3)
-                {
-                    <MudText Color="Color.Primary" Typo="Typo.h5">World ranking:  @RankWorld</MudText>
-                }
                 else
                 {
-                    <MudText Color="Color.Info" Typo="Typo.h5">World ranking:  @RankWorld</MudText>
-                }
-
-                @if (RankRealm != null)
-                {
-                    @* realm rank *@
-                    <MudText Color="Color.Info" Typo="Typo.h5">Realm ranking:  @RankRealm</MudText>
+                    <MudDivider></MudDivider>
+                    <MudText Color="Color.Info" Typo="Typo.caption">World ranking: @RankWorld | Realm ranking: @RankRealm</MudText>
                 }
             </MudItem>
             <MudItem xs="6">

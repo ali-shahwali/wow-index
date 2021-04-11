@@ -6,13 +6,13 @@
     <MudItem xs="12">
         <MudCard Class="index-banner">
             <MudCardContent>
-                <MudText Style="color: white" Typo="Typo.h6">Castle Nathria</MudText>
+                <MudText Class="mb-5" Style="color: white" Typo="Typo.h4">Castle Nathria</MudText>
                 @if (Diagnostics != null)
                 {
-                    <MudText Style="color: cornflowerblue" Typo="Typo.body1">There are currently @Diagnostics.GuildsWithFullClear guilds with full clears on record</MudText>
+                    <MudText Style="color: cornflowerblue" Typo="Typo.body1">There are currently <span style="color: white">@Diagnostics.GuildsWithFullClear</span> guilds with full clears on record</MudText>
                     <MudText Style="color: cornflowerblue" Typo="Typo.body1">
-                        It takes on average @Diagnostics.AverageProgressionTime days of progression for a full clear
-                        and the most difficult boss appears to be @Diagnostics.MostDifficultBoss .
+                        It takes on average <span style="color: white">@Diagnostics.AverageProgressionTime</span> days of progression for a full clear
+                        and the most difficult boss appears to be <span style="color: white">@Diagnostics.MostDifficultBoss</span>.
                     </MudText>
                 }
             </MudCardContent>
@@ -104,7 +104,9 @@
                 </MudCardContent>
             </MudCard>
         }
-        <MudChart ChartType="ChartType.Pie" InputData="@data" InputLabels="@labels" Width="300px" Height="300px" />
+
+    <MudText Class="mt-5" Style="color: white" Typo="Typo.h6">Region Representation</MudText>
+        <MudChart ChartType="ChartType.Donut" InputData="@data" InputLabels="@labels" Width="300px" Height="300px" Class="mt-5" />
     </MudItem>
 </MudGrid>
 
@@ -134,7 +136,7 @@
             if (LeaderboardEntries.Count > 0)
             {
                 _context.RankedCastleNathriaLeaderboard.RemoveRange(LeaderboardEntries);
-                await _context.SaveChangesAsync();
+                _context.SaveChanges();
             }
 
             // build up a sorted leaderboard
