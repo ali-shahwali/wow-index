@@ -4,32 +4,27 @@
 @using Models.POCO.CharacterAchievementPOCO
 @attribute [Authorize(Roles = "Admin")]
 
-@if (isStarted)
+@if (currentGuild != null)
 {
     <MudText Typo="Typo.h5">Adding guilds...</MudText>
-    <MudProgressLinear Buffer="true" Value="timeLeft" Min="0" Max="nrOfGuilds"></MudProgressLinear>
+    <MudProgressLinear Color="Color.Secondary" Class="my-7" Buffer="true" Value="@timeLeft" Min="0" Max="@nrOfGuilds"></MudProgressLinear>
     <MudText>Adding @currentGuild</MudText>
 }
-else
-{
-    <MudButton OnClick="GetData" Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.NotStarted">Start</MudButton>
-}
-
 
 @code {
 
-    public string[] guilds;
+    public string[] guilds { get; set; }
 
     int timeLeft { get; set; } = 0;
     int nrOfGuilds { get; set; }
     string currentGuild { get; set; }
     bool isStarted { get; set; } = false;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         guilds = System.IO.File.ReadAllLines("C:/Users/ali_z/source/repos/WowIndex/WowIndex/wwwroot/data/guild_data.txt");
-        timeLeft = 0;
         nrOfGuilds = guilds.Length;
+        await GetData();
     }
 
     private async Task GetData()
@@ -37,14 +32,16 @@ else
         isStarted = true;
         for (int i = 0; i < guilds.Length; i++)
         {
+            // parser
             currentGuild = guilds[i];
+            timeLeft++;
             StateHasChanged();
             string[] splitGuild = currentGuild.Split(new char[] { '-', ' ' });
             string region = "", guildName = "", realm = "";
             bool foundRegion = false;
             for (int j = 0; j < splitGuild.Length; j++)
             {
-                if (splitGuild[j] == "EU" || splitGuild[j] == "US" || splitGuild[j] == "KR" || splitGuild[j] == "OC")
+                if (splitGuild[j] == "EU" || splitGuild[j] == "US" || splitGuild[j] == "KR" || splitGuild[j] == "OC" || splitGuild[j] == "TW")
                 {
                     region = splitGuild[j].ToLower();
                     foundRegion = true;
@@ -57,11 +54,14 @@ else
             }
             guildName = guildName.Remove(guildName.Length - 1).ToLower();
             realm = realm.Remove(realm.Length - 1).Replace("'", "").ToLower();
+
+            // check if guild is already added
             var checkGuild = _context.Guilds.Where(x => x.NameSlug == guildName && x.Region == region && x.RealmSlug == realm).FirstOrDefault();
             if (checkGuild != null)
                 continue;
 
 
+            // gets data
             HttpClient client = new HttpClient();
             client.BaseAddress = new Uri($"https://{region}.api.blizzard.com/");
             var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
@@ -151,7 +151,7 @@ else
                             foreach (var character in allCharacters.Where(x => x.Length == progression))
                                 raidTeam.Add(character);
 
-                            DateTime[] bossKills = GetBossTimes(raidTeam);
+                            DateTime[] bossKills = Helpers.RaidDataHelper.GetBossTimes(raidTeam, 10);
 
                             // add this guilds progress to leaderboard
                             KillTimeCastleNathria newLeaderboards = new KillTimeCastleNathria
@@ -177,47 +177,8 @@ else
                     }
                 }
             }
-            timeLeft++;
-            StateHasChanged();
+
             _context.SaveChanges();
         }
-    }
-
-    private DateTime[] GetBossTimes(List<Achievement[]> raidTeam)
-    {
-        DateTime[] bossKills = new DateTime[10];
-
-        DateTime[] earliestKill = new DateTime[10];
-
-        int j = 0;
-        foreach (var member in raidTeam)
-        {
-            foreach (var achievement in member)
-            {
-                // conversion to human datetime
-                string str = achievement.completed_timestamp.ToString();
-                str = str.Substring(0, str.Length - 3);
-                DateTime killTime = UnixTimeStampToDateTime(Convert.ToInt64(str)).ToUniversalTime();
-
-                if (killTime < earliestKill[j] || earliestKill[j] == new DateTime())
-                {
-                    earliestKill[j] = killTime;
-                    bossKills[j] = killTime;
-                }
-
-                j++;
-            }
-            j = 0;
-        }
-
-        return bossKills;
-    }
-
-    public static DateTime UnixTimeStampToDateTime(long unixTimeStamp)
-    {
-        // Unix timestamp is seconds past epoch
-        DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-        dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
-        return dtDateTime;
     }
 }

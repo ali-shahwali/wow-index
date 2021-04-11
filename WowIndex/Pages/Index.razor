@@ -61,7 +61,14 @@
                     @context.Realm
                 </MudTd>
                 <MudTd DataLabel="Guild">
-                    <MudChip Label="true" Size="Size.Small" Variant="Variant.Outlined">@context.Progression / 10</MudChip>
+                    @if (context.Progression == 10)
+                    {
+                        <MudChip Label="true" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">@context.Progression / 10</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip Label="true" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">@context.Progression / 10</MudChip>
+                    }
                     <MudText Typo="Typo.caption">
                         @context.LatestProgressionTime.ToShortDateString()
                     </MudText>
@@ -170,6 +177,6 @@
             await _context.SaveChangesAsync();
         }
 
-        LeaderboardEntries.OrderBy(x => x.Rank);
+        LeaderboardEntries = LeaderboardEntries.OrderBy(x => x.Rank).ToList();
     }
 }
