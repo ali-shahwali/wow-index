@@ -30,29 +30,12 @@ else
             <MudItem xs="6">
                 @{string guildArmory = $"https://worldofwarcraft.com/en-us/guild/{Guild.Region.ToLower()}/{Guild.RealmSlug}/{Guild.NameSlug}";}
                 <MudLink Color="Color.Inherit" Target="_blank" Href="@guildArmory" Typo="Typo.h3">@Guild.Name</MudLink>
-                @if (RankWorld == null && RankRealm != null)
-                {
-                    <MudDivider/>
-                    <MudText Color="Color.Warning" Typo="Typo.caption">This guilds rank is still being calculated. It should be done soon</MudText>
-                }
-                else
-                {
-                    <MudDivider/>
-                    <MudText Color="Color.Info" Typo="Typo.h6">World ranking: @RankWorld | Realm ranking: @RankRealm</MudText>
-                }
+                <MudDivider/>
+                <MudText Color="Color.Info" Typo="Typo.h6">World ranking: @RankWorld | Realm ranking: @RankRealm</MudText>
             </MudItem>
             <MudItem xs="6">
-                @{
-                    var tooltipText = "Scan for updated information.";
-                    if (!isOutdated)
-                    {
-                        tooltipText = "This guilds information has been updated recently.";
-                    }
-                }
                 <MudItem Class="d-flex flex-row-reverse">
-                    <MudTooltip Text="@tooltipText">
-                        <MudButton StartIcon="@Icons.Material.Filled.Sync" Variant="Variant.Filled" Disabled="!isOutdated" OnClick="Update">Update this page</MudButton>
-                    </MudTooltip>
+                    <MudButton StartIcon="@Icons.Material.Filled.Sync" Variant="Variant.Filled" OnClick="Update">Update this page</MudButton>
                 </MudItem>
             </MudItem>
         </MudGrid>
@@ -111,7 +94,6 @@ else
 
     // rendering variables
     public bool isLoading { get; set; }
-    public bool isOutdated { get; set; }
     public int estTimeLeft { get; set; }
     public int estGuildRoster { get; set; } = 100;
 
@@ -126,8 +108,8 @@ else
         "Huntsman Altimor", "Shriekwing"
         };
     public List<BossStats> bossStats = new List<BossStats>();
-    public string RankWorld { get; set; }
-    public string RankRealm { get; set; }
+    public int RankWorld { get; set; }
+    public int RankRealm { get; set; }
     public string searchString = "";
 
     protected override async Task OnParametersSetAsync()
@@ -143,15 +125,14 @@ else
             guildMembers = _context.GuildRoster.Where(x => x.GuildId == Guild.Id).OrderBy(x => x.MemberRank).ToList();
 
             bossStats = Helpers.RaidDataHelper.ToBossStatsList(Helpers.CastleNathriaKillTimeHelper.GetKillTimes(raidProgRecord), bossNames);
-            if (raidProgRecord.ExpirationDate < DateTime.Now)
-                isOutdated = true;
         }
 
-        var CurrentGuildPlacement = await _context.RankedCastleNathriaLeaderboard.Where(x => x.GuildName.Equals(Guild.Name)).FirstOrDefaultAsync();
-        if (CurrentGuildPlacement != null)
+        var leaderboards = _context.RankedCastleNathriaLeaderboard.OrderByDescending(x => x.Score).ToList();
+        if(leaderboards != null)
         {
-            RankWorld = CurrentGuildPlacement.RankWorld.ToString();
-            RankRealm = _context.RankedCastleNathriaLeaderboard.Where(x => x.GuildSlug == guildSlug && x.Region == region && x.RealmSlug == realm).FirstOrDefault().RankRealm.ToString();
+            RankWorld = leaderboards.FindIndex(x => x.GuildName == Guild.Name) + 1;
+            var realmList = leaderboards.Where(x => x.Realm == Guild.Realm).ToList();
+            RankRealm = realmList.FindIndex(x => x.GuildName == Guild.Name) + 1;
         }
 
         isLoading = false;
@@ -254,7 +235,7 @@ else
                         bossStats = Helpers.RaidDataHelper.ToBossStatsList(bossKills, bossNames);
 
                         // add this guilds progress to leaderboard
-                        KillTimeCastleNathria newLeaderboards = new KillTimeCastleNathria
+                        KillTimeCastleNathria KillTimes = new KillTimeCastleNathria
                         {
                             GuildId = Guild.Id,
                             Progress = progression,
@@ -271,7 +252,21 @@ else
                             Boss10KillTime = bossKills[9],
                         };
 
-                        _context.KillTimeCastleNathria.Add(newLeaderboards);
+                        LeaderboardEntry leaderboardEntry = new LeaderboardEntry
+                        {
+                            Score = (DateTime.Now - bossKills[progression - 1]).Minutes,
+                            LatestProgressionTime = bossKills[progression - 1],
+                            Faction = Guild.FactionName,
+                            GuildSlug = Guild.NameSlug,
+                            GuildName = Guild.Name,
+                            Realm = Guild.Realm,
+                            RealmSlug = Guild.RealmSlug,
+                            Progression = progression,
+                            Region = Guild.Region
+                        };
+
+                        _context.KillTimeCastleNathria.Add(KillTimes);
+                        _context.RankedCastleNathriaLeaderboard.Add(leaderboardEntry);
                         estTimeLeft = rosterMembers.Length;
                         break;
                     }

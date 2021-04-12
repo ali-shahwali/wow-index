@@ -7,8 +7,6 @@
             <MudGrid>
                 <MudItem xs="12">
                     <MudPaper Elevation="2" Class="pa-4" Style="height: 120px;">
-                        <MudButton Variant="Variant.Filled" OnClick="ForceRefresh" Color="Color.Info" StartIcon="@Icons.Material.Filled.Refresh">Force refresh leaderboard</MudButton>
-                        <MudText><br />Time until automatic refresh: @lastRefresh.Minutes minutes and @lastRefresh.Seconds seconds</MudText>
                     </MudPaper>
                 </MudItem>
                 <MudItem xs="12">
@@ -26,23 +24,5 @@
 </MudContainer>
 
 @code {        
-    TimeSpan lastRefresh = new TimeSpan();
-
-    protected override async Task OnInitializedAsync()
-    {
-        var result = await _context.RankedCastleNathriaLeaderboard.FirstOrDefaultAsync();
-        if(result != null)
-        {
-            lastRefresh = result.ExpirationTime - DateTime.Now;
-        }
-    }
-
-    private async Task ForceRefresh()
-    {
-        var Guilds = _context.Guilds.ToList();
-        var LeaderboardEntries = _context.RankedCastleNathriaLeaderboard.ToList();
-
-        Helpers.SortLeaderboardHelper.SortLeaderboard(_context, LeaderboardEntries, Guilds);
-    }
 
 }

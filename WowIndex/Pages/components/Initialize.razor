@@ -28,7 +28,6 @@
     {
         for (int i = 0; i < guilds.Length; i++)
         {
-
             // parser
             currentGuild = guilds[i];
             timeLeft++;
@@ -168,6 +167,20 @@
                                 Boss10KillTime = bossKills[9],
                             };
 
+                            LeaderboardEntry leaderboardEntry = new LeaderboardEntry
+                            {
+                                Score = (int)(DateTime.Now - bossKills[progression - 1]).TotalMinutes,
+                                LatestProgressionTime = bossKills[progression - 1],
+                                Faction = Guild.FactionName,
+                                GuildSlug = Guild.NameSlug,
+                                GuildName = Guild.Name,
+                                Realm = Guild.Realm,
+                                RealmSlug = Guild.RealmSlug,
+                                Progression = progression,
+                                Region = Guild.Region
+                            };
+
+                            _context.RankedCastleNathriaLeaderboard.Add(leaderboardEntry);
                             _context.KillTimeCastleNathria.Add(newLeaderboards);
                             break;
                         }

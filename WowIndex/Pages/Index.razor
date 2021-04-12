@@ -47,26 +47,10 @@
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Rank">
-                    @{ string worldRank = $"World rank: {context.RankWorld}";
-                        string realmRank = $"Realm rank: {context.RankRealm}";}
                     <MudTooltip Placement="Placement.End">
                         <ChildContent>
-                            @if (context.RankWorld <= 3)
-                            {
-                                <MudText Color="@Color.Primary">@context.RankWorld</MudText>
-                            }
-                            else if (context.RankWorld <= 10)
-                            {
-                                <MudText Style="color: blueviolet">@context.RankWorld</MudText>
-                            }
-                            else
-                            {
-                                <MudText Color="Color.Info">@context.RankWorld</MudText>
-                            }
                         </ChildContent>
-                        <TooltipContent>
-                            <MudText Typo="Typo.body2">@realmRank</MudText>
-                        </TooltipContent>
+                        <TooltipContent>                        </TooltipContent>
                     </MudTooltip>
                 </MudTd>
                 <MudTd DataLabel="Guild">
@@ -182,6 +166,7 @@
 
         }
 
+        /*
         // 3. Apply Sorting - Order by sort field and direction
         if (sortDirection == "None")
             results = results.OrderBy(item => item.RankWorld);
@@ -205,8 +190,9 @@
                 if (SortField == "progress") 
                     results = results.OrderByDescending(item => item.RankWorld);
             }
-        }
 
+        }
+        */
         totalCount = results.Count();
 
         // 4. Apply Pagination - Once the query has been built up we apply the pagination and convert to a list
@@ -239,9 +225,6 @@
         RecentClears = LeaderboardEntries.Where(x => x.Progression == 10).OrderByDescending(x => x.LatestProgressionTime).Take(5).ToList();
         Guilds = _context.Guilds.ToList();
         Diagnostics = _context.SiteDiagnostics.OrderBy(x => x.CreationTime).LastOrDefault();
-
-        if (LeaderboardEntries.Count == 0 || (LeaderboardEntries.FirstOrDefault().ExpirationTime < DateTime.Now))
-            Helpers.SortLeaderboardHelper.SortLeaderboard(_context, LeaderboardEntries, Guilds);
 
         data[0] = _context.RankedCastleNathriaLeaderboard.Where(x => x.Region == "us").Count();
         data[1] = _context.RankedCastleNathriaLeaderboard.Where(x => x.Region == "eu").Count();
@@ -287,6 +270,5 @@
         };
 
         _config.Data.Datasets.Add(dataset);
-        LeaderboardEntries = LeaderboardEntries.OrderBy(x => x.RankWorld).ToList();
     }
 }
