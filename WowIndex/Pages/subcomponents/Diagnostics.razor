@@ -108,7 +108,7 @@
     protected override async Task OnInitializedAsync()
     {
         currentToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
-        diagnostics = _context.SiteDiagnostics.ToList();
+        diagnostics = _context.SiteDiagnostics.OrderByDescending(x => x.CreationTime).ToList();
 
         timeleft = currentToken.ExpirationDate - DateTime.Now;
         if ( timeleft < new TimeSpan(1))

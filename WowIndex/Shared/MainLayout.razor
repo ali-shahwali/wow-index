@@ -247,7 +247,7 @@
 
     private async Task<IEnumerable<Models.GuildObjects.Guild>> GuildSearch(string value)
     {
-        if (string.IsNullOrEmpty(value))
+        if (string.IsNullOrEmpty(value) || value.Length < 3)
             return new List<Models.GuildObjects.Guild>();
 
         var result = guilds.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).Take(100).ToList();

@@ -5,19 +5,9 @@
 @using System.IO
 @attribute [Authorize(Roles = "Admin")]
 
-@if (currentGuild != null && !isStopping)
-{
-    <MudText Typo="Typo.h5">Adding guilds...</MudText>
-    <MudProgressLinear Color="Color.Secondary" Class="my-7" Buffer="true" Value="@timeLeft" Min="0" Max="@nrOfGuilds"></MudProgressLinear>
-    <MudText>Adding @currentGuild</MudText>
-    <MudButton StartIcon="@Icons.Material.Filled.Stop" Variant="Variant.Filled" OnClick="Stop">Stop</MudButton>
-}
-else
-{
-    <MudText>Finishing up</MudText>
-    <MudProgressLinear Color="Color.Secondary" Class="my-7" Indeterminate="true"></MudProgressLinear>
-}
-
+<MudText Typo="Typo.h5">Adding guilds...</MudText>
+<MudProgressLinear Color="Color.Secondary" Class="my-7" Buffer="true" Value="@timeLeft" Min="0" Max="@nrOfGuilds"></MudProgressLinear>
+<MudText>Adding @currentGuild</MudText>
 
 @code {
 
@@ -26,8 +16,6 @@ else
     int timeLeft { get; set; } = 0;
     int nrOfGuilds { get; set; }
     string currentGuild { get; set; }
-
-    public bool isStopping { get; set; } = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -186,19 +174,11 @@ else
                     }
                 }
             }
+            accessToken.RequestsThisHour = requests;
+            _context.Update(accessToken);
             _context.SaveChanges();
-            if (isStopping)
-                break;
-
         }
         Snackbar.Add("All done!", Severity.Normal);
         NavigationManager.NavigateTo("/admin");
-    }
-
-    private void Stop()
-    {
-        isStopping = true;
-        StateHasChanged();
-        NavigationManager.NavigateTo("/admin/initialize/");
     }
 }

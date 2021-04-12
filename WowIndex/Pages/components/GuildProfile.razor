@@ -32,13 +32,13 @@ else
                 <MudLink Color="Color.Inherit" Target="_blank" Href="@guildArmory" Typo="Typo.h3">@Guild.Name</MudLink>
                 @if (RankWorld == null && RankRealm != null)
                 {
-                    <MudDivider></MudDivider>
+                    <MudDivider/>
                     <MudText Color="Color.Warning" Typo="Typo.caption">This guilds rank is still being calculated. It should be done soon</MudText>
                 }
                 else
                 {
-                    <MudDivider></MudDivider>
-                    <MudText Color="Color.Info" Typo="Typo.caption">World ranking: @RankWorld | Realm ranking: @RankRealm</MudText>
+                    <MudDivider/>
+                    <MudText Color="Color.Info" Typo="Typo.h6">World ranking: @RankWorld | Realm ranking: @RankRealm</MudText>
                 }
             </MudItem>
             <MudItem xs="6">

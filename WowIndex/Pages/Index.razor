@@ -1,6 +1,9 @@
 ﻿@page "/"
 @using WowIndex.Models.RaidingLeaderboards
 @using Microsoft.Extensions.Configuration
+@using ChartJs.Blazor.PieChart
+@using ChartJs.Blazor.Util
+@using ChartJs.Blazor.Common
 
 <MudGrid>
     <MudItem xs="12">
@@ -20,7 +23,7 @@
     </MudItem>
     <MudItem xs="8">
         <MudText Class="mb-2" Typo="Typo.h6">Mythic World Leaderboard</MudText>
-        <MudTable Outlined="true" Items="LeaderboardEntries" RowsPerPage="20" Dense="true" FixedHeader="true" @ref="Table" Hover="true">
+        <MudTable Outlined="true" Items="LeaderboardEntries" RowsPerPage="10" Dense="true" FixedHeader="true" @ref="Table" Hover="true">
             <HeaderContent>
                 <MudTh></MudTh>
                 <MudTh>Guild</MudTh>
@@ -30,7 +33,7 @@
             <RowTemplate>
                 <MudTd DataLabel="Rank">
                     @{ string worldRank = $"World rank: {context.RankWorld}";
-                       string realmRank= $"Realm rank: {context.RankRealm}";}
+                        string realmRank = $"Realm rank: {context.RankRealm}";}
                     <MudTooltip Placement="Placement.End">
                         <ChildContent>
                             @if (context.RankWorld <= 3)
@@ -104,9 +107,7 @@
                 </MudCardContent>
             </MudCard>
         }
-
-    <MudText Class="mt-5" Style="color: white" Typo="Typo.h6">Region Representation</MudText>
-        <MudChart ChartType="ChartType.Donut" InputData="@data" InputLabels="@labels" Width="300px" Height="300px" Class="mt-5" />
+        <Chart Width="400" Height="400" Config="_config"></Chart>
     </MudItem>
 </MudGrid>
 
@@ -119,7 +120,9 @@
     public Data.SiteDiagnostic Diagnostics { get; set; }
 
     string[] labels = { "US", "EU", "KR", "TW" };
-    double[] data = {0,0,0,0 };
+    int[] data = { 0, 0, 0, 0 };
+
+    private PieConfig _config;
 
     // Page load
     protected override async Task OnInitializedAsync()
@@ -189,6 +192,45 @@
         data[2] = _context.RankedCastleNathriaLeaderboard.Where(x => x.Region == "kr").Count();
         data[3] = _context.RankedCastleNathriaLeaderboard.Where(x => x.Region == "tw").Count();
 
+        _config = new PieConfig
+        {
+            Options = new PieOptions
+            {
+                Responsive = true,
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "Region Representation",
+                    FontColor = ColorUtil.ColorHexString(255, 255, 255),
+                    FontSize = 16,
+                },
+                Legend = new Legend
+                {
+                    Labels = new LegendLabels
+                    {
+                        FontColor = ColorUtil.ColorHexString(255, 255, 255)
+                    }
+                }
+            }
+        };
+
+        foreach (string label in labels)
+            _config.Data.Labels.Add(label);
+
+        PieDataset<int> dataset = new PieDataset<int>(data)
+        {
+            BackgroundColor = new[]
+            {
+                ColorUtil.ColorHexString(156, 8, 8),
+                ColorUtil.ColorHexString(32, 46, 201),
+                ColorUtil.ColorHexString(83, 49, 204),
+                ColorUtil.ColorHexString(64, 140, 31)
+            },
+            BorderColor = ColorUtil.ColorHexString(50, 51, 61),
+            HoverBorderWidth = 5
+        };
+
+        _config.Data.Datasets.Add(dataset);
         LeaderboardEntries = LeaderboardEntries.OrderBy(x => x.RankWorld).ToList();
     }
 }
