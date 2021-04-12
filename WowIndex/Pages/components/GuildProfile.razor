@@ -183,7 +183,6 @@ else
                 RealmSlug = member.character.realm.slug,
                 playable_class = Helpers.WowClassHelper.GetClassById(member.character.playable_class.id),
                 class_color = Helpers.WowClassHelper.GetClassColour(member.character.playable_class.id)
-
             });
         }
 
@@ -252,9 +251,20 @@ else
                             Boss10KillTime = bossKills[9],
                         };
 
+                        // calculate raid score (put this shiii in appsettings.json)
+                        var CastleNathriaReleaseDate = new DateTime(2020, 12, 8, 00, 00, 00);
+                        var CastleNathriaTotalBosses = 10;
+                        var latestBossKillTime = bossKills[progression - 1];
+
+                        var score1 = CastleNathriaTotalBosses - progression;
+                        var score2 = (latestBossKillTime - CastleNathriaReleaseDate).TotalMinutes;
+
+                        var formattedScore = Int32.Parse($"{score1}{score2}");
+
+
                         LeaderboardEntry leaderboardEntry = new LeaderboardEntry
                         {
-                            Score = (DateTime.Now - bossKills[progression - 1]).Minutes,
+                            Score = formattedScore,
                             LatestProgressionTime = bossKills[progression - 1],
                             Faction = Guild.FactionName,
                             GuildSlug = Guild.NameSlug,

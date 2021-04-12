@@ -47,11 +47,7 @@
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Rank">
-                    <MudTooltip Placement="Placement.End">
-                        <ChildContent>
-                        </ChildContent>
-                        <TooltipContent>                        </TooltipContent>
-                    </MudTooltip>
+                    @context.Score.ToString()
                 </MudTd>
                 <MudTd DataLabel="Guild">
                     @{string link = $"/guild/{context.Region.ToLower()}/{context.RealmSlug}/{context.GuildSlug}/";}
