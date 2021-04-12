@@ -22,7 +22,7 @@ namespace WowIndex.Helpers
                     realmLeaderboard.Add(item);
             }
 
-            var LeaderboardSorted = Helpers.RaidDataHelper.SortLeaderboard(realmLeaderboard);
+            var LeaderboardSorted = Helpers.SortLeaderboardHelper.Sort(realmLeaderboard);
 
             // get ranking for the current guild
             var y = LeaderboardSorted.FindIndex(x => x.GuildId == guild.Id) + 1;

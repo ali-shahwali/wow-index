@@ -23,8 +23,6 @@
     </MudItem>
     <MudItem xs="8">
         <MudText Class="mb-2" Typo="Typo.h6">Mythic World Leaderboard</MudText>
-
-
         <MudTable Outlined="true" ServerData="@(new Func<TableState, Task<TableData<LeaderboardEntry>>>(ServerReload))" @ref="Table" RowsPerPage="10" Dense="true" FixedHeader="true" Hover="true">
             <ToolBarContent>
                 <MudItem xs="12" md="3" class="mb-5 mt-5">
@@ -38,10 +36,9 @@
                 </MudItem>
                 <MudToolBarSpacer />
                 <MudItem xs="12" md="5" class="mb-5 mt-5">
-                    <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                    <MudTextField Immediate="true" T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                 </MudItem>
             </ToolBarContent>
-
             <HeaderContent>
                 <MudTh></MudTh>
                 <MudTh><MudTableSortLabel SortLabel="guild" T="LeaderboardEntry">Guild</MudTableSortLabel></MudTh>
@@ -175,42 +172,38 @@
         if (SelectedFilter != 0)
         {
             if (SelectedFilter == 1)
-            {
                 results = results.Where(x => x.Region == "eu");
-            }
             else if (SelectedFilter == 2)
-            {
                 results = results.Where(x => x.Region == "us");
-            }
             else if (SelectedFilter == 3)
-            {
                 results = results.Where(x => x.Region == "kr");
-            }
             else
-            {
                 results = results.Where(x => x.Region == "tw");
-            }
 
         }
 
         // 3. Apply Sorting - Order by sort field and direction
         if (sortDirection == "None")
-        {
             results = results.OrderBy(item => item.RankWorld);
-        }
         else
         {
             if (sortDirection == "Ascending")
             {
-                if (SortField == "guild") results = results.OrderBy(item => item.GuildName);
-                if (SortField == "realm") results = results.OrderBy(item => item.Realm);
-                if (SortField == "progress") results = results.OrderBy(item => item.RankWorld);
+                if (SortField == "guild") 
+                    results = results.OrderBy(item => item.GuildName);
+                if (SortField == "realm") 
+                    results = results.OrderBy(item => item.Realm);
+                if (SortField == "progress") 
+                    results = results.OrderBy(item => item.RankWorld);
             }
             else
             {
-                if (SortField == "guild") results = results.OrderByDescending(item => item.GuildName);
-                if (SortField == "realm") results = results.OrderByDescending(item => item.Realm);
-                if (SortField == "progress") results = results.OrderByDescending(item => item.RankWorld);
+                if (SortField == "guild") 
+                    results = results.OrderByDescending(item => item.GuildName);
+                if (SortField == "realm") 
+                    results = results.OrderByDescending(item => item.Realm);
+                if (SortField == "progress") 
+                    results = results.OrderByDescending(item => item.RankWorld);
             }
         }
 
@@ -248,10 +241,7 @@
         Diagnostics = _context.SiteDiagnostics.OrderBy(x => x.CreationTime).LastOrDefault();
 
         if (LeaderboardEntries.Count == 0 || (LeaderboardEntries.FirstOrDefault().ExpirationTime < DateTime.Now))
-        {
-            // sort the lb every 15 mins
             Helpers.SortLeaderboardHelper.SortLeaderboard(_context, LeaderboardEntries, Guilds);
-        }
 
         data[0] = _context.RankedCastleNathriaLeaderboard.Where(x => x.Region == "us").Count();
         data[1] = _context.RankedCastleNathriaLeaderboard.Where(x => x.Region == "eu").Count();

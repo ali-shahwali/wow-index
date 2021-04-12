@@ -39,53 +39,10 @@
 
     private async Task ForceRefresh()
     {
-        var RaidRanks = _context.RankedCastleNathriaLeaderboard.ToList();
-        List<Models.RaidingLeaderboards.LeaderboardEntry> leaderboardEntries = new List<Models.RaidingLeaderboards.LeaderboardEntry>();
-
-        _context.RankedCastleNathriaLeaderboard.RemoveRange(RaidRanks);
-        await _context.SaveChangesAsync();
-
-        // bind records from database
-
-        var Leaderboard = await _context.KillTimeCastleNathria.ToListAsync();
-        List<Models.RaidingLeaderboards.KillTimeCastleNathria> results = Helpers.RaidDataHelper.SortLeaderboard(Leaderboard);
-
-        int i = 1;
         var Guilds = _context.Guilds.ToList();
-        foreach (var item in results)
-        {
-            var guild = Guilds.Where(x => x.Id == item.GuildId).FirstOrDefault();
-            int RealmRank = Helpers.CalculateRealmRankHelper.RealmRank(guild, Leaderboard, Guilds);
-            DateTime killTime = new DateTime();
-            DateTime[] bossTimes = Helpers.CastleNathriaKillTimeHelper.GetKillTimes(item);
-            foreach (var time in bossTimes)
-            {
-                if (time != new DateTime())
-                {
-                    killTime = time;
-                    break;
-                }
-            }
+        var LeaderboardEntries = _context.RankedCastleNathriaLeaderboard.ToList();
 
-            Models.RaidingLeaderboards.LeaderboardEntry entry = new Models.RaidingLeaderboards.LeaderboardEntry
-            {
-                RankWorld = i,
-                RankRealm = RealmRank,
-                LatestProgressionTime = killTime,
-                GuildName = guild.Name,
-                Faction = guild.FactionName,
-                Realm = guild.Realm,
-                Region = guild.Region,
-                Progression = item.Progress,
-                GuildSlug = guild.NameSlug,
-                RealmSlug = guild.RealmSlug
-            };
-
-            leaderboardEntries.Add(entry);
-            _context.RankedCastleNathriaLeaderboard.Add(entry);
-            i++;
-        }
-        await _context.SaveChangesAsync();
+        Helpers.SortLeaderboardHelper.SortLeaderboard(_context, LeaderboardEntries, Guilds);
     }
 
 }
