@@ -168,16 +168,13 @@
                             };
 
                             // calculate raid score (put this shiii in appsettings.json)
-                            var CastleNathriaReleaseDate = new DateTime(2020, 12, 8, 00, 00, 00);
-                            var CastleNathriaTotalBosses = 10;
-                            var latestBossKillTime = bossKills[progression - 1];
+                            DateTime CastleNathriaReleaseDate = new DateTime(2020, 12, 8, 00, 00, 00);
+                            DateTime latestBossKillTime = bossKills[progression - 1];
 
-                            var score1 = CastleNathriaTotalBosses - progression;
-                            var score2 = (latestBossKillTime - CastleNathriaReleaseDate).TotalMinutes;
+                            int score1 = bossKills.Length - progression;
+                            int score2 = (int)(latestBossKillTime - CastleNathriaReleaseDate).TotalMinutes;
 
-                            var formattedScore = Int32.Parse($"{score1}{score2}");
-
-
+                            int formattedScore = Int32.Parse($"{score1}{score2}");
                             LeaderboardEntry leaderboardEntry = new LeaderboardEntry
                             {
                                 Score = formattedScore,
