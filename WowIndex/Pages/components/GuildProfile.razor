@@ -30,7 +30,7 @@ else
             <MudItem xs="6">
                 @{string guildArmory = $"https://worldofwarcraft.com/en-us/guild/{Guild.Region.ToLower()}/{Guild.RealmSlug}/{Guild.NameSlug}";}
                 <MudLink Color="Color.Inherit" Target="_blank" Href="@guildArmory" Typo="Typo.h3">@Guild.Name</MudLink>
-                <MudDivider/>
+                <MudDivider />
                 <MudText Color="Color.Info" Typo="Typo.h6">World ranking: @RankWorld | Realm ranking: @RankRealm</MudText>
             </MudItem>
             <MudItem xs="3">
@@ -38,18 +38,21 @@ else
                     <MudButton StartIcon="@Icons.Material.Filled.Sync" Variant="Variant.Filled" OnClick="Update">Update this page</MudButton>
                 </MudItem>
             </MudItem>
-            <MudItem xs="3">
-                @{ string linkEdit = $"/guild/{region}/{realm}/{guildSlug}/edit/";
-                   string linkSetup = $"/guild/{region}/{realm}/{guildSlug}/setup/"}
-                @if (guildProfile == null)
-                {
-                    <MudButton Link="@linkSetup" Color="Color.Info" Variant="Variant.Filled">Setup guild profile</MudButton>
-                }
-                else
-                {
-                    <MudButton Link="@linkEdit" Variant="Variant.Filled">Edit profile</MudButton>
-                }
-            </MudItem>
+            @{ string linkEdit = $"/guild/{region}/{realm}/{guildSlug}/edit/";
+               string linkSetup = $"/guild/{region}/{realm}/{guildSlug}/setup/";}
+            @if (UserIsGm) 
+            { 
+                <MudItem xs="3">
+                    @if (guildProfile == null)
+                    {
+                        <MudButton Link="@linkSetup" Color="Color.Info" Variant="Variant.Filled">Setup guild profile</MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Link="@linkEdit" Variant="Variant.Filled">Edit profile</MudButton>
+                    }
+                </MudItem>
+            }             
         </MudGrid>
         <MudGrid Spacing="6" Class="mt-16">
             <MudItem xs="8">

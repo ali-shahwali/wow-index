@@ -5,16 +5,16 @@
         <DataAnnotationsValidator />
         <MudGrid Spacing="6" Class="mt-16">
             <MudItem xs="7">
-                <MudText Typo="Typo.h5" GutterBottom="true">Report a bug</MudText>
+                <MudText Typo="Typo.h5" GutterBottom="true">Setup Guild Profile</MudText>
                 <MudGrid>
                     <MudItem xs="12">
                         <MudTextField T="string" Label="Biography/Description" @bind-Value="profile.Biography" Required="true" />
                     </MudItem>
                     <MudItem xs="12">
-                        <MudCheckBox @bind-Value="profile.IsRecruiting" T="bool" Class="ml-n2" Label="Is this guild recruiting?" />                    
+                        <MudCheckBox @bind-Checked="profile.IsRecruiting" T="bool" Class="ml-n2" Label="Is this guild recruiting?" />                    
                     </MudItem>
                     <MudItem Class="d-flex justify-end" xs="6">
-                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Secondary" Class="ml-auto">Send</MudButton>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Secondary" Class="ml-auto">Setup</MudButton>
                     </MudItem>
                 </MudGrid>
             </MudItem>
@@ -27,31 +27,34 @@
     [Parameter] public string realm { get; set; }
     [Parameter] public string guildSlug { get; set; }
 
+    public Models.GuildObjects.Guild guild { get; set; }
     public Models.GuildObjects.GuildProfile profile = new Models.GuildObjects.GuildProfile();
 
     protected override async Task OnInitializedAsync()
     {
         var AuthState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var Guild = _context.Guilds.Where(x => x.NameSlug == guildSlug && x.Region == region && x.RealmSlug == realm).FirstOrDefault();
-        var guildMembers = _context.GuildRoster.Where(x => x.GuildId == Guild.Id).OrderBy(x => x.MemberRank).ToList();
+        guild = _context.Guilds.Where(x => x.NameSlug == guildSlug && x.Region == region && x.RealmSlug == realm).FirstOrDefault();
+        var guildMembers = _context.GuildRoster.Where(x => x.GuildId == guild.Id).OrderBy(x => x.MemberRank).ToList();
         var GM = guildMembers.FirstOrDefault();
-
 
         if (!AuthState.User.Identity.IsAuthenticated)
         {
-            Snackbar.Add("You are not authorized to use this page", Severity.Normal);
+            Snackbar.Add("You must be registered to access this page!", Severity.Normal);
             NavigationManager.NavigateTo("/");
         }
         else if(_context.Characters.Where(x => x.Region == GM.Region && x.RealmSlug == GM.RealmSlug && x.CharacterName == GM.CharacterName && x.Email == AuthState.User.Identity.Name).FirstOrDefault() == null)
         {
-            Snackbar.Add("You are not authorized to use this page", Severity.Normal);
+            Snackbar.Add("Only the Guild Master of this guild can access this page!", Severity.Normal);
             NavigationManager.NavigateTo("/");
         }
     }
 
     public void OnValidSubmit(EditContext context)
     {
-        
+        profile.Guild = guild;
+        _context.GuildProfiles.Add(profile);
+        _context.SaveChanges();
         StateHasChanged();
+        NavigationManager.NavigateTo($"/guild/{region}/{realm}/{guildSlug}/");
     }
 }

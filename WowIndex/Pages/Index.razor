@@ -51,17 +51,36 @@
                 </MudTd>
                 <MudTd DataLabel="Guild">
                     @{string link = $"/guild/{context.Guild.Region.ToLower()}/{context.Guild.RealmSlug}/{context.Guild.GuildSlug}/";}
-                    @if (context.Guild.Faction == "Horde")
+                    @if (context.Profile != null && context.Profile.IsRecruiting)
                     {
-                        <MudButton Class="table-btn" Link="@link" Color="Color.Error">
-                            @context.Guild.GuildName
-                        </MudButton>
+                        @if (context.Guild.Faction == "Horde")
+                        {
+                            <MudButton Class="table-btn" Link="@link" Color="Color.Error">
+                                @context.Guild.GuildName
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Class="table-btn" Link="@link" Color="Color.Info">
+                                @context.Guild.GuildName
+                            </MudButton>
+                        }
+                        <MudIcon Color="Color.Info" Icon="@Icons.Material.Filled.GroupAdd"/>
                     }
                     else
                     {
-                        <MudButton Class="table-btn" Link="@link" Color="Color.Info">
-                            @context.Guild.GuildName
-                        </MudButton>
+                        @if (context.Guild.Faction == "Horde")
+                        {
+                            <MudButton Class="table-btn" Link="@link" Color="Color.Error">
+                                @context.Guild.GuildName
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Class="table-btn" Link="@link" Color="Color.Info">
+                                @context.Guild.GuildName
+                            </MudButton>
+                        }
                     }
                 </MudTd>
                 <MudTd DataLabel="Guild">
@@ -134,11 +153,11 @@
         int skip = state.Page * state.PageSize;
         int take = state.PageSize;
 
-        if (searchString == "") 
+        if (searchString == "")
             searchString = "blankSearch";
-        if (SortField == null) 
+        if (SortField == null)
             SortField = "None";
-        if (searchString == "blankSearch") 
+        if (searchString == "blankSearch")
             searchString = "";
 
         var pagedData = new List<LeaderboardModel>();
@@ -221,11 +240,13 @@
         Guilds = _context.Guilds.ToList();
         Diagnostics = _context.SiteDiagnostics.OrderBy(x => x.CreationTime).LastOrDefault();
 
-
         LeaderboardEntries = LeaderboardEntries.OrderBy(x => x.Score).ToList();
         int rank = 1;
         foreach (var item in LeaderboardEntries)
-            Leaderboard.Add(new LeaderboardModel { Rank = rank++, Guild = item });
+        {
+            var profile = _context.GuildProfiles.Where(x => x.Guild.Name == item.GuildName && x.Guild.Realm == item.Realm && x.Guild.Region == item.Region).FirstOrDefault();
+            Leaderboard.Add(new LeaderboardModel { Rank = rank++, Guild = item, Profile = profile});
+        }
 
 
         for (int i = 0; i < 4; i++)
