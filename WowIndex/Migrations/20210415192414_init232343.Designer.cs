@@ -10,8 +10,8 @@ using WowIndex.Data;
 namespace WowIndex.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210414135057_RefactoredModels")]
-    partial class RefactoredModels
+    [Migration("20210415192414_init232343")]
+    partial class init232343
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
