@@ -179,13 +179,8 @@
                             {
                                 Score = formattedScore,
                                 LatestProgressionTime = bossKills[progression - 1],
-                                Faction = Guild.FactionName,
-                                GuildSlug = Guild.NameSlug,
-                                GuildName = Guild.Name,
-                                Realm = Guild.Realm,
-                                RealmSlug = Guild.RealmSlug,
                                 Progression = progression,
-                                Region = Guild.Region
+                                Guild = Guild
                             };
 
                             _context.RankedCastleNathriaLeaderboard.Add(leaderboardEntry);

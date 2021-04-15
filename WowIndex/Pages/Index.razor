@@ -50,53 +50,53 @@
                     @context.Rank
                 </MudTd>
                 <MudTd DataLabel="Guild">
-                    @{string link = $"/guild/{context.Guild.Region.ToLower()}/{context.Guild.RealmSlug}/{context.Guild.GuildSlug}/";}
+                    @{string link = $"/guild/{context.LeaderboardEntry.Guild.Region.ToLower()}/{context.LeaderboardEntry.Guild.RealmSlug}/{context.LeaderboardEntry.Guild.NameSlug}/";}
                     @if (context.Profile != null && context.Profile.IsRecruiting)
                     {
-                        @if (context.Guild.Faction == "Horde")
+                        @if (context.LeaderboardEntry.Guild.FactionName == "Horde")
                         {
                             <MudButton Class="table-btn" Link="@link" Color="Color.Error">
-                                @context.Guild.GuildName
+                                @context.LeaderboardEntry.Guild.Name
                             </MudButton>
                         }
                         else
                         {
                             <MudButton Class="table-btn" Link="@link" Color="Color.Info">
-                                @context.Guild.GuildName
+                                @context.LeaderboardEntry.Guild.Name
                             </MudButton>
                         }
                         <MudIcon Color="Color.Info" Icon="@Icons.Material.Filled.GroupAdd"/>
                     }
                     else
                     {
-                        @if (context.Guild.Faction == "Horde")
+                        @if (context.LeaderboardEntry.Guild.FactionName == "Horde")
                         {
                             <MudButton Class="table-btn" Link="@link" Color="Color.Error">
-                                @context.Guild.GuildName
+                                @context.LeaderboardEntry.Guild.Name
                             </MudButton>
                         }
                         else
                         {
                             <MudButton Class="table-btn" Link="@link" Color="Color.Info">
-                                @context.Guild.GuildName
+                                @context.LeaderboardEntry.Guild.Name
                             </MudButton>
                         }
                     }
                 </MudTd>
                 <MudTd DataLabel="Guild">
-                    @context.Guild.Region.ToUpper() - @context.Guild.Realm
+                    @context.LeaderboardEntry.Guild.Region.ToUpper() - @context.LeaderboardEntry.Guild.Realm
                 </MudTd>
                 <MudTd DataLabel="Guild">
-                    @if (context.Guild.Progression == 10)
+                    @if (context.LeaderboardEntry.Progression == 10)
                     {
-                        <MudChip Label="true" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">@context.Guild.Progression / 10</MudChip>
+                        <MudChip Label="true" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">@context.LeaderboardEntry.Progression / 10</MudChip>
                     }
                     else
                     {
-                        <MudChip Label="true" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">@context.Guild.Progression / 10</MudChip>
+                        <MudChip Label="true" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">@context.LeaderboardEntry.Progression / 10</MudChip>
                     }
                     <MudText Typo="Typo.caption">
-                        @context.Guild.LatestProgressionTime.ToShortDateString()
+                        @context.LeaderboardEntry.LatestProgressionTime.ToShortDateString()
                     </MudText>
                 </MudTd>
             </RowTemplate>
@@ -113,9 +113,9 @@
                 <MudCardContent>
                     @{
                         TimeSpan time = DateTime.Now - item.LatestProgressionTime;
-                        string link = $"/guild/{item.Region}/{item.RealmSlug}/{item.GuildSlug}/";
+                        string link = $"/guild/{item.Guild.Region}/{item.Guild.RealmSlug}/{item.Guild.NameSlug}/";
                     }
-                    <MudText>Congrats to <a href="@link" style="color: #A970FF;">@item.GuildName</a> for clearing castle nathria</MudText>
+                    <MudText>Congrats to <a href="@link" style="color: #A970FF;">@item.Guild.Name</a> for clearing castle nathria</MudText>
 
                     <MudText Typo="Typo.body2">They cleared it @time.Days days and @time.Hours hours ago</MudText>
                 </MudCardContent>
@@ -164,19 +164,19 @@
         var totalCount = new Int32();
 
         // 1. Base Query
-        var results = Leaderboard.Where(item => item.Guild.GuildName.Contains(searchString, StringComparison.InvariantCultureIgnoreCase));
+        var results = Leaderboard.Where(item => item.LeaderboardEntry.Guild.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase));
 
         // 2. Apply filters
         if (SelectedFilter != 0)
         {
             if (SelectedFilter == 1)
-                results = results.Where(x => x.Guild.Region == "eu");
+                results = results.Where(x => x.LeaderboardEntry.Guild.Region == "eu");
             else if (SelectedFilter == 2)
-                results = results.Where(x => x.Guild.Region == "us");
+                results = results.Where(x => x.LeaderboardEntry.Guild.Region == "us");
             else if (SelectedFilter == 3)
-                results = results.Where(x => x.Guild.Region == "kr");
+                results = results.Where(x => x.LeaderboardEntry.Guild.Region == "kr");
             else
-                results = results.Where(x => x.Guild.Region == "tw");
+                results = results.Where(x => x.LeaderboardEntry.Guild.Region == "tw");
 
         }
 
@@ -189,18 +189,18 @@
             if (sortDirection == "Ascending")
             {
                 if (SortField == "guild")
-                    results = results.OrderBy(item => item.Guild.GuildName);
+                    results = results.OrderBy(item => item.LeaderboardEntry.Guild.Name);
                 if (SortField == "realm")
-                    results = results.OrderBy(item => item.Guild.Realm);
+                    results = results.OrderBy(item => item.LeaderboardEntry.Guild.Realm);
                 if (SortField == "progress")
                     results = results.OrderBy(item => item.Rank);
             }
             else
             {
                 if (SortField == "guild")
-                    results = results.OrderByDescending(item => item.Guild.GuildName);
+                    results = results.OrderByDescending(item => item.LeaderboardEntry.Guild.Name);
                 if (SortField == "realm")
-                    results = results.OrderByDescending(item => item.Guild.Realm);
+                    results = results.OrderByDescending(item => item.LeaderboardEntry.Guild.Realm);
                 if (SortField == "progress")
                     results = results.OrderByDescending(item => item.Rank);
             }
@@ -244,13 +244,13 @@
         int rank = 1;
         foreach (var item in LeaderboardEntries)
         {
-            var profile = _context.GuildProfiles.Where(x => x.Guild.Name == item.GuildName && x.Guild.Realm == item.Realm && x.Guild.Region == item.Region).FirstOrDefault();
-            Leaderboard.Add(new LeaderboardModel { Rank = rank++, Guild = item, Profile = profile});
+            var profile = _context.GuildProfiles.Where(x => x.Guild == item.Guild).FirstOrDefault();
+            Leaderboard.Add(new LeaderboardModel { Rank = rank++, LeaderboardEntry = item, Profile = profile});
         }
 
 
         for (int i = 0; i < 4; i++)
-            data[i] = _context.RankedCastleNathriaLeaderboard.Where(x => x.Region == labels[i].ToLower()).Count();
+            data[i] = _context.RankedCastleNathriaLeaderboard.Where(x => x.Guild.Region == labels[i].ToLower()).Count();
 
 
         _config = new PieConfig

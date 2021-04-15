@@ -25,93 +25,85 @@
 }
 else
 {
-    <MudContainer>
-        <MudGrid>
-            <MudItem xs="6">
-                @{string guildArmory = $"https://worldofwarcraft.com/en-us/guild/{Guild.Region.ToLower()}/{Guild.RealmSlug}/{Guild.NameSlug}";}
-                <MudLink Color="Color.Inherit" Target="_blank" Href="@guildArmory" Typo="Typo.h3">@Guild.Name</MudLink>
-                <MudDivider />
-                <MudText Color="Color.Info" Typo="Typo.h6">World ranking: @RankWorld | Realm ranking: @RankRealm</MudText>
+<MudContainer>
+    <MudGrid>
+        <MudItem xs="6">
+            @{string guildArmory = $"https://worldofwarcraft.com/en-us/guild/{Guild.Region.ToLower()}/{Guild.RealmSlug}/{Guild.NameSlug}";}
+            <MudLink Color="Color.Inherit" Target="_blank" Href="@guildArmory" Typo="Typo.h3">@Guild.Name</MudLink>
+            <MudDivider />
+            <MudText Color="Color.Info" Typo="Typo.h6">World ranking: @RankWorld | Realm ranking: @RankRealm</MudText>
+        </MudItem>
+        <MudItem xs="3">
+            <MudItem Class="d-flex flex-row-reverse">
+                <MudButton StartIcon="@Icons.Material.Filled.Sync" Variant="Variant.Filled" OnClick="Update">Update this page</MudButton>
             </MudItem>
+        </MudItem>
+        @{string linkSetup = $"/guild/{region}/{realm}/{guildSlug}/setup/";}
+        @if (UserIsGm && guildProfile == null)
+        {
             <MudItem xs="3">
-                <MudItem Class="d-flex flex-row-reverse">
-                    <MudButton StartIcon="@Icons.Material.Filled.Sync" Variant="Variant.Filled" OnClick="Update">Update this page</MudButton>
-                </MudItem>
+                <MudButton Link="@linkSetup" Color="Color.Info" Variant="Variant.Filled">Setup guild profile</MudButton>
             </MudItem>
-            @{ string linkEdit = $"/guild/{region}/{realm}/{guildSlug}/edit/";
-               string linkSetup = $"/guild/{region}/{realm}/{guildSlug}/setup/";}
-            @if (UserIsGm) 
-            { 
-                <MudItem xs="3">
-                    @if (guildProfile == null)
-                    {
-                        <MudButton Link="@linkSetup" Color="Color.Info" Variant="Variant.Filled">Setup guild profile</MudButton>
-                    }
-                    else
-                    {
-                        <MudButton Link="@linkEdit" Variant="Variant.Filled">Edit profile</MudButton>
-                    }
-                </MudItem>
-            }             
-        </MudGrid>
-        <MudGrid Spacing="6" Class="mt-16">
-            <MudItem xs="8">
-                <MudText Typo="Typo.h5" GutterBottom="true">Castle Nathria Overview</MudText>
-                @foreach (var stat in bossStats)
-                {
-                    <MudCard Class="mb-2" Outlined="true">
-                        <MudCardContent>
-                            <MudText>@stat.Name</MudText>
-                            @if (stat.KillTime != new DateTime())
-                            {
-                                <MudText>Killed @stat.KillTime</MudText>
-                            }
-                        </MudCardContent>
-                        <MudCardActions>
-                            @if (stat.KillTime != new DateTime())
-                            {
-                                <MudButton StartIcon="@Icons.Material.Filled.Done" Variant="Variant.Text" Color="Color.Success">Down</MudButton>
-                            }
-                            else
-                            {
-                                <MudButton StartIcon="@Icons.Material.Filled.Error" Variant="Variant.Text" Color="Color.Error">Not done</MudButton>
-                            }
-                        </MudCardActions>
-                    </MudCard>
-                }
+        }
+    </MudGrid>
+    @if (guildProfile != null)
+    {
+        <MudTextField Spellcheck="false" T="string" ReadOnly="!UserIsGm" Label="Biography" Immediate="true" Variant="Variant.Text" TextChanged="@(e => BioHasChanged(true))" @bind-Value="guildProfile.Biography" Text="@guildProfile.Biography" Lines="5" />
+        <MudButton Disabled="!BioChanged" OnClick="SaveBioChanges" StartIcon="@Icons.Material.Filled.Save" Color="Color.Success">Save</MudButton>
+        <MudButton Disabled="!BioChanged" OnClick="@(e => BioHasChanged(false))" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Error">Cancel</MudButton>
+    }
+    else
+    {
+        <MudText Color="Color.Info" Typo="Typo.body1">This guild has not setup their profile yet</MudText>
+        <MudText Color="Color.Info" Typo="Typo.caption">Are you the guild master? <a href="/Identity/Account/Login">Log in</a> and setup your account to get started!</MudText>
+    }
+    <MudGrid Spacing="6" Class="mt-16">
+        <MudItem xs="8">
+            <MudText Typo="Typo.h5" GutterBottom="true">Castle Nathria Overview</MudText>
+            @foreach (var stat in bossStats)
+            {
+                <MudCard Class="mb-2" Outlined="true">
+                    <MudCardContent>
+                        <MudText>@stat.Name</MudText>
+                        @if (stat.KillTime != new DateTime())
+                        {
+                            <MudText>Killed @stat.KillTime</MudText>
+                        }
+                    </MudCardContent>
+                    <MudCardActions>
+                        @if (stat.KillTime != new DateTime())
+                        {
+                            <MudButton StartIcon="@Icons.Material.Filled.Done" Variant="Variant.Text" Color="Color.Success">Down</MudButton>
+                        }
+                        else
+                        {
+                            <MudButton StartIcon="@Icons.Material.Filled.Error" Variant="Variant.Text" Color="Color.Error">Not done</MudButton>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            }
+        </MudItem>
+        <MudItem xs="4">
+            <MudItem>
+                <MudText Typo="Typo.h5" GutterBottom="true">Roster</MudText>
+                <MudTable Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Items="guildMembers" Filter="new Func<GuildRoster,bool>(FilterFunc)">
+                    <ToolBarContent>
+                        <MudTextField Spellcheck="false" Immediate="true" @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                    </ToolBarContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Character">
+                            @{ string link = $"https://worldofwarcraft.com/en-us/character/{context.Region.ToLower()}/{context.RealmSlug}/{context.CharacterName}";}
+                            <MudButton StartIcon="@Icons.Material.Filled.OpenInNew" Target="_blank" Link="@link" Variant="Variant.Text" Style="@context.class_color">@context.CharacterName</MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager DisableRowsPerPage="true" />
+                    </PagerContent>
+                </MudTable>
             </MudItem>
-            <MudItem xs="4">
-                <MudItem>
-                    @if (guildProfile == null)
-                    {
-                        <MudText Color="Color.Info" Typo="Typo.body1">This guild has not setup their profile yet</MudText>
-                        <MudText Color="Color.Info" Typo="Typo.caption">Are you the guild master? <a href="/Identity/Account/Login">Log in</a> and setup your account to get started!</MudText>
-                    }
-                    else
-                    {
-                        <MudText>@guildProfile.Biography</MudText>
-                    }
-                </MudItem>
-                <MudItem>
-                    <MudText Typo="Typo.h5" GutterBottom="true">Roster</MudText>
-                    <MudTable Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Items="guildMembers" Filter="new Func<GuildRoster,bool>(FilterFunc)">
-                        <ToolBarContent>
-                            <MudTextField Spellcheck="false" Immediate="true" @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-                        </ToolBarContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Character">
-                                @{ string link = $"https://worldofwarcraft.com/en-us/character/{context.Region.ToLower()}/{context.RealmSlug}/{context.CharacterName}";}
-                                <MudButton StartIcon="@Icons.Material.Filled.OpenInNew" Target="_blank" Link="@link" Variant="Variant.Text" Style="@context.class_color">@context.CharacterName</MudButton>
-                            </MudTd>
-                        </RowTemplate>
-                        <PagerContent>
-                            <MudTablePager DisableRowsPerPage="true" />
-                        </PagerContent>
-                    </MudTable>
-                </MudItem>
-            </MudItem>
-        </MudGrid>
-    </MudContainer>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
 }
 
 @code {
@@ -123,6 +115,7 @@ else
     // rendering variables
     public bool isLoading { get; set; }
     public bool UserIsGm { get; set; } = false;
+    public bool BioChanged { get; set; } = false;
     public int estTimeLeft { get; set; }
     public int estGuildRoster { get; set; } = 100;
 
@@ -170,9 +163,9 @@ else
 
         if (leaderboards != null)
         {
-            RankWorld = leaderboards.FindIndex(x => x.GuildName == Guild.Name) + 1;
-            var realmList = leaderboards.Where(x => x.Realm == Guild.Realm).ToList();
-            RankRealm = realmList.FindIndex(x => x.GuildName == Guild.Name) + 1;
+            RankWorld = leaderboards.FindIndex(x => x.Guild == Guild) + 1;
+            var realmList = leaderboards.Where(x => x.Guild.RealmSlug == realm).ToList();
+            RankRealm = realmList.FindIndex(x => x.Guild == Guild) + 1;
         }
 
         isLoading = false;
@@ -303,13 +296,8 @@ else
                         {
                             Score = formattedScore,
                             LatestProgressionTime = bossKills[progression - 1],
-                            Faction = Guild.FactionName,
-                            GuildSlug = Guild.NameSlug,
-                            GuildName = Guild.Name,
-                            Realm = Guild.Realm,
-                            RealmSlug = Guild.RealmSlug,
                             Progression = progression,
-                            Region = Guild.Region
+                            Guild = Guild
                         };
 
                         _context.KillTimeCastleNathria.Add(KillTimes);
@@ -340,4 +328,17 @@ else
         return false;
     }
 
+    private void BioHasChanged(bool toggle)
+    {
+        BioChanged = toggle;
+        StateHasChanged();
+    }
+
+    private async Task SaveBioChanges()
+    {
+        _context.GuildProfiles.Update(guildProfile);
+        await _context.SaveChangesAsync();
+        BioChanged = false;
+        StateHasChanged();
+    }
 }
