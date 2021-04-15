@@ -47,7 +47,18 @@
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Rank">
-                    @context.Rank
+                    @if (context.Rank <= 3)
+                    {
+                        <MudText Color="Color.Primary">@context.Rank</MudText>
+                    }
+                    else if (context.Rank <= 10)
+                    {
+                        <MudText Color="Color.Secondary">@context.Rank</MudText>
+                    }
+                    else
+                    {
+                        <MudText Color="Color.Info">@context.Rank</MudText>
+                    }
                 </MudTd>
                 <MudTd DataLabel="Guild">
                     @{string link = $"/guild/{context.LeaderboardEntry.Guild.Region.ToLower()}/{context.LeaderboardEntry.Guild.RealmSlug}/{context.LeaderboardEntry.Guild.NameSlug}/";}
@@ -65,7 +76,9 @@
                                 @context.LeaderboardEntry.Guild.Name
                             </MudButton>
                         }
-                        <MudIcon Color="Color.Info" Icon="@Icons.Material.Filled.GroupAdd"/>
+                        <MudTooltip Placement="Placement.End" Text="This guild is recruiting!">
+                            <MudIcon Color="Color.Info" Icon="@Icons.Material.Filled.GroupAdd" />
+                        </MudTooltip>
                     }
                     else
                     {
@@ -128,10 +141,8 @@
 @code {
     // Properties
     public MudTable<LeaderboardModel> Table;
-    public List<LeaderboardEntry> LeaderboardEntries { get; set; }
     public List<LeaderboardModel> Leaderboard { get; set; } = new List<LeaderboardModel>();
     public List<LeaderboardEntry> RecentClears { get; set; }
-    public List<Models.GuildObjects.Guild> Guilds { get; set; }
     public Data.SiteDiagnostic Diagnostics { get; set; }
 
     public int totalItems;
@@ -235,9 +246,9 @@
     protected override async Task OnInitializedAsync()
     {
         // get lists
-        LeaderboardEntries = _context.RankedCastleNathriaLeaderboard.ToList();
+        var LeaderboardEntries = _context.RankedCastleNathriaLeaderboard.ToList();
+        var Guilds = _context.Guilds.ToList();
         RecentClears = LeaderboardEntries.Where(x => x.Progression == 10).OrderByDescending(x => x.LatestProgressionTime).Take(5).ToList();
-        Guilds = _context.Guilds.ToList();
         Diagnostics = _context.SiteDiagnostics.OrderBy(x => x.CreationTime).LastOrDefault();
 
         LeaderboardEntries = LeaderboardEntries.OrderBy(x => x.Score).ToList();

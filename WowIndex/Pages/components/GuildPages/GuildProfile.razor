@@ -2,6 +2,11 @@
 @using Models.GuildObjects
 @using Models.RaidingLeaderboards
 @using Models.POCO.CharacterAchievementPOCO
+@using ChartJs.Blazor.BarChart
+@using ChartJs.Blazor.Util
+@using ChartJs.Blazor.Common
+@using ChartJs.Blazor.Common.Axes
+@using ChartJs.Blazor.Common.Axes.Ticks
 
 @if (isLoading)
 {
@@ -33,29 +38,32 @@ else
             <MudDivider />
             <MudText Color="Color.Info" Typo="Typo.h6">World ranking: @RankWorld | Realm ranking: @RankRealm</MudText>
         </MudItem>
-        <MudItem xs="3">
+        <MudItem xs="6">
             <MudItem Class="d-flex flex-row-reverse">
                 <MudButton StartIcon="@Icons.Material.Filled.Sync" Variant="Variant.Filled" OnClick="Update">Update this page</MudButton>
             </MudItem>
+            @{string linkSetup = $"/guild/{region}/{realm}/{guildSlug}/setup/";}
+            @if (UserIsGm && guildProfile == null)
+            {
+                <MudItem Class="d-flex flex-row-reverse">
+                    <MudButton Link="@linkSetup" Color="Color.Info" Variant="Variant.Filled">Setup guild profile</MudButton>
+                </MudItem>
+            }
         </MudItem>
-        @{string linkSetup = $"/guild/{region}/{realm}/{guildSlug}/setup/";}
-        @if (UserIsGm && guildProfile == null)
-        {
-            <MudItem xs="3">
-                <MudButton Link="@linkSetup" Color="Color.Info" Variant="Variant.Filled">Setup guild profile</MudButton>
-            </MudItem>
-        }
     </MudGrid>
     @if (guildProfile != null)
     {
         <MudTextField Spellcheck="false" T="string" ReadOnly="!UserIsGm" Label="Biography" Immediate="true" Variant="Variant.Text" TextChanged="@(e => BioHasChanged(true))" @bind-Value="guildProfile.Biography" Text="@guildProfile.Biography" Lines="5" />
-        <MudButton Disabled="!BioChanged" OnClick="SaveBioChanges" StartIcon="@Icons.Material.Filled.Save" Color="Color.Success">Save</MudButton>
-        <MudButton Disabled="!BioChanged" OnClick="@(e => BioHasChanged(false))" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Error">Cancel</MudButton>
+        @if (UserIsGm)
+        {
+            <MudButton Disabled="!BioChanged" OnClick="SaveBioChanges" StartIcon="@Icons.Material.Filled.Save" Color="Color.Success">Save</MudButton>
+            <MudButton Disabled="!BioChanged" OnClick="@(e => BioHasChanged(false))" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Error">Cancel</MudButton>
+        }
     }
     else
     {
-        <MudText Color="Color.Info" Typo="Typo.body1">This guild has not setup their profile yet</MudText>
-        <MudText Color="Color.Info" Typo="Typo.caption">Are you the guild master? <a href="/Identity/Account/Login">Log in</a> and setup your account to get started!</MudText>
+        <MudText Color="Color.Inherit" Typo="Typo.body1">This guild has not setup their profile yet</MudText>
+        <MudText Color="Color.Inherit" Typo="Typo.caption">Are you the guild master? <a href="/Identity/Account/Login">Log in</a> and setup your account to get started!</MudText>
     }
     <MudGrid Spacing="6" Class="mt-16">
         <MudItem xs="8">
@@ -86,15 +94,31 @@ else
         <MudItem xs="4">
             <MudItem>
                 <MudText Typo="Typo.h5" GutterBottom="true">Roster</MudText>
+                <Chart Width="400" Height="325" Config="_config"></Chart>
                 <MudTable Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Items="guildMembers" Filter="new Func<GuildRoster,bool>(FilterFunc)">
                     <ToolBarContent>
                         <MudTextField Spellcheck="false" Immediate="true" @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                     </ToolBarContent>
                     <RowTemplate>
                         <MudTd DataLabel="Character">
-                            @{ string link = $"https://worldofwarcraft.com/en-us/character/{context.Region.ToLower()}/{context.RealmSlug}/{context.CharacterName}";}
-                            <MudButton StartIcon="@Icons.Material.Filled.OpenInNew" Target="_blank" Link="@link" Variant="Variant.Text" Style="@context.class_color">@context.CharacterName</MudButton>
-                        </MudTd>
+                            @{ string link = $"https://worldofwarcraft.com/en-us/character/{context.Region.ToLower()}/{context.RealmSlug}/{context.CharacterName}";
+                               bool isRegistered = _context.Characters.Where(x => x.CharacterName == context.CharacterName && x.RealmSlug == context.RealmSlug && x.Region == context.Region).FirstOrDefault() != null; }
+                            @if (!isRegistered)
+                            {
+                                <MudTooltip Text="Open in armory">
+                                    <MudButton Target="_blank" Link="@link" Variant="Variant.Text" Style="@context.class_color">@context.CharacterName</MudButton>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <MudTooltip Text="This user is registered!">
+                                    <MudIcon Size="Size.Small" Color="Color.Info" Icon="@Icons.Material.Filled.Verified"></MudIcon>
+                                </MudTooltip>
+                                <MudTooltip Text="Open in armory!">
+                                    <MudButton Target="_blank" Link="@link" Variant="Variant.Text" Style="@context.class_color">@context.CharacterName</MudButton>
+                                </MudTooltip>
+                            }
+                            </MudTd>
                     </RowTemplate>
                     <PagerContent>
                         <MudTablePager DisableRowsPerPage="true" />
@@ -134,6 +158,13 @@ else
     public int RankWorld { get; set; }
     public int RankRealm { get; set; }
     public string searchString = "";
+    public int[] classData = new int[12];
+    public string[] classLabels =
+        {
+            "Warrior", "Paladin", "Hunter", "Rogue", "Priest", "Death Knight",
+            "Shaman", "Mage", "Warlock", "Monk", "Druid", "Demon Hunter"
+        };
+    private BarConfig _config;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -153,7 +184,66 @@ else
             bossStats = Helpers.RaidDataHelper.ToBossStatsList(Helpers.CastleNathriaKillTimeHelper.GetKillTimes(raidProgRecord), bossNames);
         }
 
-        if(AuthState.User.Identity.IsAuthenticated)
+        int i = 0;
+        foreach (var className in classLabels)
+            classData[i++] = guildMembers.Where(x => x.playable_class == className).Count();
+
+        _config = new BarConfig
+        {
+            Options = new BarOptions
+            {
+                Responsive = true,
+                Title = new OptionsTitle
+                {
+                    Display = false,
+                },
+                Legend = new Legend
+                {
+                    Display = false
+                },
+                Scales = new BarScales
+                {
+                    YAxes = new List<CartesianAxis>
+                    {
+                        new LinearCartesianAxis
+                        {
+                            Ticks = new LinearCartesianTicks
+                            {
+                                BeginAtZero = true
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        foreach (string label in classLabels)
+            _config.Data.Labels.Add(label);
+
+        BarDataset<int> dataset = new BarDataset<int>(classData)
+        {
+            BackgroundColor = new[]
+            {
+                ColorUtil.ColorHexString(198,155,109),
+                ColorUtil.ColorHexString(244,140,186),
+                ColorUtil.ColorHexString(170,211,114),
+                ColorUtil.ColorHexString(255,244,104),
+                ColorUtil.ColorHexString(240,235,224),
+                ColorUtil.ColorHexString(196,30,59),
+                ColorUtil.ColorHexString(35,89,255),
+                ColorUtil.ColorHexString(104,204,239),
+                ColorUtil.ColorHexString(147,130,201),
+                ColorUtil.ColorHexString(0,255,186),
+                ColorUtil.ColorHexString(255,124,10),
+                ColorUtil.ColorHexString(163,48,201)
+            },
+            BorderColor = ColorUtil.ColorHexString(50, 51, 61),
+            HoverBorderWidth = 5
+        };
+
+        _config.Data.Datasets.Add(dataset);
+
+        if (AuthState.User.Identity.IsAuthenticated)
         {
             string UserName = AuthState.User.Identity.Name;
             var GM = guildMembers.FirstOrDefault();
