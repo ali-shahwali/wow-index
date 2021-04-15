@@ -1,0 +1,15 @@
+﻿@page "/about" 
+
+<MudText Typo="Typo.h4">About</MudText>
+<MudButton Link="https://discord.gg/uaEQNQrc" Target="_blank" Variant="Variant.Filled" EndIcon="@discordIcon">Discord</MudButton>
+
+
+@code {  
+
+    string discordIcon { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        discordIcon = "img/Discord-Logo-Black.svg";
+    }
+}
