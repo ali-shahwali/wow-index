@@ -16,6 +16,8 @@ namespace WowIndex.Models.UserProfile
 
         public string Realm { get; set; }
 
+        public string RealmSlug { get; set; }
+
         public int Level { get; set; }
 
         public string Faction { get; set; }

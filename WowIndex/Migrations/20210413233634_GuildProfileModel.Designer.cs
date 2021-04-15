@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WowIndex.Data;
 
 namespace WowIndex.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210413233634_GuildProfileModel")]
+    partial class GuildProfileModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -495,8 +497,14 @@ namespace WowIndex.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("GuildId")
-                        .HasColumnType("int");
+                    b.Property<string>("Faction")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GuildName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GuildSlug")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("LatestProgressionTime")
                         .HasColumnType("datetime2");
@@ -504,12 +512,19 @@ namespace WowIndex.Migrations
                     b.Property<int>("Progression")
                         .HasColumnType("int");
 
+                    b.Property<string>("Realm")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RealmSlug")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Region")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Score")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("GuildId");
 
                     b.ToTable("RankedCastleNathriaLeaderboard");
                 });
@@ -638,15 +653,6 @@ namespace WowIndex.Migrations
                 });
 
             modelBuilder.Entity("WowIndex.Models.GuildObjects.GuildProfile", b =>
-                {
-                    b.HasOne("WowIndex.Models.GuildObjects.Guild", "Guild")
-                        .WithMany()
-                        .HasForeignKey("GuildId");
-
-                    b.Navigation("Guild");
-                });
-
-            modelBuilder.Entity("WowIndex.Models.RaidingLeaderboards.LeaderboardEntry", b =>
                 {
                     b.HasOne("WowIndex.Models.GuildObjects.Guild", "Guild")
                         .WithMany()

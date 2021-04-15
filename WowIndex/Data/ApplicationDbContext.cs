@@ -31,5 +31,7 @@ namespace WowIndex.Data
 
         public DbSet<Models.BugReport> BugReports { get; set; }
 
+        public DbSet<Models.GuildObjects.GuildProfile> GuildProfiles { get; set; }
+
     }
 }

@@ -141,7 +141,7 @@
 
     bool hasProfile = true;
     bool isLoggedIn = true;
-    bool _drawerOpen = true;
+    bool _drawerOpen = false;
     bool isEditMode = false;
 
     MudTheme darkTheme = new MudTheme()
@@ -187,7 +187,7 @@
         else
         {
             region = character.Region;
-            ProfilePic = character.avatar_url;
+            ProfilePic = character.avatar_url ?? "img/profile-icon.svg";
             BattleTagName = profile.BattleTag.Split('#')[0];
             BattleTagId = "#" + profile.BattleTag.Split('#')[1];
         }
@@ -247,7 +247,7 @@
 
     private async Task<IEnumerable<Models.GuildObjects.Guild>> GuildSearch(string value)
     {
-        if (string.IsNullOrEmpty(value) || value.Length < 3)
+        if (string.IsNullOrEmpty(value) || value.Length < 2)
             return new List<Models.GuildObjects.Guild>();
 
         var result = guilds.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).Take(100).ToList();
