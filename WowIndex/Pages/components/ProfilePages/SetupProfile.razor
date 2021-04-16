@@ -38,6 +38,23 @@
     [Parameter]
     public string region { get; set; }= "";
 
+    protected override async Task OnInitializedAsync()
+    {
+        var AuthState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (!AuthState.User.Identity.IsAuthenticated)
+        {
+            Snackbar.Add("You must log in first!", Severity.Normal);
+            NavigationManager.NavigateTo("/");
+        }
+
+        var checkProfile = _context.Profiles.Where(x => x.AspEmail == AuthState.User.Identity.Name).FirstOrDefault();
+        if(checkProfile != null)
+        {
+            Snackbar.Add("You have already setup your profile!", Severity.Normal);
+            NavigationManager.NavigateTo("/profile");
+        }
+    }
+
     private async Task OnValidSubmit()
     {
         string clientId = Configuration["APIClientID"];

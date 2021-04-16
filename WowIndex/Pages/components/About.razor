@@ -1,15 +1,34 @@
 ﻿@page "/about" 
+<MudGrid>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h4">About</MudText>
+        <MudText Typo="Typo.body1">
+            Wowindex is a website that tracks every mythic raiding guild in the world in their race to world first
+            or their progression to a full clear of the latest raid. Currently we track Castle Nathria.
+            <br />
+            <br />
+            We also provide other useful tools and information such as data about the current raid tier
+            and guilds registered on the site.
+            <br />
+            <br />
+        </MudText>
+        <MudText Typo="Typo.h5">Get started</MudText>
+        <MudText Typo="Typo.body1">
+            Guild pages can be managed by their respective guild masters, all you have to do as a guild master is
+            <a style="color:dodgerblue" target="_blank" href="/Identity/Account/Register">register</a> on the site and setup your profile <a style="color:dodgerblue" target="_blank" href="/setupProfile">here</a>, this feature should now be available to you.
+            <br />
+            <br />If you have any questions please don't hesitate to join our discord server where you can ask the developers questions of any kind!
+            <br />
+            <br />You can also check out the <a style="color:dodgerblue" href="/FAQ">frequently asked questions section</a>.
+        </MudText>
+    </MudItem>
+    <MudItem xs="12">
+        <MudButton Link="https://discord.gg/uaEQNQrc" Color="Color.Secondary" Target="_blank" Variant="Variant.Filled">Discord</MudButton>
+    </MudItem>
+</MudGrid>
 
-<MudText Typo="Typo.h4">About</MudText>
-<MudButton Link="https://discord.gg/uaEQNQrc" Target="_blank" Variant="Variant.Filled" EndIcon="@discordIcon">Discord</MudButton>
 
 
 @code {  
 
-    string discordIcon { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        discordIcon = "img/Discord-Logo-Black.svg";
-    }
 }
