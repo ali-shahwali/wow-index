@@ -8,9 +8,9 @@ body {
     margin-bottom: 19px;
 }
 
-    .brand-wrapper .logo {
-        height: 37px;
-    }
+.brand-wrapper .logo {
+    height: 37px;
+}
 
 .login-card {
     border: 0;
@@ -55,30 +55,30 @@ body {
     padding: 15px 25px;
     margin-bottom: 20px;
     min-height: 45px;
-    font-size: 13px;
+    font-size: 16px;
     line-height: 15;
     font-weight: normal;
 }
 
-    .login-card .form-control::-webkit-input-placeholder {
-        color: #919aa3;
-    }
+.login-card .form-control::-webkit-input-placeholder {
+    color: #919aa3;
+}
 
-    .login-card .form-control::-moz-placeholder {
-        color: #919aa3;
-    }
+.login-card .form-control::-moz-placeholder {
+    color: #919aa3;
+}
 
-    .login-card .form-control:-ms-input-placeholder {
-        color: #919aa3;
-    }
+.login-card .form-control:-ms-input-placeholder {
+    color: #919aa3;
+}
 
-    .login-card .form-control::-ms-input-placeholder {
-        color: #919aa3;
-    }
+.login-card .form-control::-ms-input-placeholder {
+    color: #919aa3;
+}
 
-    .login-card .form-control::placeholder {
-        color: #919aa3;
-    }
+.login-card .form-control::placeholder {
+    color: #919aa3;
+}
 
 .login-card .login-btn {
     padding: 13px 20px 12px;
@@ -91,11 +91,11 @@ body {
     margin-bottom: 24px;
 }
 
-    .login-card .login-btn:hover {
-        border: 1px solid #000;
-        background-color: #d5dae2;
-        color: #000;
-    }
+.login-card .login-btn:hover {
+    border: 1px solid #000;
+    background-color: #d5dae2;
+    color: #000;
+}
 
 .login-card .forgot-password-link {
     font-size: 14px;
