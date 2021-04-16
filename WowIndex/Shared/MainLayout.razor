@@ -163,19 +163,19 @@
         {
             Primary = "#FF8000",
             Secondary = "#A970FF",
-            LinesInputs = "#27272f",
-            Black = "#27272f",
-            Background = "#32333d",
-            BackgroundGrey = "#27272f",
-            Surface = "#373740",
-            DrawerBackground = "#27272f",
+            LinesInputs = "#27293D",
+            Black = "#27293D",
+            Background = "#1E1E28",
+            BackgroundGrey = "#27293D",
+            Surface = "#27293D",
+            DrawerBackground = "#27293D",
             DrawerText = "rgba(255,255,255, 0.50)",
             DrawerIcon = "rgba(255,255,255, 0.50)",
-            AppbarBackground = "#27272f",
+            AppbarBackground = "#27293D",
             AppbarText = "rgba(255,255,255, 0.70)",
             TextPrimary = "rgba(255,255,255, 0.70)",
             TextSecondary = "rgba(255,255,255, 0.50)",
-            TableLines = "#27272f",
+            TableLines = "#27293D",
             Divider = "#32333d",
             ActionDefault = "#adadb1",
             ActionDisabled = "rgba(255,255,255, 0.26)",
@@ -223,7 +223,7 @@
             client.BaseAddress = new Uri($"https://{searchRegion}.api.blizzard.com/");
 
             // check api for guild
-            var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
+            var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context, Configuration);
             var request = await client.GetAsync($"data/wow/guild/{searchRealmSlug}/{searchNameSlug}?namespace=profile-{searchRegion}&locale=en_US&access_token={accessToken.token}");
 
             if (request.IsSuccessStatusCode)

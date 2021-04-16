@@ -60,7 +60,7 @@
             // gets data
             HttpClient client = new HttpClient();
             client.BaseAddress = new Uri($"https://{region}.api.blizzard.com/");
-            var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
+            var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context, Configuration);
             var response = client.GetAsync($"data/wow/guild/{realm}/{guildName}?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}").Result;
             string guildString = response.Content.ReadAsStringAsync().Result;
 

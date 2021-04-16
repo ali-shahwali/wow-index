@@ -142,7 +142,7 @@
     // Properties
     public MudTable<LeaderboardModel> Table;
     public List<LeaderboardModel> Leaderboard { get; set; } = new List<LeaderboardModel>();
-    public List<LeaderboardEntry> RecentClears { get; set; }
+    public List<LeaderboardEntry> RecentClears { get; set; } = new List<LeaderboardEntry>();
     public Data.SiteDiagnostic Diagnostics { get; set; }
 
     public int totalItems;
@@ -293,10 +293,10 @@
         {
             BackgroundColor = new[]
             {
-                ColorUtil.ColorHexString(156, 8, 8),
-                ColorUtil.ColorHexString(32, 46, 201),
-                ColorUtil.ColorHexString(83, 49, 204),
-                ColorUtil.ColorHexString(64, 140, 31)
+                ColorUtil.ColorHexString(29, 140, 248),
+                ColorUtil.ColorHexString(65, 175, 126),
+                ColorUtil.ColorHexString(253, 93, 147),
+                ColorUtil.ColorHexString(91, 6, 189)
             },
             BorderColor = ColorUtil.ColorHexString(50, 51, 61),
             HoverBorderWidth = 5

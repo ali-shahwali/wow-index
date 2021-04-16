@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -8,10 +9,10 @@ namespace WowIndex.Helpers
 {
     public class AuthTokenHelper
     {
-        public static HttpClient HttpClient()
+        public static HttpClient HttpClient(IConfiguration Configuration)
         {
-            string clientId = "1982e5a534d049c2be0c44fa9a4c3171";
-            string clientSecret = "6J4G57M927DI3z3adm5iI3hIvn185CbG";
+            string clientId = Configuration["APIClientID"];
+            string clientSecret = Configuration["APIClientSecret"];
             HttpClient client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($"{clientId}:{clientSecret}")));
             client.BaseAddress = new Uri($"https://eu.battle.net/oauth/token");
@@ -21,23 +22,23 @@ namespace WowIndex.Helpers
 
 
 
-        public static async Task<Token> ValidateToken(ApplicationDbContext _context)
+        public static async Task<Token> ValidateToken(ApplicationDbContext _context, IConfiguration Configuration)
         {
             var TokenInDatabase = _context.Tokens.Where(x => x.ExpirationDate > DateTime.Now).FirstOrDefault();
 
             // NO TOKEN
             if (TokenInDatabase == null)
-                return await GetNewToken(_context);
+                return await GetNewToken(_context, Configuration);
             else
                 return TokenInDatabase;
         }
 
 
 
-        public static async Task<Token> GetNewToken(ApplicationDbContext _context)
+        public static async Task<Token> GetNewToken(ApplicationDbContext _context, IConfiguration Configuration)
         {
             // Get new token (oauth access token, 24 hour TTL)
-            var request = await HttpClient().PostAsync($"?grant_type=client_credentials&scope=wow.profile", null);
+            var request = await HttpClient(Configuration).PostAsync($"?grant_type=client_credentials&scope=wow.profile", null);
             string response = await request.Content.ReadAsStringAsync();
             string AccessToken = response.Split('"')[3];
             var newToken = new Token()

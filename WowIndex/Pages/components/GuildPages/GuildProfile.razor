@@ -283,7 +283,7 @@ else
 
         HttpClient client = new HttpClient();
         client.BaseAddress = new Uri($"https://{region}.api.blizzard.com/");
-        var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
+        var accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context, Configuration);
         var response = await client.GetAsync($"data/wow/guild/{realm}/{guildSlug}/roster?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}");
         string rosterString = await response.Content.ReadAsStringAsync();
 

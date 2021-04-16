@@ -144,7 +144,7 @@
             // Returns the leaderboard for a given raid and faction
 
             // Check token
-            accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context);
+            accessToken = await Helpers.AuthTokenHelper.ValidateToken(_context, Configuration);
 
             var apiResponseAlliance = await apiConnection().GetAsync($"data/wow/leaderboard/hall-of-fame/{raidName}/alliance?namespace=dynamic-us&locale=en_US&access_token={accessToken.token}");
             var apiResponseHorde = await apiConnection().GetAsync($"data/wow/leaderboard/hall-of-fame/{raidName}/horde?namespace=dynamic-us&locale=en_US&access_token={accessToken.token}");
