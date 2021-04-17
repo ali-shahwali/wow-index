@@ -47,18 +47,7 @@
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Rank">
-                    @if (context.Rank <= 3)
-                    {
-                        <MudText Color="Color.Primary">@context.Rank</MudText>
-                    }
-                    else if (context.Rank <= 10)
-                    {
-                        <MudText Color="Color.Secondary">@context.Rank</MudText>
-                    }
-                    else
-                    {
-                        <MudText Color="Color.Info">@context.Rank</MudText>
-                    }
+                    <MudText Color="context.RankColor">@context.Rank</MudText>
                 </MudTd>
                 <MudTd DataLabel="Guild">
                     @{string link = $"/guild/{context.LeaderboardEntry.Guild.Region.ToLower()}/{context.LeaderboardEntry.Guild.RealmSlug}/{context.LeaderboardEntry.Guild.NameSlug}/";}
@@ -256,7 +245,7 @@
         foreach (var item in LeaderboardEntries)
         {
             var profile = _context.GuildProfiles.Where(x => x.Guild == item.Guild).FirstOrDefault();
-            Leaderboard.Add(new LeaderboardModel { Rank = rank++, LeaderboardEntry = item, Profile = profile});
+            Leaderboard.Add(new LeaderboardModel { Rank = rank++, LeaderboardEntry = item, Profile = profile, RankColor = Helpers.RankColorHelper.GetColorByRank(rank - 1) });
         }
 
 

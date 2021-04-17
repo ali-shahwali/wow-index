@@ -18,3 +18,7 @@
 .mud-nav-link.active:not(.mud-nav-link-disabled) {
     color: white;
 }
+
+.mud-badge-bordered {
+    border-color: #27293D !important;
+}

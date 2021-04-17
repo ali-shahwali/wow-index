@@ -77,9 +77,9 @@
             <MudText><span style="color: #FF8000">@BattleTagName</span>@BattleTagId</MudText>
             <MudMenu Class="ml-5 p-5" Direction="Direction.Right" OffsetY="true">
                 <ActivatorContent>
-                    <MudAvatar Image="@ProfilePic" Color="Color.Transparent">
-
-                    </MudAvatar>
+                    <MudBadge Bottom="true" Icon="@Icons.Material.Filled.ExpandMore" Color="Color.Info" Overlap="true" Bordered="true" Class="mx-6 my-4">
+                        <MudAvatar Image="@ProfilePic" Color="Color.Transparent" />
+                    </MudBadge>
                 </ActivatorContent>
                 <ChildContent>
                     @if (hasProfile)

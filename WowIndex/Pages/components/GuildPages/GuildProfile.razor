@@ -35,8 +35,15 @@ else
         <MudItem xs="6">
             @{string guildArmory = $"https://worldofwarcraft.com/en-us/guild/{Guild.Region.ToLower()}/{Guild.RealmSlug}/{Guild.NameSlug}";}
             <MudLink Color="Color.Inherit" Target="_blank" Href="@guildArmory" Typo="Typo.h3">@Guild.Name</MudLink>
-            <MudDivider />
-            <MudText Color="Color.Info" Typo="Typo.h6">World ranking: @RankWorld | Realm ranking: @RankRealm</MudText>
+            <MudDivider Class="my-3"/>
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.h5" Color="worldRankColor"><span style="color: azure">World rank:</span> @RankWorld</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.h5" Color="realmRankColor"><span style="color: azure">Realm Rank:</span> @RankRealm</MudText>
+                </MudItem>
+            </MudGrid>
         </MudItem>
         <MudItem xs="6">
             <MudItem Class="d-flex flex-row-reverse">
@@ -159,6 +166,8 @@ else
     public List<BossStats> bossStats = new List<BossStats>();
     public int RankWorld { get; set; }
     public int RankRealm { get; set; }
+    public Color worldRankColor { get; set; }
+    public Color realmRankColor { get; set; }
     public string searchString = "";
     public int[] classData = new int[12];
     public string[] classLabels =
@@ -187,6 +196,9 @@ else
             RankWorld = leaderboards.FindIndex(x => x.Guild == Guild) + 1;
             var realmList = leaderboards.Where(x => x.Guild.RealmSlug == realm).ToList();
             RankRealm = realmList.FindIndex(x => x.Guild == Guild) + 1;
+
+            worldRankColor = Helpers.RankColorHelper.GetColorByRank(RankWorld);
+            realmRankColor = Helpers.RankColorHelper.GetColorByRank(RankRealm);
         }
 
         int i = 0;
@@ -407,10 +419,13 @@ else
         _context.Update(accessToken);
         await _context.SaveChangesAsync();
 
+        // calculate rank and get color
         var leaderboards = await _context.RankedCastleNathriaLeaderboard.OrderBy(x => x.Score).ToListAsync();
         RankWorld = leaderboards.FindIndex(x => x.Guild == Guild) + 1;
         var realmList = leaderboards.Where(x => x.Guild.RealmSlug == realm).ToList();
         RankRealm = realmList.FindIndex(x => x.Guild == Guild) + 1;
+        worldRankColor = Helpers.RankColorHelper.GetColorByRank(RankWorld);
+        realmRankColor = Helpers.RankColorHelper.GetColorByRank(RankRealm);
     }
 
     private bool FilterFunc(GuildRoster element)
