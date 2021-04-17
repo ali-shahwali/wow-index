@@ -6,6 +6,8 @@
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
 }
 
+<MudText Class="mb-2" Typo="Typo.h6">Past Raids</MudText>
+
 <MudTabs Centered="false" Elevation="4" AlwaysShowScrollButtons="true" Rounded="false" Color="@Color.Dark">
     <MudTabPanel OnClick="@(e => ChangeRaid("castle-nathria"))" Text="Castle Nathria" />
     <MudTabPanel OnClick="@(e => ChangeRaid("nyalotha-the-waking-city"))" Text="Ny'alotha" />
@@ -15,7 +17,7 @@
     <MudTabPanel OnClick="@(e => ChangeRaid("uldir"))" Text="Uldir" />
 </MudTabs>
 
-<MudTable ServerData="@(new Func<TableState, Task<TableData<HallOfFameRecord>>>(ServerReload))" RowsPerPage="100" Dense="true" Height="calc(100vh - 236px)" FixedHeader="true" @ref="table" Hover="true">
+<MudTable ServerData="@(new Func<TableState, Task<TableData<HallOfFameRecord>>>(ServerReload))" RowsPerPage="10" Dense="true" FixedHeader="true" @ref="table" Hover="true">
     <HeaderContent>
         <MudTh></MudTh>
         <MudTh>Guild</MudTh>
@@ -93,7 +95,7 @@
                 @if (context.region == "cn")
                 {
                     var msg = $"Limited Data for this region ({context.region.ToUpper()})";
-                    <MudTooltip Text="@msg">
+                    <MudTooltip Text="@msg" Placement="Placement.Start">
                         <MudIcon Icon="@Icons.Material.Outlined.Info" />
                     </MudTooltip>
                 }
@@ -131,12 +133,30 @@
     private async Task<TableData<HallOfFameRecord>> ServerReload(TableState state)
     {
         // bind records from database
-        records = _context.HoFRecords.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToList();
+        //records = _context.HoFRecords.Where(x => x.raidName.Equals(raidName)).OrderBy(x => x.timestamp).ToList();
 
-        DateTime RequestInterval = DateTime.Now.AddMinutes(-Int32.Parse(Configuration["LiveRaidApiRequestInterval"]));
+        int skip = state.Page * state.PageSize;
+        int take = state.PageSize;
 
-        // if record is older than 10 min then all a new record from the api and update the database
-        if (records.Count == 0) // WHAT THE FUCK??
+        var pagedData = new List<HallOfFameRecord>();
+        var totalCount = new Int32();
+
+        // 1. Base Query
+        var results = _context.HoFRecords.Where(x => x.raidName.Equals(raidName));
+
+        // 3. Apply Sorting - Order by sort field and direction
+        results = results.OrderBy(x => x.timestamp);
+
+        totalCount = results.Count();
+
+        // 4. Apply Pagination - Once the query has been built up we apply the pagination and convert to a list
+        pagedData = results.Skip(skip).Take(take).ToList();
+
+
+
+
+
+        if (pagedData.Count == 0)
         {
             isLoading = true;
             // Call Blizzard API
@@ -207,13 +227,13 @@
         }
         isLoading = false;
         StateHasChanged();
-        return new TableData<HallOfFameRecord>() { Items = records };
+        return new TableData<HallOfFameRecord>() { TotalItems = totalCount, Items = pagedData };
     }
 
     public async Task ChangeRaid(string raid)
     {
         raidName = raid;
-
+        table.CurrentPage = 0;
         await table.ReloadServerData();
     }
 }
