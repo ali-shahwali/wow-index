@@ -1,5 +1,5 @@
 ﻿@page "/authorize/{region}"
-
+@using System.Net
 
 @code {
     /*
@@ -36,7 +36,7 @@
         // query parameters
         string grantType = "authorization_code";
         string code = GetQueryParam("code", NavigationManager);
-        string redirectURI = $"https%3A%2F%2Flocalhost%3A44374%2Fauthorize%2F{region}";
+        string redirectURI = $"{WebUtility.UrlEncode(NavigationManager.BaseUri)}authorize%2F{region}";
 
         client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes($"{clientId}:{clientSecret}")));
 
