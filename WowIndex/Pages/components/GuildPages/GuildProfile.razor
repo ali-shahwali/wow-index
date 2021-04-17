@@ -62,8 +62,10 @@ else
     }
     else
     {
-        <MudText Color="Color.Inherit" Typo="Typo.body1">This guild has not setup their profile yet</MudText>
-        <MudText Color="Color.Inherit" Typo="Typo.caption">Are you the guild master? <a href="/Identity/Account/Login">Log in</a> and setup your account to get started!</MudText>
+        <MudAlert Class="mt-3" Severity="Severity.Info">
+            <MudText Color="Color.Inherit" Typo="Typo.body1">This guild has not setup their profile yet</MudText>
+            <MudText Color="Color.Inherit" Typo="Typo.caption">Are you the guild master? <a style="color: darkorange§1§" href="/Identity/Account/Login">Log in</a> and setup your account to get started!</MudText>
+        </MudAlert>
     }
     <MudGrid Spacing="6" Class="mt-16">
         <MudItem xs="8">
@@ -102,23 +104,23 @@ else
                     <RowTemplate>
                         <MudTd DataLabel="Character">
                             @{ string link = $"https://worldofwarcraft.com/en-us/character/{context.Region.ToLower()}/{context.RealmSlug}/{context.CharacterName}";
-                               bool isRegistered = _context.Characters.Where(x => x.CharacterName == context.CharacterName && x.RealmSlug == context.RealmSlug && x.Region == context.Region).FirstOrDefault() != null; }
+                                    bool isRegistered = _context.Characters.Where(x => x.CharacterName == context.CharacterName && x.RealmSlug == context.RealmSlug && x.Region == context.Region).FirstOrDefault() != null; }
                             @if (!isRegistered)
-                            {
+                                {
                                 <MudTooltip Text="Open in armory">
                                     <MudButton Target="_blank" Link="@link" Variant="Variant.Text" Style="@context.class_color">@context.CharacterName</MudButton>
                                 </MudTooltip>
-                            }
-                            else
-                            {
+                                }
+                                else
+                                {
                                 <MudTooltip Text="This user is registered!">
                                     <MudIcon Size="Size.Small" Color="Color.Info" Icon="@Icons.Material.Filled.Verified"></MudIcon>
                                 </MudTooltip>
                                 <MudTooltip Text="Open in armory!">
                                     <MudButton Target="_blank" Link="@link" Variant="Variant.Text" Style="@context.class_color">@context.CharacterName</MudButton>
                                 </MudTooltip>
-                            }
-                            </MudTd>
+                                }
+                        </MudTd>
                     </RowTemplate>
                     <PagerContent>
                         <MudTablePager DisableRowsPerPage="true" />

@@ -50,9 +50,9 @@
           "resources": [
             {
               "sku": {
-                "name": "Free_F1",
-                "tier": "Free",
-                "size": "F1",
+                "name": "Standard_S1",
+                "tier": "Standard",
+                "size": "S1",
                 "capacity": 1
               },
               "location": "[parameters('resourceLocation')]",
