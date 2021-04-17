@@ -184,6 +184,9 @@ else
         {
             guildMembers = _context.GuildRoster.Where(x => x.GuildId == Guild.Id).OrderBy(x => x.MemberRank).ToList();
             bossStats = Helpers.RaidDataHelper.ToBossStatsList(Helpers.CastleNathriaKillTimeHelper.GetKillTimes(raidProgRecord), bossNames);
+            RankWorld = leaderboards.FindIndex(x => x.Guild == Guild) + 1;
+            var realmList = leaderboards.Where(x => x.Guild.RealmSlug == realm).ToList();
+            RankRealm = realmList.FindIndex(x => x.Guild == Guild) + 1;
         }
 
         int i = 0;
@@ -253,13 +256,6 @@ else
                 UserIsGm = true;
         }
 
-        if (leaderboards != null)
-        {
-            RankWorld = leaderboards.FindIndex(x => x.Guild == Guild) + 1;
-            var realmList = leaderboards.Where(x => x.Guild.RealmSlug == realm).ToList();
-            RankRealm = realmList.FindIndex(x => x.Guild == Guild) + 1;
-        }
-
         isLoading = false;
         StateHasChanged();
     }
@@ -293,13 +289,16 @@ else
             .members.Where(x => x.character.level == 60).OrderBy(x => x.rank).ToArray();
         estGuildRoster = rosterMembers.Length;
 
+        if(rosterMembers.Length < 20)
+            NavigationManager.NavigateTo("/invalidGuildMessage");
+
         var oldGuildRoster = await _context.GuildRoster.Where(x => x.GuildId == Guild.Id).ToListAsync();
         _context.GuildRoster.RemoveRange(oldGuildRoster);
         await _context.SaveChangesAsync();
 
         foreach (var member in rosterMembers)
         {
-            await _context.GuildRoster.AddAsync(new GuildRoster
+            GuildRoster rosterMember = new GuildRoster()
             {
                 CharacterName = member.character.name,
                 GuildId = Guild.Id,
@@ -308,107 +307,110 @@ else
                 RealmSlug = member.character.realm.slug,
                 playable_class = Helpers.WowClassHelper.GetClassById(member.character.playable_class.id),
                 class_color = Helpers.WowClassHelper.GetClassColour(member.character.playable_class.id)
-            });
+            };
+
+            await _context.GuildRoster.AddAsync(rosterMember);
+            guildMembers.Add(rosterMember);
         }
 
         List<Achievement[]> allCharacters = new List<Achievement[]>();
         int[] progressionTally = new int[10];
         int iterations = 0, progression = 0, requests = 0;
-        if (rosterMembers.Length > 20)
+        foreach (Models.POCO.Member item in rosterMembers)
         {
-            foreach (Models.POCO.Member item in rosterMembers)
+            var apiResponse = await client.GetAsync($"profile/wow/character/{realm}/{item.character.name.ToLower()}/achievements?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}");
+            requests++;
+
+            if (apiResponse.IsSuccessStatusCode)
             {
-                var apiResponse = await client.GetAsync($"profile/wow/character/{realm}/{item.character.name.ToLower()}/achievements?namespace=profile-{region}&locale=en_US&access_token={accessToken.token}");
-                requests++;
+                var apiResponseString = apiResponse.Content.ReadAsStringAsync().Result;
+                CharacterAchievement characterAchievements = JsonConvert.DeserializeObject<CharacterAchievement>(apiResponseString);
+                var check = characterAchievements.achievements.Where(x => x.id >= 14356 && x.id <= 14365).FirstOrDefault();
 
-                if (apiResponse.IsSuccessStatusCode)
+                if (check == null)
+                    continue;
+
+                Achievement[] validAchievements = characterAchievements.achievements.Where(x => x.id >= 14356 && x.id <= 14365).ToArray();
+
+                if (validAchievements.Length > 0)
                 {
-                    var apiResponseString = apiResponse.Content.ReadAsStringAsync().Result;
-                    CharacterAchievement characterAchievements = JsonConvert.DeserializeObject<CharacterAchievement>(apiResponseString);
-                    var check = characterAchievements.achievements.Where(x => x.id >= 14356 && x.id <= 14365).FirstOrDefault();
+                    progressionTally[validAchievements.Length - 1]++;
+                    allCharacters.Add(validAchievements);
+                    iterations++;
+                    estTimeLeft += rosterMembers.Length / 15;
+                }
 
-                    if (check == null)
-                        continue;
-
-                    Achievement[] validAchievements = characterAchievements.achievements.Where(x => x.id >= 14356 && x.id <= 14365).ToArray();
-
-                    if (validAchievements.Length > 0)
+                if (iterations >= 15)
+                {
+                    for (int i = 9; i >= 0; i--)
                     {
-                        progressionTally[validAchievements.Length - 1]++;
-                        allCharacters.Add(validAchievements);
-                        iterations++;
-                        estTimeLeft += rosterMembers.Length / 15;
-                    }
-
-                    if (iterations >= 15)
-                    {
-                        for (int i = 9; i >= 0; i--)
-                        {
-                            if (progressionTally[i] >= 15)
-                                progression = i + 1;
-                        }
-                    }
-
-                    if (progression != 0)
-                    {
-                        List<Achievement[]> raidTeam = new List<Achievement[]>();
-                        foreach (var character in allCharacters.Where(x => x.Length == progression))
-                            raidTeam.Add(character);
-
-                        DateTime[] bossKills = Helpers.RaidDataHelper.GetBossTimes(raidTeam, 10);
-                        bossStats = Helpers.RaidDataHelper.ToBossStatsList(bossKills, bossNames);
-
-                        // add this guilds progress to leaderboard
-                        KillTimeCastleNathria KillTimes = new KillTimeCastleNathria
-                        {
-                            GuildId = Guild.Id,
-                            Progress = progression,
-                            ExpirationDate = DateTime.Now.AddMinutes(15),
-                            Boss1KillTime = bossKills[0],
-                            Boss2KillTime = bossKills[1],
-                            Boss3KillTime = bossKills[2],
-                            Boss4KillTime = bossKills[3],
-                            Boss5KillTime = bossKills[4],
-                            Boss6KillTime = bossKills[5],
-                            Boss7KillTime = bossKills[6],
-                            Boss8KillTime = bossKills[7],
-                            Boss9KillTime = bossKills[8],
-                            Boss10KillTime = bossKills[9],
-                        };
-
-                        // calculate raid score (put this shiii in appsettings.json)
-                        DateTime CastleNathriaReleaseDate = new DateTime(2020, 12, 8, 00, 00, 00);
-                        DateTime latestBossKillTime = bossKills[progression - 1];
-
-                        int score1 = bossKills.Length - progression;
-                        int score2 = (int)(latestBossKillTime - CastleNathriaReleaseDate).TotalMinutes;
-
-                        int formattedScore = Int32.Parse($"{score1}{score2}");
-                        LeaderboardEntry leaderboardEntry = new LeaderboardEntry
-                        {
-                            Score = formattedScore,
-                            LatestProgressionTime = bossKills[progression - 1],
-                            Progression = progression,
-                            Guild = Guild
-                        };
-
-                        _context.KillTimeCastleNathria.Add(KillTimes);
-                        _context.RankedCastleNathriaLeaderboard.Add(leaderboardEntry);
-                        estTimeLeft = rosterMembers.Length;
-                        break;
+                        if (progressionTally[i] >= 15)
+                            progression = i + 1;
                     }
                 }
 
-                StateHasChanged();
-            }
-        }
-        else
-            NavigationManager.NavigateTo("/invalidGuildMessage");
+                if (progression != 0)
+                {
+                    List<Achievement[]> raidTeam = new List<Achievement[]>();
+                    foreach (var character in allCharacters.Where(x => x.Length == progression))
+                        raidTeam.Add(character);
 
+                    DateTime[] bossKills = Helpers.RaidDataHelper.GetBossTimes(raidTeam, 10);
+                    bossStats = Helpers.RaidDataHelper.ToBossStatsList(bossKills, bossNames);
+
+                    // add this guilds progress to leaderboard
+                    KillTimeCastleNathria KillTimes = new KillTimeCastleNathria
+                    {
+                        GuildId = Guild.Id,
+                        Progress = progression,
+                        ExpirationDate = DateTime.Now.AddMinutes(15),
+                        Boss1KillTime = bossKills[0],
+                        Boss2KillTime = bossKills[1],
+                        Boss3KillTime = bossKills[2],
+                        Boss4KillTime = bossKills[3],
+                        Boss5KillTime = bossKills[4],
+                        Boss6KillTime = bossKills[5],
+                        Boss7KillTime = bossKills[6],
+                        Boss8KillTime = bossKills[7],
+                        Boss9KillTime = bossKills[8],
+                        Boss10KillTime = bossKills[9],
+                    };
+
+                    // calculate raid score (put this shiii in appsettings.json)
+                    DateTime CastleNathriaReleaseDate = new DateTime(2020, 12, 8, 00, 00, 00);
+                    DateTime latestBossKillTime = bossKills[progression - 1];
+
+                    int score1 = bossKills.Length - progression;
+                    int score2 = (int)(latestBossKillTime - CastleNathriaReleaseDate).TotalMinutes;
+
+                    int formattedScore = Int32.Parse($"{score1}{score2}");
+                    LeaderboardEntry leaderboardEntry = new LeaderboardEntry
+                    {
+                        Score = formattedScore,
+                        LatestProgressionTime = bossKills[progression - 1],
+                        Progression = progression,
+                        Guild = Guild
+                    };
+
+                    _context.KillTimeCastleNathria.Add(KillTimes);
+                    _context.RankedCastleNathriaLeaderboard.Add(leaderboardEntry);
+                    estTimeLeft = rosterMembers.Length;
+                    break;
+                }
+            }
+
+            StateHasChanged();
+        }
+
+        // update token
         accessToken.RequestsThisHour = requests;
         _context.Update(accessToken);
         await _context.SaveChangesAsync();
-        guildMembers = await _context.GuildRoster.Where(x => x.GuildId == Guild.Id).OrderBy(x => x.MemberRank).ToListAsync();
+
+        var leaderboards = await _context.RankedCastleNathriaLeaderboard.OrderBy(x => x.Score).ToListAsync();
+        RankWorld = leaderboards.FindIndex(x => x.Guild == Guild) + 1;
+        var realmList = leaderboards.Where(x => x.Guild.RealmSlug == realm).ToList();
+        RankRealm = realmList.FindIndex(x => x.Guild == Guild) + 1;
     }
 
     private bool FilterFunc(GuildRoster element)
