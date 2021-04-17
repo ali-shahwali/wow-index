@@ -1,9 +1,8 @@
 ﻿@page "/"
 @using WowIndex.Models.RaidingLeaderboards
 @using Microsoft.Extensions.Configuration
+@using ChartJs.Blazor.LineChart
 @using ChartJs.Blazor.PieChart
-@using ChartJs.Blazor.Util
-@using ChartJs.Blazor.Common
 
 <MudGrid>
     <MudItem xs="12">
@@ -106,6 +105,7 @@
                 <MudTablePager DisableRowsPerPage="true" />
             </PagerContent>
         </MudTable>
+        <Chart Width="600" Height="350" Config="_configLine"></Chart>
     </MudItem>
     <MudItem xs="4">
         <MudText Class="mb-2" Typo="Typo.h6">Recent Activity</MudText>
@@ -123,7 +123,7 @@
                 </MudCardContent>
             </MudCard>
         }
-        <Chart Width="400" Height="400" Config="_config"></Chart>
+        <Chart Width="400" Height="400" Config="_configPie"></Chart>
     </MudItem>
 </MudGrid>
 
@@ -140,11 +140,8 @@
     public string SortField { get; set; }
     public string sortDirection { get; set; }
 
-
-    string[] labels = { "US", "EU", "KR", "TW" };
-    int[] data = { 0, 0, 0, 0 };
-
-    private PieConfig _config;
+    private PieConfig _configPie;
+    private LineConfig _configLine;
 
     private async Task<TableData<LeaderboardModel>> ServerReload(TableState state)
     {
@@ -249,49 +246,11 @@
         }
 
 
-        for (int i = 0; i < 4; i++)
-            data[i] = _context.RankedCastleNathriaLeaderboard.Where(x => x.Guild.Region == labels[i].ToLower()).Count();
 
+        _configLine = Helpers.ChartHelper.GetClearsLineChart(_context);
 
-        _config = new PieConfig
-        {
-            Options = new PieOptions
-            {
-                Responsive = true,
-                Title = new OptionsTitle
-                {
-                    Display = true,
-                    Text = "Region Representation",
-                    FontColor = ColorUtil.ColorHexString(255, 255, 255),
-                    FontSize = 16,
-                },
-                Legend = new Legend
-                {
-                    Labels = new LegendLabels
-                    {
-                        FontColor = ColorUtil.ColorHexString(255, 255, 255)
-                    }
-                }
-            }
-        };
-
-        foreach (string label in labels)
-            _config.Data.Labels.Add(label);
-
-        PieDataset<int> dataset = new PieDataset<int>(data)
-        {
-            BackgroundColor = new[]
-            {
-                ColorUtil.ColorHexString(29, 140, 248),
-                ColorUtil.ColorHexString(65, 175, 126),
-                ColorUtil.ColorHexString(253, 93, 147),
-                ColorUtil.ColorHexString(91, 6, 189)
-            },
-            BorderColor = ColorUtil.ColorHexString(50, 51, 61),
-            HoverBorderWidth = 5
-        };
-
-        _config.Data.Datasets.Add(dataset);
+        _configPie = Helpers.ChartHelper.GetRegionPieChart(_context);
+        
     }
 
 }
