@@ -122,8 +122,18 @@
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
-        <MudContainer Class="mt-16">
-            @Body
+        <MudContainer Class="mt-16" Fixed="true">
+            <MudGrid>
+                <MudItem md="9">
+                    @Body
+                </MudItem>
+                <MudItem md="3">
+                    <MudPaper Class="mb-3 placeholder-bg" Height="600px" Width="100%"></MudPaper>
+                    <MudText Typo="Typo.caption" Style="color: #5c5c5cb3;">
+                        World of Warcraft, Warcraft and Blizzard Entertainment are trademarks or registered trademarks of Blizzard Entertainment, Inc. in the U.S. and/or other countries.
+                    </MudText>
+                </MudItem>
+            </MudGrid>
         </MudContainer>
     </MudMainContent>
 </MudLayout>
@@ -175,8 +185,8 @@
             AppbarText = "rgba(255,255,255, 0.70)",
             TextPrimary = "rgba(255,255,255, 0.70)",
             TextSecondary = "rgba(255,255,255, 0.50)",
-            TableLines = "#27293D",
-            Divider = "#32333d",
+            TableLines = "#1E1E28",
+            Divider = "#1E1E28",
             ActionDefault = "#adadb1",
             ActionDisabled = "rgba(255,255,255, 0.26)",
             ActionDisabledBackground = "rgba(255,255,255, 0.12)",
