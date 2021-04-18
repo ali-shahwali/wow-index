@@ -22,7 +22,7 @@
     </MudItem>
     <MudItem xs="8">
         <MudText Class="mb-2" Typo="Typo.h6">Mythic World Leaderboard</MudText>
-        <MudTable Outlined="true" ServerData="@(new Func<TableState, Task<TableData<LeaderboardModel>>>(ServerReload))" @ref="Table" RowsPerPage="10" Dense="true" FixedHeader="true" Hover="true">
+        <MudTable Outlined="true" ServerData="@(new Func<TableState, Task<TableData<LeaderboardModel>>>(ServerReload))" @ref="Table" RowsPerPage="15" Dense="true" FixedHeader="true" Hover="true">
             <ToolBarContent>
                 <MudItem xs="12" md="3" class="mb-5 mt-5">
                     <MudSelect T="int" Label="Filter by Region" ValueChanged="@(i=>OnFilter(i))">
@@ -105,7 +105,7 @@
                 <MudTablePager DisableRowsPerPage="true" />
             </PagerContent>
         </MudTable>
-        <Chart Width="600" Height="350" Config="_configLine"></Chart>
+        @*<Chart Width="600" Height="250" Config="_configLine"></Chart>*@
     </MudItem>
     <MudItem xs="4">
         <MudText Class="mb-2" Typo="Typo.h6">Recent Activity</MudText>
@@ -246,9 +246,10 @@
         }
 
 
+        // get chart for all clears over time
+        //_configLine = Helpers.ChartHelper.GetClearsLineChart(_context);
 
-        _configLine = Helpers.ChartHelper.GetClearsLineChart(_context);
-
+        // get pie chart for clears in each region
         _configPie = Helpers.ChartHelper.GetRegionPieChart(_context);
         
     }

@@ -45,9 +45,9 @@ namespace WowIndex
             services.AddDatabaseDeveloperPageExceptionFilter();
             services.AddMudServices();
 
-            //services.AddMvc();
-            //services.AddSignalR()
-            //        .AddAzureSignalR();
+            services.AddMvc();
+            services.AddSignalR()
+                    .AddAzureSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
