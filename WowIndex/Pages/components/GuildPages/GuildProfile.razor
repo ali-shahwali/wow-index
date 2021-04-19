@@ -207,22 +207,26 @@ else
         }
 
         isLoading = false;
-        StateHasChanged();
     }
 
     public async Task Update()
     {
-        var oldLeaderboards = await _context.KillTimeCastleNathria.Where(x => x.GuildId == Guild.Id).FirstOrDefaultAsync();
+        var oldKillTimes = await _context.KillTimeCastleNathria.Where(x => x.GuildId == Guild.Id).FirstOrDefaultAsync();
 
-        if (oldLeaderboards.Progress == 10)
+        if (oldKillTimes.Progress == 10)
+            Snackbar.Add($"Progression completed on {oldKillTimes.Boss10KillTime.ToString()}", Severity.Normal);
+        else
         {
-            Snackbar.Add($"Progression completed on {oldLeaderboards.Boss10KillTime.ToString()}", Severity.Normal);
-            return;
-        }
+            isLoading = true;
 
-        _context.KillTimeCastleNathria.Remove(oldLeaderboards);
-        await _context.SaveChangesAsync();
-        await GetData();
+            var oldLeaderboards = await _context.RankedCastleNathriaLeaderboard.Where(x => x.Guild == Guild).FirstOrDefaultAsync();
+            _context.KillTimeCastleNathria.Remove(oldKillTimes);
+            _context.RankedCastleNathriaLeaderboard.Remove(oldLeaderboards);
+
+            await _context.SaveChangesAsync();
+            await GetData();
+        }
+        
     }
 
     public async Task GetData()
@@ -348,7 +352,6 @@ else
                     break;
                 }
             }
-
             StateHasChanged();
         }
 
@@ -366,6 +369,9 @@ else
         // get colors
         worldRankColor = Helpers.RankColorHelper.GetColorByRank(RankWorld);
         realmRankColor = Helpers.RankColorHelper.GetColorByRank(RankRealm);
+
+        isLoading = false;
+        StateHasChanged();
     }
 
     private bool FilterFunc(GuildRoster element)

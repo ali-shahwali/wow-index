@@ -55,6 +55,8 @@ namespace WowIndex.Areas.Identity.Pages.Account
 
             string data = $@"{{""link"": ""{code}""}}";
 
+            await emailClient.VerifyEmailAddressAsync(new VerifyEmailAddressRequest { EmailAddress = Email} );
+
             var sendRequest = new SendTemplatedEmailRequest
             {
                 Source = $"WowIndex <ali_zinq@hotmail.com>",
